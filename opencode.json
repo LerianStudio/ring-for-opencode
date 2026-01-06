@@ -1,0 +1,46 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "version": "1.0.0",
+  "name": "ring-opencode",
+  "description": "Ring skills library for OpenCode - enforces proven software engineering practices",
+  "permission": {
+    "skill": {
+      "*": "allow"
+    },
+    "edit": "ask",
+    "bash": {
+      "git *": "allow",
+      "ls *": "allow",
+      "pwd": "allow",
+      "tree *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "wc *": "allow",
+      "find * -name *": "allow",
+      "mkdir *": "ask",
+      "rm *": "ask",
+      "mv *": "ask",
+      "cp *": "ask",
+      "curl *": "deny",
+      "wget *": "deny",
+      "*": "ask"
+    },
+    "webfetch": "ask",
+    "external_directory": "ask",
+    "doom_loop": "ask"
+  },
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "model": "anthropic/claude-opus-4-20250514"
+    },
+    "plan": {
+      "mode": "primary",
+      "model": "anthropic/claude-opus-4-5-20251101",
+      "permission": {
+        "edit": "ask",
+        "bash": "ask"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "ring-opencode-plugins",
+  "version": "1.0.0",
+  "description": "Ring plugins for OpenCode - context injection, state management, and workflow automation",
+  "type": "module",
+  "dependencies": {
+    "@opencode-ai/plugin": "1.1.3",
+    "better-sqlite3": "9.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.13",
+    "@types/node": "25.0.3",
+    "typescript": "5.9.3"
+  }
+}

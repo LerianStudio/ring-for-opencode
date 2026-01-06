@@ -1,0 +1,6 @@
+{
+  "name": "ring-opencode-plugins",
+  "private": true,
+  "type": "module",
+  "description": "Development-only metadata for plugin directory. Dependencies are managed in opencode/.opencode/package.json"
+}
