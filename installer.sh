@@ -16,6 +16,32 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_ROOT="$SCRIPT_DIR/.opencode"
 TARGET_ROOT="${OPENCODE_CONFIG_DIR:-"$HOME/.config/opencode"}"
 
+# Node version check - require 18-24, warn if 25+
+check_node_version() {
+  if ! command -v node >/dev/null 2>&1; then
+    echo "WARN: Node.js not found. Will attempt to use bun for installation." >&2
+    return 0
+  fi
+
+  local node_version
+  node_version=$(node -v | sed 's/^v//' | cut -d. -f1)
+
+  if [[ "$node_version" -lt 18 ]]; then
+    echo "ERROR: Node.js version $node_version is too old. Requires Node 18-24 (LTS)." >&2
+    echo "Please install Node 22 LTS: https://nodejs.org/" >&2
+    exit 1
+  fi
+
+  if [[ "$node_version" -ge 25 ]]; then
+    echo "WARN: Node.js $node_version detected. This installer is tested with Node 18-24." >&2
+    echo "WARN: better-sqlite3 may fail to build on Node 25+." >&2
+    echo "WARN: Consider using Node 22 LTS for best compatibility." >&2
+    echo ""
+  fi
+}
+
+check_node_version
+
 if [[ ! -d "$SOURCE_ROOT" ]]; then
   echo "ERROR: Source directory not found: $SOURCE_ROOT" >&2
   echo "Expected this script to live at: opencode/installer.sh" >&2
@@ -83,11 +109,11 @@ mkdir -p "$TARGET_ROOT/state"
 REQUIRED_DEPS_JSON='{
   "dependencies": {
     "@opencode-ai/plugin": "1.1.3",
-    "better-sqlite3": "9.0.0"
+    "better-sqlite3": "12.6.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "7.6.13",
-    "@types/node": "25.0.3",
+    "@types/node": "22.19.5",
     "typescript": "5.9.3"
   }
 }'
@@ -130,12 +156,29 @@ NODE
 # Install deps
 if command -v bun >/dev/null 2>&1; then
   echo "Installing dependencies with bun..."
-  (cd "$TARGET_ROOT" && CXXFLAGS='-std=c++20' bun install)
+  if ! (cd "$TARGET_ROOT" && CXXFLAGS='-std=c++20' bun install); then
+    echo "" >&2
+    echo "ERROR: bun install failed." >&2
+    echo "" >&2
+    echo "Common causes:" >&2
+    echo "  - Node.js version incompatibility (better-sqlite3 requires Node 18-24)" >&2
+    echo "  - Missing C++ build tools" >&2
+    echo "" >&2
+    echo "Recommended fix:" >&2
+    echo "  1. Install Node 22 LTS: https://nodejs.org/" >&2
+    echo "  2. Ensure you have build tools installed:" >&2
+    echo "     - macOS: xcode-select --install" >&2
+    echo "     - Linux: apt-get install build-essential python3" >&2
+    echo "  3. Re-run this installer" >&2
+    exit 1
+  fi
 
   # Run tests if present
   if [[ -f "$TARGET_ROOT/plugin/test-plugins.ts" ]]; then
     echo "Running plugin tests..."
-    (cd "$TARGET_ROOT" && bun plugin/test-plugins.ts)
+    if ! (cd "$TARGET_ROOT" && bun plugin/test-plugins.ts); then
+      echo "WARN: Plugin tests failed. Installation may be incomplete." >&2
+    fi
   fi
 else
   echo "WARN: bun not found; skipping dependency install and tests." >&2

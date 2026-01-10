@@ -14,16 +14,18 @@ import type { Plugin } from "@opencode-ai/plugin"
  *
  * SECURITY: All notification content is sanitized to prevent command injection.
  */
+/**
+ * Sanitize notification content to prevent command injection.
+ * Removes all characters except alphanumeric, spaces, and basic punctuation.
+ * Exported for testing.
+ */
+export function sanitizeNotificationContent(content: string, maxLength: number = 100): string {
+  return content
+    .replace(/[^a-zA-Z0-9 .,!?:;()\-]/g, "")
+    .slice(0, maxLength)
+}
+
 export const RingNotification: Plugin = async ({ $ }) => {
-  /**
-   * Sanitize notification content to prevent command injection.
-   * Removes all characters except alphanumeric, spaces, and basic punctuation.
-   */
-  const sanitizeNotificationContent = (content: string, maxLength: number = 100): string => {
-    return content
-      .replace(/[^a-zA-Z0-9 .,!?:;()\-]/g, "")
-      .slice(0, maxLength)
-  }
 
   const sendNotification = async (title: string, message: string) => {
     const platform = process.platform
@@ -53,8 +55,11 @@ export const RingNotification: Plugin = async ({ $ }) => {
         `
         await $`powershell -Command ${script}`
       }
-    } catch {
-      // Notification not critical - fail silently
+    } catch (err) {
+      // Notification not critical - log for debugging
+      if (process.env.DEBUG) {
+        console.debug('[ring] Notification failed:', err)
+      }
     }
   }
 

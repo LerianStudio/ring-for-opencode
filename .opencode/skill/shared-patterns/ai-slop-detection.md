@@ -137,12 +137,46 @@ Before approving code, verify implementation shows evidence of reading:
 | **Middleware for single operation** | AI adds middleware "for extensibility" | What other operations would use this? |
 | **Abstract base class with 1 child** | AI adds abstraction "for structure" | Will there be sibling classes? |
 | **Builder pattern for simple object** | AI adds fluent API "for clarity" | Does object have optional fields? |
+| **Stateless struct when functions would suffice** | AI creates struct with no fields (Go-specific) | Does the struct hold any state? |
 
 ### Severity Assessment
 
 - **3+ of these patterns in one PR** → HIGH (likely AI slop)
 - **1-2 patterns with no justification** → MEDIUM
 - **Patterns with documented future use** → LOW (acceptable)
+
+### Stateless Struct Pattern (Go)
+
+```go
+// BAD: OVER-ENGINEERED: Struct with no fields
+type ScopeMatcher struct{}
+
+func (s *ScopeMatcher) Match(scope string, pattern string) bool {
+    return strings.HasPrefix(scope, pattern)
+}
+
+// Usage requires unnecessary instantiation:
+matcher := &ScopeMatcher{}
+result := matcher.Match(scope, pattern)
+
+// GOOD: SIMPLE: Plain function
+func MatchScope(scope string, pattern string) bool {
+    return strings.HasPrefix(scope, pattern)
+}
+
+// Usage is direct:
+result := MatchScope(scope, pattern)
+```
+
+**When stateless structs ARE justified:**
+- Implementing an interface (e.g., `http.Handler`)
+- Grouping related methods for discoverability
+- Future state is planned (documented)
+
+**When to flag:**
+- Single method on struct with no fields
+- No interface requirement
+- No documented reason for struct wrapper
 
 ---
 

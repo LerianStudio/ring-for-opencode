@@ -1,8 +1,8 @@
 ---
 name: requesting-code-review
 description: |
-  Gate 4 of development cycle - dispatches 3 specialized reviewers (code, business-logic,
-  security) in parallel for comprehensive code review feedback.
+  Gate 4 of development cycle - dispatches 5 specialized reviewers (code, business-logic,
+  security, test, nil-safety) in parallel for comprehensive code review feedback.
 license: MIT
 compatibility: opencode
 metadata:
@@ -30,7 +30,7 @@ metadata:
 | requirements | string | optional | Requirements or acceptance criteria (reviewers will infer from code if not provided) |
 | implementation_files | array | optional | List of files changed (auto-detected via git diff if not provided) |
 | gate0_handoff | object | optional | Full handoff from Gate 0 (only when called from dev-cycle) |
-| skip_reviewers | array | optional | Reviewers to skip: code-reviewer, business-logic-reviewer, security-reviewer (use sparingly) |
+| skip_reviewers | array | optional | Reviewers to skip: code-reviewer, business-logic-reviewer, security-reviewer, test-reviewer, nil-safety-reviewer (use sparingly) |
 
 ## Output Schema
 
@@ -44,7 +44,7 @@ metadata:
 
 **Metrics:**
 - result: PASS | FAIL | NEEDS_FIXES
-- reviewers_passed: X/3 format
+- reviewers_passed: X/5 format
 - issues_critical, issues_high, issues_medium, issues_low: integer counts
 - iterations: integer
 
@@ -52,13 +52,15 @@ metadata:
 
 ## Overview
 
-Dispatch all three reviewer subagents in **parallel** for fast, comprehensive feedback:
+Dispatch all five reviewer subagents in **parallel** for fast, comprehensive feedback:
 
 1. **code-reviewer** - Architecture, design patterns, code quality
 2. **business-logic-reviewer** - Domain correctness, business rules, edge cases
 3. **security-reviewer** - Vulnerabilities, authentication, OWASP risks
+4. **test-reviewer** - Test quality, coverage, edge cases, anti-patterns
+5. **nil-safety-reviewer** - Nil/null pointer safety for Go and TypeScript
 
-**Core principle:** All 3 reviewers run simultaneously in a single message with 3 Task tool calls.
+**Core principle:** All 5 reviewers run simultaneously in a single message with 5 Task tool calls.
 
 ## CRITICAL: Role Clarification
 
@@ -118,7 +120,7 @@ AFTER AUTO-DETECTION, display context:
 │ Files Changed: [count] files                                    │
 │ Commits: [count] commits                                        │
 │                                                                 │
-│ Dispatching 3 reviewers in parallel...                          │
+│ Dispatching 5 reviewers in parallel...                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -132,7 +134,9 @@ review_state = {
   reviewers: {
     code_reviewer: {verdict: null, issues: []},
     business_logic_reviewer: {verdict: null, issues: []},
-    security_reviewer: {verdict: null, issues: []}
+    security_reviewer: {verdict: null, issues: []},
+    test_reviewer: {verdict: null, issues: []},
+    nil_safety_reviewer: {verdict: null, issues: []}
   },
   aggregated_issues: {
     critical: [],
@@ -146,9 +150,9 @@ review_state = {
 }
 ```
 
-## Step 3: Dispatch All 3 Reviewers in Parallel
+## Step 3: Dispatch All 5 Reviewers in Parallel
 
-**CRITICAL: All 3 reviewers MUST be dispatched in a SINGLE message with 3 Task calls.**
+**CRITICAL: All 5 reviewers MUST be dispatched in a SINGLE message with 5 Task calls.**
 
 ```yaml
 # Task 1: Code Reviewer
@@ -267,12 +271,91 @@ Task:
     | Input validation | ✅/❌ |
     | Auth checks | ✅/❌ |
     | No hardcoded secrets | ✅/❌ |
+
+# Task 4: Test Reviewer
+Task:
+  subagent_type: "test-reviewer"
+  model: "opus"
+  description: "Test quality review for [unit_id]"
+  prompt: |
+    ## Test Quality Review Request
+
+    **Unit ID:** [unit_id]
+    **Base SHA:** [base_sha]
+    **Head SHA:** [head_sha]
+
+    ## What Was Implemented
+    [implementation_summary]
+
+    ## Requirements
+    [requirements]
+
+    ## Your Focus
+    - Test coverage for business logic
+    - Edge case testing (empty, null, boundary)
+    - Error path coverage
+    - Test independence and isolation
+    - Assertion quality (not just "no error")
+    - Test anti-patterns (testing mock behavior)
+
+    ## Required Output
+    ### VERDICT: PASS / FAIL
+
+    ### Issues Found
+    | Severity | Description | File:Line | Recommendation |
+    |----------|-------------|-----------|----------------|
+    | [CRITICAL/HIGH/MEDIUM/LOW] | [issue] | [location] | [fix] |
+
+    ### Test Coverage Analysis
+    | Test Type | Count | Coverage |
+    |-----------|-------|----------|
+    | Unit | [N] | [areas] |
+    | Integration | [N] | [areas] |
+    | E2E | [N] | [areas] |
+
+# Task 5: Nil-Safety Reviewer
+Task:
+  subagent_type: "nil-safety-reviewer"
+  model: "opus"
+  description: "Nil/null safety review for [unit_id]"
+  prompt: |
+    ## Nil-Safety Review Request
+
+    **Unit ID:** [unit_id]
+    **Base SHA:** [base_sha]
+    **Head SHA:** [head_sha]
+    **Languages:** [Go|TypeScript|both - detect from files]
+
+    ## What Was Implemented
+    [implementation_summary]
+
+    ## Requirements
+    [requirements]
+
+    ## Your Focus
+    - Nil/null pointer risks in changed code
+    - Missing nil guards before dereference
+    - Map access without ok check (Go)
+    - Type assertions without ok check (Go)
+    - Optional chaining misuse (TypeScript)
+    - Error-then-use patterns
+
+    ## Required Output
+    ### VERDICT: PASS / FAIL
+
+    ### Issues Found
+    | Severity | Description | File:Line | Recommendation |
+    |----------|-------------|-----------|----------------|
+    | [CRITICAL/HIGH/MEDIUM/LOW] | [issue] | [location] | [fix] |
+
+    ### Nil Risk Trace
+    [For each risk: Source → Propagation → Dereference point]
 ```
 
 ## Step 4: Wait for All Reviewers and Parse Output
 
 ```text
-Wait for all 3 Task calls to complete.
+Wait for all 5 Task calls to complete.
 
 For each reviewer:
 1. Extract VERDICT (PASS/FAIL)
@@ -346,9 +429,9 @@ Task:
 ```text
 After fixes committed:
 1. Get new HEAD_SHA
-2. Go back to Step 3 (dispatch all 3 reviewers again)
+2. Go back to Step 3 (dispatch all 5 reviewers again)
 
-CRITICAL: Always re-run ALL 3 reviewers after fixes.
+CRITICAL: Always re-run ALL 5 reviewers after fixes.
 Do NOT cherry-pick reviewers.
 ```
 
@@ -377,6 +460,8 @@ Generate skill output:
 | code-reviewer | ✅ PASS | [count] |
 | business-logic-reviewer | ✅ PASS | [count] |
 | security-reviewer | ✅ PASS | [count] |
+| test-reviewer | ✅ PASS | [count] |
+| nil-safety-reviewer | ✅ PASS | [count] |
 
 ## Low/Cosmetic Issues (TODO/FIXME added)
 [list with file locations]
@@ -384,7 +469,7 @@ Generate skill output:
 ## Handoff to Next Gate
 - Review status: COMPLETE
 - All blocking issues: RESOLVED
-- Reviewers passed: 3/3
+- Reviewers passed: 5/5
 - Ready for Gate 5 (Validation): YES
 ```
 
@@ -414,6 +499,8 @@ Generate skill output:
 | code-reviewer | [PASS/FAIL] |
 | business-logic-reviewer | [PASS/FAIL] |
 | security-reviewer | [PASS/FAIL] |
+| test-reviewer | [PASS/FAIL] |
+| nil-safety-reviewer | [PASS/FAIL] |
 
 ## Handoff to Next Gate
 - Review status: FAILED
@@ -432,8 +519,8 @@ See [shared-patterns/pressure-resistance.md](../shared-patterns/pressure-resista
 
 | User Says | Your Response |
 |-----------|---------------|
-| "Skip review, code is simple" | "Simple code can have security issues. Dispatching all 3 reviewers." |
-| "Just run code-reviewer" | "All 3 reviewers run in parallel. No time saved by skipping." |
+| "Skip review, code is simple" | "Simple code can have security issues. Dispatching all 5 reviewers." |
+| "Just run code-reviewer" | "All 5 reviewers run in parallel. No time saved by skipping." |
 | "Fix later, merge now" | "Blocking issues (Critical/High/Medium) MUST be fixed before Gate 5." |
 
 ## Anti-Rationalization Table
@@ -444,11 +531,11 @@ See [shared-patterns/anti-rationalization.md](../shared-patterns/anti-rationaliz
 
 | Rationalization | Why It's WRONG | Required Action |
 |-----------------|----------------|-----------------|
-| "Run reviewers one at a time" | Sequential = slow. Parallel = 3x faster. | **Dispatch all 3 in single message** |
+| "Run reviewers one at a time" | Sequential = slow. Parallel = 5x faster. | **Dispatch all 5 in single message** |
 | "Skip security for internal code" | Internal code can have vulnerabilities. | **Include security-reviewer** |
 | "Critical issue is false positive" | Prove it with evidence, don't assume. | **Fix or provide evidence** |
 | "Low issues don't need TODO" | TODOs ensure issues aren't forgotten. | **Add TODO comments** |
-| "2 of 3 reviewers passed" | Gate 4 requires ALL 3. 2/3 = 0/3. | **Re-run ALL 3 reviewers** |
+| "4 of 5 reviewers passed" | Gate 4 requires ALL 5. 4/5 = 0/5. | **Re-run ALL 5 reviewers** |
 | "MEDIUM is not blocking" | MEDIUM = MUST FIX. Same as CRITICAL/HIGH. | **Fix MEDIUM issues NOW** |
 
 ---
@@ -476,6 +563,8 @@ See [shared-patterns/anti-rationalization.md](../shared-patterns/anti-rationaliz
 | code-reviewer | ✅/❌ |
 | business-logic-reviewer | ✅/❌ |
 | security-reviewer | ✅/❌ |
+| test-reviewer | ✅/❌ |
+| nil-safety-reviewer | ✅/❌ |
 
 ## Handoff to Next Gate
 - Review status: [COMPLETE|FAILED]

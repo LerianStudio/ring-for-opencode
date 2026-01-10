@@ -20,7 +20,7 @@ Skills are loaded on-demand via the native `skill` tool. See `.opencode/skill/` 
 ### Core Skills
 - `test-driven-development` - RED-GREEN-REFACTOR methodology
 - `brainstorming` - Socratic design refinement
-- `requesting-code-review` - Parallel 3-reviewer code review
+- `requesting-code-review` - Parallel 5-reviewer code review
 - `systematic-debugging` - 4-phase debugging methodology
 - `executing-plans` - Batch task execution with checkpoints
 
@@ -36,8 +36,10 @@ Agents are invoked via @ mention or automatically by primary agents.
 
 ### Reviewers (subagents)
 - `@code-reviewer` - Code quality, architecture, design patterns
-- `@security-reviewer` - Security vulnerabilities, data protection
 - `@business-logic-reviewer` - Business rules, domain correctness
+- `@security-reviewer` - Security vulnerabilities, data protection
+- `@test-reviewer` - Test quality, coverage, anti-patterns
+- `@nil-safety-reviewer` - Nil/null pointer safety (Go and TypeScript)
 
 ### Specialist Agents (subagents)
 - `@codebase-explorer` - Codebase exploration and analysis
@@ -48,13 +50,13 @@ Agents are invoked via @ mention or automatically by primary agents.
 Commands are invoked via `/command-name`.
 
 - `/commit` - Atomic commits with intelligent grouping
-- `/codereview` - Dispatch all 3 reviewers in parallel
+- `/codereview` - Dispatch all 5 reviewers in parallel
 - `/brainstorm` - Start design refinement session
 
 ## Compliance Rules
 
 - TDD: Test must fail before implementation
-- Review: All 3 reviewers must pass
+- Review: All 5 reviewers must pass
 - Commits: Use conventional commit format
 
 ## Key Principles

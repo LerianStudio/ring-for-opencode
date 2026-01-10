@@ -1,0 +1,32 @@
+[
+  {
+    "content": "Fix HIGH: Update AGENTS.md to list all 5 reviewers",
+    "status": "completed",
+    "activeForm": "Updating AGENTS.md reviewer list"
+  },
+  {
+    "content": "Fix HIGH: Import test functions from source instead of inlining",
+    "status": "completed",
+    "activeForm": "Fixing test imports"
+  },
+  {
+    "content": "Fix MEDIUM: Update README.md Plugins section",
+    "status": "completed",
+    "activeForm": "Updating README plugins"
+  },
+  {
+    "content": "Fix MEDIUM: Add try-catch to statSync in session-outcome.ts",
+    "status": "completed",
+    "activeForm": "Adding try-catch wrapper"
+  },
+  {
+    "content": "Fix MEDIUM: Add missing test edge cases",
+    "status": "completed",
+    "activeForm": "Adding test edge cases"
+  },
+  {
+    "content": "Fix LOW: Clean up test code organization",
+    "status": "completed",
+    "activeForm": "Cleaning up tests"
+  }
+]

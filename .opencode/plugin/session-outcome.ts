@@ -30,6 +30,12 @@ interface PendingOutcomePrompt {
   sourceSessionId: string
 }
 
+interface SessionInfo {
+  id: string
+  updatedAt?: number
+  createdAt?: number
+}
+
 // Maximum time between session.compacted and session.created to show outcome prompt
 const OUTCOME_PROMPT_WINDOW_MS = 30000
 
@@ -60,7 +66,13 @@ export const RingSessionOutcome: Plugin = async ({ client, directory }) => {
       const ledgers = readdirSync(ledgerDir)
         .filter((f) => f.startsWith("CONTINUITY-") && f.endsWith(".md"))
         .map((f) => ({ name: f, path: join(ledgerDir, f) }))
-        .filter((f) => statSync(f.path).mtimeMs > twoHoursAgo)
+        .filter((f) => {
+          try {
+            return statSync(f.path).mtimeMs > twoHoursAgo
+          } catch {
+            return false
+          }
+        })
 
       if (ledgers.length > 0) {
         hasWork = true
@@ -88,6 +100,10 @@ export const RingSessionOutcome: Plugin = async ({ client, directory }) => {
             break
           }
         } catch (err) {
+          // Non-critical - log for debugging
+          if (process.env.DEBUG) {
+            console.debug('[ring] Failed to read handoffs directory:', err)
+          }
         }
       }
     }
@@ -146,8 +162,8 @@ After user responds, save the grade using:
       return
     }
 
-    const sessions = sessionsResult.data ?? []
-    const currentSession = sessions.sort((a: any, b: any) => (b.updatedAt || 0) - (a.updatedAt || 0))[0]
+    const sessions = (sessionsResult.data ?? []) as SessionInfo[]
+    const currentSession = sessions.sort((a: SessionInfo, b: SessionInfo) => (b.updatedAt || 0) - (a.updatedAt || 0))[0]
 
     if (!currentSession) {
       return
@@ -209,7 +225,6 @@ Then continue with the new session.
           if (hasWork) {
             const contextStr = context.join(", ")
             await injectOutcomePrompt(contextStr)
-          } else {
           }
         }
         return

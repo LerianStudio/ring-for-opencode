@@ -202,7 +202,13 @@ Run: \`skill: "using-ring"\` to see available workflows.`
 
     try {
       const skills = readdirSync(skillDir)
-        .filter((d) => statSync(join(skillDir, d)).isDirectory())
+        .filter((d) => {
+          try {
+            return statSync(join(skillDir, d)).isDirectory()
+          } catch {
+            return false
+          }
+        })
         .sort()
 
       let overview = "# Ring Skills Quick Reference\n\n"
@@ -244,6 +250,11 @@ Run: \`skill: "using-ring"\` to see available workflows.`
 
     // Inject Ring context into the SYSTEM PROMPT (runs before each LLM call)
     "experimental.chat.system.transform": async (_input: {}, output: { system: string[] }) => {
+      // Defensive check for malformed output
+      if (!output?.system || !Array.isArray(output.system)) {
+        return
+      }
+
       // Generate skills overview (cached after first call)
       if (!cachedSkillsOverview) {
         cachedSkillsOverview = await generateSkillsOverview()

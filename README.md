@@ -49,12 +49,12 @@ Commands are invoked with `/`:
 | **Skills** | 37 | Development workflow skills |
 | **Agents** | 14 | Specialized AI agents |
 | **Commands** | 19 | Utility commands |
-| **Plugins** | 5 | Session management and security |
+| **Plugins** | 7 | Session management and workflow enhancement |
 
 ### Core Skills
 - `test-driven-development` - RED-GREEN-REFACTOR methodology
 - `brainstorming` - Socratic design refinement
-- `requesting-code-review` - Parallel 3-reviewer code review
+- `requesting-code-review` - Parallel 5-reviewer code review
 - `systematic-debugging` - 4-phase debugging methodology
 - `executing-plans` - Batch task execution with checkpoints
 
@@ -77,11 +77,13 @@ Commands are invoked with `/`:
 
 | Plugin | Purpose |
 |--------|---------|
-| `session-start.ts` | Logs Ring initialization |
-| `context-injection.ts` | Preserves Ring rules during compaction |
+| `session-start.ts` | Initializes Ring context and injects critical rules |
+| `context-injection.ts` | Preserves Ring rules during context compaction |
 | `notification.ts` | Desktop notifications (cross-platform) |
-| `env-protection.ts` | Blocks reading sensitive files |
-| `index.ts` | Module exports |
+| `session-outcome.ts` | Prompts for session outcome grade |
+| `task-completion-check.ts` | Notifies when all todos complete |
+| `outcome-inference.ts` | Infers session outcome from todo state |
+| `doubt-resolver.ts` | Structured choice prompts for ambiguity |
 
 ## Platform Compatibility
 

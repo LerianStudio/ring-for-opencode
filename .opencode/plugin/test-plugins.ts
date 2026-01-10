@@ -1,16 +1,60 @@
 #!/usr/bin/env bun
 /**
- * Ring OpenCode Plugin Test Script
+ * Ring OpenCode Plugin Smoke Tests
  *
- * Validates that all plugins:
- * 1. Export correctly
- * 2. Have proper type signatures
- * 3. Return valid hook objects
+ * Simple validation that all plugins export correctly and return hooks.
+ * For full behavioral tests, run: bun test .opencode/plugin/test-plugins.test.ts
  *
  * Run with: bun .opencode/plugin/test-plugins.ts
  */
 
-import * as plugins from "./index"
+import { mkdirSync, rmSync, existsSync } from "fs"
+
+// Import plugins
+import {
+  RingContextInjection,
+  RingNotification,
+  RingDoubtResolver,
+  RingSessionStart,
+  RingTaskCompletionCheck,
+  RingSessionOutcome,
+  RingOutcomeInference,
+} from "./index"
+
+// Test directory for file system operations
+const CLI_TEST_DIR = "/tmp/ring-plugin-cli-tests"
+
+// Create simple mock context
+function createMockContext() {
+  const noop = () => Promise.resolve({})
+
+  return {
+    project: { name: "test-project", path: CLI_TEST_DIR },
+    client: {
+      session: {
+        list: () =>
+          Promise.resolve({
+            data: [{ id: "test-session-1", updatedAt: Date.now(), name: "Test Session" }],
+            error: null,
+          }),
+        prompt: noop,
+      },
+      tui: {
+        showToast: noop,
+      },
+    },
+    $: Object.assign(
+      async () => ({
+        text: async () => "",
+        quiet: () => Promise.resolve({ text: async () => "" }),
+        exitCode: 0,
+      }),
+      { quiet: () => Promise.resolve({ text: async () => "" }) }
+    ),
+    directory: CLI_TEST_DIR,
+    worktree: CLI_TEST_DIR,
+  }
+}
 
 interface TestResult {
   name: string
@@ -18,87 +62,90 @@ interface TestResult {
   error?: string
 }
 
-const results: TestResult[] = []
-
-// Mock context for plugin initialization
-// SDK returns array directly, not { data: [] }
-const mockContext = {
-  project: { name: "test-project", path: "/tmp/test-project" },
-  client: {
-    session: {
-      // Returns array with realistic session structure
-      list: async () => [{ id: "test-session-1", updatedAt: Date.now(), name: "Test Session" }],
-      prompt: async () => ({ success: true }),
-    },
-  },
-  // Mock Bun shell ($) with realistic structure
-  $: Object.assign(
-    async (strings: TemplateStringsArray, ...values: unknown[]) => ({
-      text: async () => "",
-      quiet: () => Promise.resolve({ text: async () => "" }),
-      exitCode: 0,
-    }),
-    { quiet: () => Promise.resolve({ text: async () => "" }) }
-  ),
-  directory: "/tmp/test-project",
-  worktree: "/tmp/test-project",
-}
-
-async function testPlugin(name: string, plugin: any): Promise<TestResult> {
-  try {
-    // Check it's a function
-    if (typeof plugin !== "function") {
-      return { name, passed: false, error: "Not a function" }
-    }
-
-    // Initialize plugin
-    const hooks = await plugin(mockContext)
-
-    // Check it returns an object
-    if (typeof hooks !== "object") {
-      return { name, passed: false, error: "Does not return hooks object" }
-    }
-
-    // Check for valid hooks
-    const validHooks = [
-      "event",
-      "tool.execute.before",
-      "tool.execute.after",
-      "experimental.session.compacting",
-      "session.compacted",
-    ]
-
-    const hookKeys = Object.keys(hooks)
-    for (const key of hookKeys) {
-      if (!validHooks.includes(key) && key !== "tool") {
-        return { name, passed: false, error: `Invalid hook: ${key}` }
-      }
-    }
-
-    return { name, passed: true }
-  } catch (err) {
-    return { name, passed: false, error: String(err) }
-  }
-}
-
 async function runTests() {
-  console.log("Testing Ring OpenCode Plugins\n")
-  console.log("=".repeat(50))
+  console.log("Running Ring OpenCode Plugin Smoke Tests\n")
+  console.log("For full behavioral tests, run: bun test .opencode/plugin/test-plugins.test.ts\n")
+  console.log("=".repeat(60))
 
-  const pluginEntries = Object.entries(plugins).filter(([name]) => name !== "default" && name.startsWith("Ring"))
+  // Setup test directory
+  if (existsSync(CLI_TEST_DIR)) {
+    rmSync(CLI_TEST_DIR, { recursive: true, force: true })
+  }
+  mkdirSync(CLI_TEST_DIR, { recursive: true })
 
-  for (const [name, plugin] of pluginEntries) {
-    const result = await testPlugin(name, plugin)
-    results.push(result)
+  const ctx = createMockContext()
+  const results: TestResult[] = []
 
+  const plugins = [
+    { name: "RingContextInjection", plugin: RingContextInjection },
+    { name: "RingNotification", plugin: RingNotification },
+    { name: "RingDoubtResolver", plugin: RingDoubtResolver },
+    { name: "RingSessionStart", plugin: RingSessionStart },
+    { name: "RingTaskCompletionCheck", plugin: RingTaskCompletionCheck },
+    { name: "RingSessionOutcome", plugin: RingSessionOutcome },
+    { name: "RingOutcomeInference", plugin: RingOutcomeInference },
+  ]
+
+  for (const { name, plugin } of plugins) {
+    try {
+      // Check it's a function
+      if (typeof plugin !== "function") {
+        results.push({ name, passed: false, error: "Not a function" })
+        continue
+      }
+
+      // Initialize plugin
+      const hooks = await plugin(ctx as any)
+
+      // Check it returns an object
+      if (typeof hooks !== "object") {
+        results.push({ name, passed: false, error: "Does not return hooks object" })
+        continue
+      }
+
+      // Check for valid hooks
+      const validHooks = [
+        "event",
+        "tool",
+        "tool.execute.before",
+        "tool.execute.after",
+        "experimental.session.compacting",
+        "experimental.chat.system.transform",
+        "experimental.chat.context.transform",
+        "session.compacted",
+      ]
+
+      const hookKeys = Object.keys(hooks)
+      let hasInvalidHook = false
+      for (const key of hookKeys) {
+        if (!validHooks.includes(key)) {
+          results.push({ name, passed: false, error: `Invalid hook: ${key}` })
+          hasInvalidHook = true
+          break
+        }
+      }
+
+      if (!hasInvalidHook) {
+        results.push({ name, passed: true })
+      }
+    } catch (err) {
+      results.push({ name, passed: false, error: String(err) })
+    }
+  }
+
+  // Print results
+  for (const result of results) {
     const status = result.passed ? "PASS" : "FAIL"
-    console.log(`${status}: ${name}`)
+    console.log(`${status}: ${result.name}`)
     if (result.error) {
       console.log(`       Error: ${result.error}`)
     }
   }
 
-  console.log("\n" + "=".repeat(50))
+  // Cleanup
+  rmSync(CLI_TEST_DIR, { recursive: true, force: true })
+
+  console.log("\n" + "=".repeat(60))
 
   const passed = results.filter((r) => r.passed).length
   const failed = results.filter((r) => !r.passed).length
@@ -110,7 +157,7 @@ async function runTests() {
   }
 }
 
-// Only run when executed directly (not when imported by OpenCode)
+// Run when executed directly
 if (import.meta.main) {
   runTests().catch(console.error)
 }

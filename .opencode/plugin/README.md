@@ -8,16 +8,10 @@ This directory contains TypeScript plugins that port Ring's hook system to OpenC
 |--------|-----------------|----------------|-------------|
 | `session-start.ts` | `session-start.sh` | `session.created` | Context injection at session start |
 | `context-injection.ts` | `session-start.sh` (compact) | `experimental.session.compacting` | Preserve context during compaction |
-| `ledger-save.ts` | `ledger-save.sh` | `experimental.session.compacting`, `session.idle` | Save continuity ledger before compact/end |
 | `session-outcome.ts` | `session-outcome.sh` | `session.compacted`, `session.created` | Prompt for session outcome grade |
-| `artifact-index-write.ts` | `artifact-index-write.sh` | `tool.execute.after` | Index handoffs/plans on write |
 | `task-completion-check.ts` | `task-completion-check.sh` | `todo.updated` | Detect all todos complete |
-| `instruction-reminder.ts` | `claude-md-reminder.sh` | `message.updated` | Re-inject instruction files |
-| `context-usage-check.ts` | `context-usage-check.sh` | `message.updated` | Context usage warnings |
 | `outcome-inference.ts` | `outcome_inference.py` | `session.idle` | Infer session outcome |
-| `learning-extract.ts` | `learning-extract.py` | `session.idle` | Extract session learnings |
 | `notification.ts` | N/A | `session.idle` | Desktop notifications |
-| `env-protection.ts` | N/A | `tool.execute.before` | Protect sensitive files |
 | `doubt-resolver.ts` | N/A | Tool: `ring_doubt` | Ask user to choose from options |
 
 ## Event Mapping
@@ -67,7 +61,7 @@ Session IDs are obtained from environment variables with secure fallback:
 
 Defined in `.opencode/package.json`:
 - `@opencode-ai/plugin` - OpenCode plugin API (pinned)
-- `better-sqlite3` - Safe SQL queries (exact version: 9.0.0)
+- `better-sqlite3` - Safe SQL queries (exact version: 12.6.0)
 
 - `@types/better-sqlite3` - Type definitions
 - `@types/node` - Node.js type definitions

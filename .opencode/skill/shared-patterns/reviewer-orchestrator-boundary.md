@@ -26,14 +26,15 @@ This document defines the mandatory separation of responsibilities between revie
 │ • code-reviewer     │          │ • backend-engineer-golang       │
 │ • business-logic    │          │ • backend-engineer-typescript   │
 │ • security-reviewer │          │ • frontend-engineer             │
-│                     │          │ • devops-engineer               │
-│ OUTPUT: Report      │          │ • qa-analyst                    │
-│ ACTION: NONE        │          │                                 │
-│                     │          │ OUTPUT: Code changes            │
-│ CANNOT: Edit files  │          │ ACTION: Edit, Create, Delete    │
-│ CANNOT: Fix issues  │          │                                 │
-│ CANNOT: Run tests   │          │ CAN: Implement fixes            │
-│                     │          │ CAN: Run tests                  │
+│ • test-reviewer     │          │ • devops-engineer               │
+│ • nil-safety        │          │ • qa-analyst                    │
+│                     │          │                                 │
+│ OUTPUT: Report      │          │ OUTPUT: Code changes            │
+│ ACTION: NONE        │          │ ACTION: Edit, Create, Delete    │
+│                     │          │                                 │
+│ CANNOT: Edit files  │          │ CAN: Implement fixes            │
+│ CANNOT: Fix issues  │          │ CAN: Run tests                  │
+│ CANNOT: Run tests   │          │                                 │
 └─────────────────────┘          └─────────────────────────────────┘
 ```
 
@@ -82,9 +83,9 @@ This document defines the mandatory separation of responsibilities between revie
 - Enables proper accountability and learning
 
 ### 4. Parallel Execution
-- Reviewers run in parallel (code, business-logic, security)
+- Reviewers run in parallel (code, business-logic, security, test, nil-safety)
 - If reviewers also fixed, they'd need sequential execution
-- Separation enables 3x faster review cycles
+- Separation enables 5x faster review cycles
 
 ---
 
@@ -143,7 +144,7 @@ See [shared-patterns/reviewer-orchestrator-boundary.md](../shared-patterns/revie
 
 The `dev-cycle` skill enforces this boundary at Gate 4 (Review):
 
-1. **Dispatch reviewers in parallel** (code, business-logic, security)
+1. **Dispatch reviewers in parallel** (code, business-logic, security, test, nil-safety)
 2. **Collect structured reports** from each reviewer
 3. **If any reviewer returns FAIL:**
    - Extract issues from report

@@ -39,9 +39,9 @@ export const RingTaskCompletionCheck: Plugin = async ({ client, directory }) => 
         return
       }
 
-      const todoEvent = event as TodoEvent
-      // Defensive payload handling - support both property paths
-      const todos = todoEvent.properties?.todos || todoEvent.data?.todos || []
+      // Type guard for TodoEvent with defensive payload handling
+      const todoEvent = event as unknown as TodoEvent
+      const todos = todoEvent?.properties?.todos || todoEvent?.data?.todos || []
 
       // Runtime validation
       if (!Array.isArray(todos)) {

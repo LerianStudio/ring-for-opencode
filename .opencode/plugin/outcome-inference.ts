@@ -133,6 +133,10 @@ function inferOutcome(todos: Todo[] | null): OutcomeResult {
   return result
 }
 
+// Export for testing
+export { analyzeTodos, inferOutcomeFromTodos, OUTCOME }
+export type { Todo, OutcomeType }
+
 export const RingOutcomeInference: Plugin = async ({ directory }) => {
   const projectRoot = directory
   const sessionId = getSessionId()
