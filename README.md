@@ -4,20 +4,54 @@ Ring skills library converted for native OpenCode use.
 
 ## Installation
 
-1. Copy the `.opencode/` directory to your project root:
+### Option 1: Direct Copy (Recommended)
+
+1. Clone this repository:
    ```bash
-   cp -r opencode/.opencode /path/to/your/project/
+   git clone https://github.com/fredcamaral/ring-for-opencode.git
+   cd ring-for-opencode
    ```
 
-2. Copy `opencode.json` to your project root (optional, for customization):
+2. Run the installer to copy to your OpenCode config:
    ```bash
-   cp opencode/opencode.json /path/to/your/project/
+   ./installer.sh
    ```
 
-3. Copy `AGENTS.md` to your project root:
-   ```bash
-   cp opencode/AGENTS.md /path/to/your/project/
-   ```
+   This copies Ring assets to `~/.config/opencode/` and installs dependencies.
+
+### Option 2: Per-Project Installation
+
+Copy `.opencode/` directory to your project root:
+```bash
+cp -r ring-for-opencode/.opencode /path/to/your/project/
+```
+
+Copy `opencode.json` to your project root (optional, for customization):
+```bash
+cp ring-for-opencode/opencode.json /path/to/your/project/
+```
+
+Copy `AGENTS.md` to your project root:
+```bash
+cp ring-for-opencode/AGENTS.md /path/to/your/project/
+```
+
+## Directory Structure
+
+```
+ring-for-opencode/
+├── .opencode/              # OpenCode discovery root
+│   ├── command/            # Slash commands (/commit, /codereview, etc.)
+│   ├── agent/              # AI agents (@code-reviewer, @write-plan, etc.)
+│   ├── skill/              # Development skills (TDD, debugging, etc.)
+│   ├── plugin/             # TypeScript plugins for session management
+│   ├── state/              # Runtime state storage
+│   └── background-tasks.json
+├── opencode.json           # OpenCode configuration
+├── AGENTS.md               # Agent discovery documentation
+├── installer.sh            # Installation script
+└── README.md
+```
 
 ## Usage
 
@@ -46,9 +80,9 @@ Commands are invoked with `/`:
 
 | Type | Count | Description |
 |------|-------|-------------|
-| **Skills** | 37 | Development workflow skills |
-| **Agents** | 14 | Specialized AI agents |
-| **Commands** | 19 | Utility commands |
+| **Skills** | 30 | Development workflow skills |
+| **Agents** | 16 | Specialized AI agents |
+| **Commands** | 16 | Utility commands |
 | **Plugins** | 7 | Session management and workflow enhancement |
 
 ### Core Skills
