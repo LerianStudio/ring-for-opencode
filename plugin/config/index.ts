@@ -69,3 +69,10 @@ export {
   parseJsoncContent,
   deepMerge,
 } from "./loader"
+
+// Config handler for OpenCode injection
+export {
+  createConfigHandler,
+  type OpenCodeConfig,
+  type ConfigHandlerDeps,
+} from "./config-handler"

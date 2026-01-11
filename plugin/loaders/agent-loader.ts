@@ -1,0 +1,196 @@
+/**
+ * Ring Agent Loader
+ *
+ * Loads Ring agents from .opencode/agent/*.md files.
+ * Parses YAML frontmatter and markdown body into agent configs.
+ */
+
+import { existsSync, readdirSync, readFileSync } from "fs"
+import { join, basename } from "path"
+
+/**
+ * Agent configuration compatible with OpenCode SDK.
+ */
+export interface AgentConfig {
+  description?: string
+  mode?: "primary" | "subagent"
+  prompt?: string
+  model?: string
+  tools?: Record<string, boolean>
+  permission?: Record<string, string>
+  color?: string
+}
+
+/**
+ * Frontmatter data from agent markdown files.
+ */
+interface AgentFrontmatter {
+  description?: string
+  mode?: string
+  model?: string
+  tools?: string
+  color?: string
+}
+
+/**
+ * Parse YAML frontmatter from markdown content.
+ */
+function parseFrontmatter(content: string): { data: AgentFrontmatter; body: string } {
+  // Normalize line endings for cross-platform support
+  const normalizedContent = content.replace(/\r\n/g, "\n")
+  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/
+  const match = normalizedContent.match(frontmatterRegex)
+
+  if (!match) {
+    return { data: {}, body: normalizedContent }
+  }
+
+  const yamlContent = match[1]
+  const body = match[2]
+
+  // Simple YAML parsing for our use case
+  const data: AgentFrontmatter = {}
+  const lines = yamlContent.split("\n")
+
+  for (const line of lines) {
+    const colonIndex = line.indexOf(":")
+    if (colonIndex === -1) continue
+
+    const key = line.slice(0, colonIndex).trim()
+    let value = line.slice(colonIndex + 1).trim()
+
+    // Remove quotes if present
+    if ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1)
+    }
+
+    if (key === "description") data.description = value
+    if (key === "mode") data.mode = value
+    if (key === "model") data.model = value
+    if (key === "tools") data.tools = value
+    if (key === "color") data.color = value
+  }
+
+  return { data, body }
+}
+
+/**
+ * Parse tools string into tools config object.
+ */
+function parseToolsConfig(toolsStr?: string): Record<string, boolean> | undefined {
+  if (!toolsStr) return undefined
+
+  const tools = toolsStr.split(",").map((t) => t.trim()).filter(Boolean)
+  if (tools.length === 0) return undefined
+
+  const result: Record<string, boolean> = {}
+  for (const tool of tools) {
+    // Handle negation (e.g., "!task" means task: false)
+    if (tool.startsWith("!")) {
+      result[tool.slice(1).toLowerCase()] = false
+    } else {
+      result[tool.toLowerCase()] = true
+    }
+  }
+  return result
+}
+
+/**
+ * Load agents from a directory.
+ */
+function loadAgentsFromDir(
+  agentsDir: string,
+  disabledAgents: Set<string>
+): Record<string, AgentConfig> {
+  if (!existsSync(agentsDir)) {
+    return {}
+  }
+
+  const result: Record<string, AgentConfig> = {}
+
+  try {
+    const entries = readdirSync(agentsDir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".md")) continue
+
+      const agentPath = join(agentsDir, entry.name)
+      const agentName = basename(entry.name, ".md")
+
+      // Skip disabled agents
+      if (disabledAgents.has(agentName)) continue
+
+      try {
+        const content = readFileSync(agentPath, "utf-8")
+        const { data, body } = parseFrontmatter(content)
+
+        // Validate mode before casting
+        const validModes = ["primary", "subagent"] as const
+        const mode = validModes.includes(data.mode as typeof validModes[number])
+          ? (data.mode as "primary" | "subagent")
+          : "subagent"
+
+        const config: AgentConfig = {
+          description: data.description ? `(ring) ${data.description}` : `(ring) ${agentName} agent`,
+          mode,
+          prompt: body.trim(),
+        }
+
+        if (data.model) {
+          config.model = data.model
+        }
+
+        if (data.color) {
+          config.color = data.color
+        }
+
+        const toolsConfig = parseToolsConfig(data.tools)
+        if (toolsConfig) {
+          config.tools = toolsConfig
+        }
+
+        result[agentName] = config
+      } catch (error) {
+        if (process.env.RING_DEBUG === "true") {
+          console.debug(`[ring] Failed to parse ${agentPath}:`, error)
+        }
+        continue
+      }
+    }
+  } catch (error) {
+    if (process.env.RING_DEBUG === "true") {
+      console.debug(`[ring] Failed to read agents directory:`, error)
+    }
+    return {}
+  }
+
+  return result
+}
+
+/**
+ * Load Ring agents from .opencode/agent/ directory.
+ */
+export function loadRingAgents(
+  projectRoot: string,
+  disabledAgents: string[] = []
+): Record<string, AgentConfig> {
+  const agentsDir = join(projectRoot, ".opencode", "agent")
+  const disabledSet = new Set(disabledAgents)
+  return loadAgentsFromDir(agentsDir, disabledSet)
+}
+
+/**
+ * Get count of available agents.
+ */
+export function countRingAgents(projectRoot: string): number {
+  const agentsDir = join(projectRoot, ".opencode", "agent")
+  if (!existsSync(agentsDir)) return 0
+
+  try {
+    const entries = readdirSync(agentsDir)
+    return entries.filter((f) => f.endsWith(".md")).length
+  } catch {
+    return 0
+  }
+}

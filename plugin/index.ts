@@ -4,12 +4,31 @@
  * This module exports Ring plugins for OpenCode.
  *
  * Architecture:
+ * - Unified plugin: Single entry matching oh-my-opencode pattern (recommended)
  * - Hook system: Middleware pattern with lifecycle events
  * - Layered config: 4-layer priority with deep merge
  * - Background tasks: Parallel agent execution manager
+ * - Component loaders: Load agents, skills, commands from .opencode/
+ *
+ * The unified plugin combines:
+ * - Config handler: Injects 16 agents, 30 skills, 16 commands
+ * - Tool registration: ring_doubt tool
+ * - Event routing: Lifecycle events to hooks
+ * - System transform: Context injection
+ * - Compaction: Context preservation
  */
 
-// Main plugin - new hook-based architecture
+// =============================================================================
+// UNIFIED PLUGIN (Recommended - matches oh-my-opencode pattern)
+// =============================================================================
+
+export { RingUnifiedPlugin } from "./ring-unified.js"
+
+// =============================================================================
+// LEGACY PLUGIN (Hook-based architecture)
+// =============================================================================
+
+// Main plugin - hook-based architecture
 export { RingPlugin, RingPlugin as default } from "./ring-plugin.js"
 
 // ============================================================================
@@ -143,3 +162,53 @@ export {
   findMostRecentFile,
   readFileSafe,
 } from "./utils/state.js"
+
+// ============================================================================
+// Component Loaders (for unified plugin)
+// ============================================================================
+
+export {
+  loadRingAgents,
+  loadRingSkills,
+  loadRingCommands,
+  countRingAgents,
+  countRingSkills,
+  countRingCommands,
+} from "./loaders/index.js"
+
+export type {
+  AgentConfig,
+  SkillConfig,
+  CommandConfig,
+} from "./loaders/index.js"
+
+// ============================================================================
+// Tools (for unified plugin)
+// ============================================================================
+
+export { ringTools, ringDoubtTool } from "./tools/index.js"
+
+// ============================================================================
+// Lifecycle Router (for unified plugin)
+// ============================================================================
+
+export {
+  createLifecycleRouter,
+  EVENTS,
+} from "./lifecycle/index.js"
+
+export type {
+  OpenCodeEvent,
+  LifecycleRouterDeps,
+} from "./lifecycle/index.js"
+
+// ============================================================================
+// Config Handler (for unified plugin)
+// ============================================================================
+
+export { createConfigHandler } from "./config/index.js"
+
+export type {
+  OpenCodeConfig,
+  ConfigHandlerDeps,
+} from "./config/index.js"
