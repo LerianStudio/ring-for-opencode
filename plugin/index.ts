@@ -26,5 +26,4 @@
 // PLUGIN EXPORTS ONLY
 // =============================================================================
 
-export { RingUnifiedPlugin } from "./ring-unified.js"
-export { RingUnifiedPlugin as default } from "./ring-unified.js"
+export { RingUnifiedPlugin, RingUnifiedPlugin as default } from "./ring-unified.js"

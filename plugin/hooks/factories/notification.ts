@@ -82,13 +82,6 @@ function getPlatform(): Platform {
 }
 
 /**
- * Escape string for AppleScript.
- */
-function escapeAppleScript(str: string): string {
-  return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
-}
-
-/**
  * Sanitize string for Windows notification (remove special characters).
  */
 function sanitizeWindowsString(str: string): string {

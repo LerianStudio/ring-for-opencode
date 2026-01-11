@@ -1724,6 +1724,65 @@ EOF
 
 ---
 
+### Task 6.2: Verify Refactored Agents Work
+
+**Files:**
+- Test: All refactored reviewer agents
+
+**Prerequisites:**
+- Task 6.1 completed
+- All Phases 0-5 completed
+
+**Step 1: Verify shared pattern references resolve**
+
+Run: `for f in /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/*-reviewer.md; do echo "=== $f ==="; grep -o '\[.*\](../skill/shared-patterns/[^)]*' "$f" | head -5; done`
+
+**Expected output:** All reviewers show valid pattern references
+
+**Step 2: Verify no broken references remain**
+
+Run: `grep -r "../skills/shared-patterns" /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/`
+
+**Expected output:** No results (empty)
+
+**Step 3: Verify agent structure**
+
+For each refactored reviewer agent, confirm:
+- [ ] YAML frontmatter is valid (`description`, `mode: subagent`, `name:` with prefix)
+- [ ] "Shared Patterns (MUST Read)" section exists with pattern table
+- [ ] Domain-specific content preserved (checklists, examples)
+- [ ] No duplicate content that should be in shared patterns
+
+**Step 4: Smoke test a reviewer agent**
+
+Dispatch one reviewer (e.g., code-reviewer) against a small change to verify:
+- Agent loads without errors
+- Agent reads and follows shared patterns
+- Agent produces valid output format
+
+Run: `echo "Test the code-reviewer agent against a trivial change to verify it works end-to-end"`
+
+**If Verification Fails:**
+
+1. **Broken pattern references:**
+   - Check: Pattern file exists at referenced path
+   - Fix: Correct the path in the agent file
+   - Re-run: Verify step again
+
+2. **Invalid frontmatter:**
+   - Check: YAML syntax valid
+   - Fix: Correct YAML structure
+   - Re-run: Verify step again
+
+3. **Agent fails to load:**
+   - Check: Agent file has no syntax errors
+   - Fix: Review refactoring changes
+   - Rollback: `git checkout -- assets/agent/<agent>.md` if needed
+
+**IMPORTANT:** Do NOT proceed to Phase 7 (Code Review) if any verification fails. The refactored agents must be functional before code review.
+
+---
+
 ## Phase 7: Code Review Checkpoint
 
 ### Task 7.1: Run Code Review
