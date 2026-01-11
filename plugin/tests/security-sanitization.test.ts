@@ -318,10 +318,11 @@ describe("isPathWithinRoot", () => {
       expect(typeof result).toBe("boolean")
     })
 
-    test("relative path from current directory", () => {
-      // This depends on cwd, but should not throw
-      const result = isPathWithinRoot("./file.txt", "/some/root")
-      expect(typeof result).toBe("boolean")
+    test("relative path resolves correctly", () => {
+      // When checking relative path against a specific root
+      const result = isPathWithinRoot("./subdir/file.txt", "/tmp/test-root")
+      // Relative paths resolve against cwd, which is outside /tmp/test-root
+      expect(result).toBe(false)
     })
   })
 })
@@ -696,12 +697,10 @@ describe("sanitizeNotificationContent", () => {
       expect(sanitizeNotificationContent("test", 0)).toBe("")
     })
 
-    test("handles negative maxLength", () => {
-      // Note: slice(0, -1) returns all chars except last one
-      // This documents current behavior - negative maxLength is not explicitly guarded
+    test("handles negative maxLength by treating as zero", () => {
+      // Negative maxLength is guarded with Math.max(0, maxLength)
       const result = sanitizeNotificationContent("test", -1)
-      // "test".slice(0, -1) = "tes" (3 chars)
-      expect(result).toBe("tes")
+      expect(result).toBe("")
     })
   })
 })

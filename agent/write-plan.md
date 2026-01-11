@@ -480,16 +480,16 @@ Add this step after every 3-5 tasks (or after significant features):
 ```markdown
 ### Task N: Run Code Review
 
-1. **Dispatch all 3 reviewers in parallel:**
+1. **Dispatch all 5 reviewers in parallel:**
    - REQUIRED SUB-SKILL: Use requesting-code-review
-   - All reviewers run simultaneously (code-reviewer, business-logic-reviewer, security-reviewer)
+   - All reviewers run simultaneously (code-reviewer, business-logic-reviewer, security-reviewer, test-reviewer, nil-safety-reviewer)
    - Wait for all to complete
 
 2. **Handle findings by severity (MANDATORY):**
 
 **Critical/High/Medium Issues:**
 - Fix immediately (do NOT add TODO comments for these severities)
-- Re-run all 3 reviewers in parallel after fixes
+- Re-run all 5 reviewers in parallel after fixes
 - Repeat until zero Critical/High/Medium issues remain
 
 **Low Issues:**

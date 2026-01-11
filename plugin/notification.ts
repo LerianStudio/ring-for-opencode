@@ -20,9 +20,10 @@ import type { Plugin } from "@opencode-ai/plugin"
  * Exported for testing.
  */
 export function sanitizeNotificationContent(content: string, maxLength: number = 100): string {
+  const safeMaxLength = Math.max(0, maxLength)
   return content
     .replace(/[^a-zA-Z0-9 .,!?:;()\-]/g, "")
-    .slice(0, maxLength)
+    .slice(0, safeMaxLength)
 }
 
 export const RingNotification: Plugin = async ({ $ }) => {

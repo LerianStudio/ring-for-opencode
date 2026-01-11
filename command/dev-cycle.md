@@ -35,7 +35,7 @@ Execute the development cycle for tasks in a markdown file.
 | 1 | `dev-devops` | Create Docker/compose |
 | 2 | `dev-sre` | Observability validation |
 | 3 | `dev-testing` | Write and run tests (85%+ coverage) |
-| 4 | `requesting-code-review` | Code review (3 reviewers in parallel) |
+| 4 | `requesting-code-review` | Code review (5 reviewers in parallel) |
 | 5 | `dev-validation` | Final validation |
 
 ## Execution Mode
@@ -54,7 +54,7 @@ Before executing, ask user for execution mode:
 
 - **ALL 6 gates execute** - Checkpoints affect pauses, not gates
 - **Gates execute in order** - 0 -> 1 -> 2 -> 3 -> 4 -> 5
-- **Gate 4 requires ALL 3 reviewers** - 2/3 = FAIL
+- **Gate 4 requires ALL 5 reviewers** - 3/5 = FAIL
 - **Coverage threshold** - 85% minimum, no exceptions
 - **State persisted** - Can resume with `--resume`
 

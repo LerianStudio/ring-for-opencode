@@ -699,6 +699,33 @@ describe("RingOutcomeInference", () => {
 
     expect(outcome.status).toBe("FAILED")
   })
+
+  test("handles corrupted todos-state file gracefully", async () => {
+    const ctx = createMockContext()
+    const plugin = await RingOutcomeInference(ctx as any)
+
+    // Write corrupted JSON to state file
+    const stateDir = join(TEST_STATE_DIR)
+    mkdirSync(stateDir, { recursive: true })
+    writeFileSync(
+      join(stateDir, `todos-state-${TEST_SESSION_ID}.json`),
+      "{ invalid json content"
+    )
+
+    // Should not throw - gracefully handles corrupted file
+    // When JSON parsing fails, readState returns null, inferOutcome handles null gracefully
+    await plugin.event!({ event: { type: "session.idle" } })
+
+    // Verify outcome was written (should be UNKNOWN status)
+    const stateFiles = require("fs").readdirSync(TEST_STATE_DIR)
+    const outcomeFile = stateFiles.find((f: string) => f.startsWith("session-outcome"))
+    expect(outcomeFile).toBeDefined()
+
+    const outcome = JSON.parse(
+      readFileSync(join(TEST_STATE_DIR, outcomeFile), "utf-8")
+    )
+    expect(outcome.status).toBe("UNKNOWN")
+  })
 })
 
 // ============================================================================

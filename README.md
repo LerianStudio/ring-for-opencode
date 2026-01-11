@@ -62,6 +62,8 @@ Commands are invoked with `/`:
 - `@code-reviewer` - Code quality, architecture, design patterns
 - `@security-reviewer` - Security vulnerabilities, OWASP Top 10
 - `@business-logic-reviewer` - Business rules, domain correctness
+- `@test-reviewer` - Test quality, coverage, anti-patterns
+- `@nil-safety-reviewer` - Nil/null pointer safety (Go and TypeScript)
 - `@codebase-explorer` - Deep codebase analysis
 - `@write-plan` - Implementation planning
 

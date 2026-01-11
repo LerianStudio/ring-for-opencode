@@ -18,7 +18,7 @@ import { join } from "path"
 const CRITICAL_RULES_COMPACT = `**3-FILE RULE: HARD GATE** - >3 files = dispatch agent, no exceptions.
 **AUTO-TRIGGER:** "fix issues" -> agent, "find where" -> Explore agent.
 **TDD:** Test must fail (RED) before implementation.
-**REVIEW:** All 3 reviewers must pass before merge.
+**REVIEW:** All 5 reviewers must pass before merge.
 **COMMIT:** Use /commit command for intelligent grouping.`
 
 export const RingContextInjection: Plugin = async ({ directory }) => {
@@ -101,7 +101,7 @@ ${CRITICAL_RULES_COMPACT}`)
 
 Key skills for common tasks:
 - **test-driven-development**: TDD methodology (RED -> GREEN -> REFACTOR)
-- **requesting-code-review**: Parallel review with 3 specialized reviewers
+- **requesting-code-review**: Parallel review with 5 specialized reviewers
 - **systematic-debugging**: 4-phase debugging methodology
 - **writing-plans**: Create detailed implementation plans
 - **executing-plans**: Execute plans in batches with review checkpoints
@@ -111,7 +111,7 @@ Key skills for common tasks:
 ## Ring Commands
 
 - /commit - Intelligent commit grouping
-- /codereview - Dispatch 3 parallel reviewers
+- /codereview - Dispatch 5 parallel reviewers
 - /brainstorm - Socratic design refinement
 - /execute-plan - Batch execution with checkpoints
 - /worktree - Create isolated development branch

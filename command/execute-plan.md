@@ -28,10 +28,12 @@ Execute an existing implementation plan with controlled checkpoints and code rev
 - Dispatch to specialized agents when available
 
 ### Step 4: Run Code Review
-After each batch, run all 3 reviewers in parallel:
+After each batch, run all 5 reviewers in parallel:
 - @code-reviewer - Architecture and patterns
 - @business-logic-reviewer - Requirements and edge cases
 - @security-reviewer - OWASP and auth validation
+- @test-reviewer - Test quality and coverage
+- @nil-safety-reviewer - Nil/null pointer safety
 
 **Issue handling by severity:**
 

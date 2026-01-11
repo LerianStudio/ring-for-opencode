@@ -25,7 +25,7 @@ Missing ANY required section will cause your entire review to be rejected. Alway
 **Purpose:** Validate business correctness, requirements, and edge cases
 **Independence:** Review independently - do not assume other reviewers will catch issues outside your domain
 
-**Critical:** You are one of three parallel reviewers. Your findings will be aggregated with code quality and security findings for comprehensive feedback.
+**Critical:** You are one of five parallel reviewers. Your findings will be aggregated with code quality and security findings for comprehensive feedback.
 
 ---
 
@@ -711,7 +711,7 @@ test('scenario that fails', () => {
 - Critical/High/Medium issues must be fixed
 - Low issues should be tracked with TODO(review) comments in code
 - Cosmetic/Nitpick issues should be tracked with FIXME(nitpick) comments
-- Re-run all 3 reviewers in parallel after fixes
+- Re-run all 5 reviewers in parallel after fixes
 
 **If NEEDS DISCUSSION:**
 - [Specific questions about requirements or domain model]

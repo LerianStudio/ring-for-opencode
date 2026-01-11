@@ -167,6 +167,9 @@ export function deleteState(projectRoot: string, key: string, sessionId?: string
       unlinkSync(statePath)
     }
   } catch (err) {
+    if (process.env.DEBUG) {
+      console.debug('[ring] State operation failed:', err)
+    }
   }
 }
 
@@ -189,6 +192,9 @@ export function cleanupOldState(projectRoot: string, maxAgeDays: number = 7): vo
       }
     }
   } catch (err) {
+    if (process.env.DEBUG) {
+      console.debug('[ring] State operation failed:', err)
+    }
   }
 }
 
