@@ -189,7 +189,7 @@ export const createTaskCompletionHook: HookFactory<TaskCompletionConfig> = (
 
         // Check if all tasks just completed
         if (wasJustCompleted && cfg.notifyOnComplete) {
-          // Add completion notification to chain data for notification hook
+          // Emit completion signal via chainData (consumed by notification hook on todo.updated)
           return {
             success: true,
             data: {

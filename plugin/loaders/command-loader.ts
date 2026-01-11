@@ -30,6 +30,16 @@ interface CommandFrontmatter {
 }
 
 /**
+ * Keys that must never be used as object properties when building maps from filenames.
+ * Prevents prototype pollution via "__proto__.md", etc.
+ */
+const FORBIDDEN_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"])
+
+function isForbiddenObjectKey(key: string): boolean {
+  return FORBIDDEN_OBJECT_KEYS.has(key)
+}
+
+/**
  * Parse YAML frontmatter from markdown content.
  */
 function parseFrontmatter(content: string): { data: CommandFrontmatter; body: string } {
@@ -83,7 +93,7 @@ function loadCommandsFromDir(
     return {}
   }
 
-  const result: Record<string, CommandConfig> = {}
+  const result: Record<string, CommandConfig> = Object.create(null)
 
   try {
     const entries = readdirSync(commandsDir, { withFileTypes: true })
@@ -93,6 +103,9 @@ function loadCommandsFromDir(
 
       const commandPath = join(commandsDir, entry.name)
       const commandName = basename(entry.name, ".md")
+
+      // SECURITY: Skip forbidden gadget keys
+      if (isForbiddenObjectKey(commandName)) continue
 
       // Skip disabled commands
       if (disabledCommands.has(commandName)) continue
@@ -153,11 +166,11 @@ export function loadRingCommands(
   const userDir = join(projectRoot, ".opencode", "command")
   const userCommands = loadCommandsFromDir(userDir, disabledSet)
 
-  // Merge with user's taking priority
-  return {
-    ...builtInCommands,
-    ...userCommands,
-  }
+  // Merge with user's taking priority, using a null-prototype map
+  const merged: Record<string, CommandConfig> = Object.create(null)
+  Object.assign(merged, builtInCommands)
+  Object.assign(merged, userCommands)
+  return merged
 }
 
 /**

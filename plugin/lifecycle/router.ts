@@ -22,8 +22,6 @@ export interface OpenCodeEvent {
 export interface LifecycleRouterDeps {
   projectRoot: string
   ringConfig: RingConfig
-  notifySessionIdle?: () => Promise<void>
-  notifySessionError?: () => Promise<void>
 }
 
 /**
@@ -31,20 +29,17 @@ export interface LifecycleRouterDeps {
  *
  * Event mappings:
  * - session.created -> Reset context state, cleanup old files
- * - session.idle -> Notification hook
- * - session.error -> Notification hook
+ * - session.idle -> Hook execution (via RingUnifiedPlugin)
+ * - session.error -> Hook execution (via RingUnifiedPlugin)
  * - todo.updated -> Task completion hook
  * - experimental.session.compacting -> Context injection
  */
 export function createLifecycleRouter(deps: LifecycleRouterDeps) {
-  const { projectRoot, ringConfig, notifySessionIdle, notifySessionError } = deps
-  const sessionId = getSessionId()
+  const { projectRoot, ringConfig } = deps
   const debug = process.env.RING_DEBUG === "true"
 
   if (debug) {
     console.debug("[ring] Lifecycle router initialized", {
-      hasIdleHook: !!notifySessionIdle,
-      hasErrorHook: !!notifySessionError,
       disabledAgents: ringConfig.disabled_agents?.length ?? 0,
       disabledSkills: ringConfig.disabled_skills?.length ?? 0,
     })
@@ -60,8 +55,11 @@ export function createLifecycleRouter(deps: LifecycleRouterDeps) {
 
     // session.created - Initialize session
     if (eventType === "session.created") {
+      const props = event.properties as Record<string, unknown> | undefined
+      const eventSessionId = (props?.sessionID as string | undefined) ?? getSessionId()
+
       // Reset context usage state for new session
-      deleteState(projectRoot, "context-usage", sessionId)
+      deleteState(projectRoot, "context-usage", eventSessionId)
       // Clean up old state files (> 7 days)
       cleanupOldState(projectRoot, 7)
 
@@ -71,25 +69,13 @@ export function createLifecycleRouter(deps: LifecycleRouterDeps) {
       return
     }
 
-    // session.idle - Session completed
-    if (eventType === "session.idle") {
-      if (notifySessionIdle) {
-        await notifySessionIdle()
-      }
-      return
-    }
-
-    // session.error - Session failed
-    if (eventType === "session.error") {
-      if (notifySessionError) {
-        await notifySessionError()
-      }
-      return
-    }
-
-    // todo.updated - Task completion tracking
-    if (eventType === "todo.updated") {
-      // Route to hook registry for task-completion hooks
+    // session.idle / session.error / todo.updated are handled via hook execution
+    // in RingUnifiedPlugin (this router only manages state side effects).
+    if (
+      eventType === "session.idle" ||
+      eventType === "session.error" ||
+      eventType === "todo.updated"
+    ) {
       return
     }
 

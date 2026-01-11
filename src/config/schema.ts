@@ -119,18 +119,58 @@ const NotificationConfigSchema = z.object({
 })
 
 // Main Ring OpenCode configuration schema
-export const RingOpenCodeConfigSchema = z.object({
-  $schema: z.string().optional(),
-  version: z.string().optional(),
-  name: z.string().optional(),
-  description: z.string().optional(),
-  permission: PermissionSchema.optional(),
-  agent: AgentsConfigSchema.optional(),
-  disabled_hooks: z.array(RingHookNameSchema).optional(),
-  skills: SkillsConfigSchema.optional(),
-  state: StateConfigSchema.optional(),
-  notification: NotificationConfigSchema.optional(),
-})
+//
+// Backwards compatibility:
+// - README historically used plural keys (agents/permissions)
+// - OpenCode uses singular keys (agent/permission)
+//
+// We accept both, but normalize to the canonical singular keys.
+export const RingOpenCodeConfigSchema = z
+  .object({
+    $schema: z.string().optional(),
+    version: z.string().optional(),
+    name: z.string().optional(),
+    description: z.string().optional(),
+
+    // canonical keys
+    permission: PermissionSchema.optional(),
+    agent: AgentsConfigSchema.optional(),
+
+    // aliases (accepted as input only)
+    permissions: PermissionSchema.optional(),
+    agents: AgentsConfigSchema.optional(),
+
+    disabled_hooks: z.array(RingHookNameSchema).optional(),
+    skills: SkillsConfigSchema.optional(),
+    state: StateConfigSchema.optional(),
+    notification: NotificationConfigSchema.optional(),
+  })
+  .passthrough()
+  .superRefine((value, ctx) => {
+    if (value.permission && value.permissions) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["permissions"],
+        message: "Use only one of 'permission' or 'permissions' (alias).",
+      })
+    }
+
+    if (value.agent && value.agents) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["agents"],
+        message: "Use only one of 'agent' or 'agents' (alias).",
+      })
+    }
+  })
+  .transform((value) => {
+    const { permissions, agents, ...rest } = value
+    return {
+      ...rest,
+      permission: rest.permission ?? permissions,
+      agent: rest.agent ?? agents,
+    }
+  })
 
 // Type exports
 export type RingOpenCodeConfig = z.infer<typeof RingOpenCodeConfigSchema>

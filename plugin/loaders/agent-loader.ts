@@ -36,6 +36,15 @@ interface AgentFrontmatter {
 }
 
 /**
+ * Keys that must never be used as object properties when building maps from filenames.
+ */
+const FORBIDDEN_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"])
+
+function isForbiddenObjectKey(key: string): boolean {
+  return FORBIDDEN_OBJECT_KEYS.has(key)
+}
+
+/**
  * Parse YAML frontmatter from markdown content.
  */
 function parseFrontmatter(content: string): { data: AgentFrontmatter; body: string } {
@@ -115,7 +124,7 @@ function loadAgentsFromDir(
     return {}
   }
 
-  const result: Record<string, AgentConfig> = {}
+  const result: Record<string, AgentConfig> = Object.create(null)
 
   try {
     const entries = readdirSync(agentsDir, { withFileTypes: true })
@@ -125,6 +134,9 @@ function loadAgentsFromDir(
 
       const agentPath = join(agentsDir, entry.name)
       const agentName = basename(entry.name, ".md")
+
+      // SECURITY: Skip forbidden gadget keys
+      if (isForbiddenObjectKey(agentName)) continue
 
       // Skip disabled agents
       if (disabledAgents.has(agentName)) continue
@@ -200,11 +212,11 @@ export function loadRingAgents(
   const userDir = join(projectRoot, ".opencode", "agent")
   const userAgents = loadAgentsFromDir(userDir, disabledSet)
 
-  // Merge with user's taking priority
-  return {
-    ...builtInAgents,
-    ...userAgents,
-  }
+  // Merge with user's taking priority, using a null-prototype map
+  const merged: Record<string, AgentConfig> = Object.create(null)
+  Object.assign(merged, builtInAgents)
+  Object.assign(merged, userAgents)
+  return merged
 }
 
 /**

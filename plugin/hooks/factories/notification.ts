@@ -72,15 +72,48 @@ function sanitizeWindowsString(str: string): string {
 }
 
 /**
+ * Build notify-send args (Linux).
+ *
+ * NOTE: This is exported for unit testing.
+ */
+export function buildNotifySendArgs(title: string, message: string): string[] {
+  // `--` ensures notify-send treats user strings as positional args
+  // even if they start with '-' (option injection hardening).
+  return ["--", title, message]
+}
+
+/**
+ * Build osascript args (macOS).
+ *
+ * NOTE: This is exported for unit testing.
+ */
+export function buildOsaScriptArgs(title: string, message: string, sound: boolean): string[] {
+  // IMPORTANT: Never interpolate user-provided content into the AppleScript itself.
+  // Instead, pass it as argv after `--` and reference argv inside the script.
+  const scriptBase = `on run argv
+  set theTitle to item 1 of argv
+  set theMessage to item 2 of argv
+  display notification theMessage with title theTitle
+end run`
+
+  const scriptWithSound = `on run argv
+  set theTitle to item 1 of argv
+  set theMessage to item 2 of argv
+  display notification theMessage with title theTitle sound name "Glass"
+end run`
+
+  const script = sound ? scriptWithSound : scriptBase
+
+  return ["-e", script, "--", title, message]
+}
+
+/**
  * Send notification on macOS using osascript.
  */
 async function notifyDarwin(title: string, message: string, sound: boolean): Promise<boolean> {
   try {
-    const soundPart = sound ? 'sound name "Glass"' : ""
-    const script = `display notification "${escapeAppleScript(message)}" with title "${escapeAppleScript(title)}" ${soundPart}`
-
     // Use execFile with array arguments to prevent command injection
-    await execFileAsync("osascript", ["-e", script])
+    await execFileAsync("osascript", buildOsaScriptArgs(title, message, sound))
     return true
   } catch {
     return false
@@ -93,7 +126,7 @@ async function notifyDarwin(title: string, message: string, sound: boolean): Pro
 async function notifyLinux(title: string, message: string): Promise<boolean> {
   try {
     // Use execFile with array arguments to prevent command injection
-    await execFileAsync("notify-send", [title, message])
+    await execFileAsync("notify-send", buildNotifySendArgs(title, message))
     return true
   } catch {
     // Try alternative methods
@@ -165,6 +198,10 @@ function getNotificationMessage(eventType: string, properties?: Record<string, u
       return "Session is idle. Waiting for your input."
     case "task.complete":
       return "Task completed successfully!"
+    case "session.error": {
+      const errorMsg = properties?.message ?? properties?.error ?? "An error occurred"
+      return `Session error: ${String(errorMsg)}`
+    }
     case "error": {
       const errorMsg = properties?.message ?? "An error occurred"
       return `Error: ${String(errorMsg)}`
@@ -189,7 +226,7 @@ export const createNotificationHook: HookFactory<NotificationConfig> = (
 
   return {
     name: "notification",
-    lifecycles: ["session.idle", "event"],
+    lifecycles: ["session.idle", "session.error", "todo.updated", "event"],
     priority: 200, // Run late, after main processing
     enabled: cfg.enabled,
 
@@ -199,18 +236,31 @@ export const createNotificationHook: HookFactory<NotificationConfig> = (
       }
 
       try {
-        const eventType = ctx.event?.type ?? ctx.lifecycle
+        let eventType = ctx.event?.type ?? ctx.lifecycle
         const properties = ctx.event?.properties
 
-        // Check if we should notify for this event type
+        // Check if we should notify for this lifecycle/event
         let shouldNotify = false
 
-        if (ctx.lifecycle === "session.idle" && cfg.notifyOn.sessionIdle) {
-          shouldNotify = true
-        } else if (eventType === "task.complete" && cfg.notifyOn.taskComplete) {
-          shouldNotify = true
-        } else if (eventType === "error" && cfg.notifyOn.error) {
-          shouldNotify = true
+        // Task-completion notifications are emitted via chainData on todo.updated.
+        if (ctx.lifecycle === "todo.updated") {
+          const isTaskCompletion =
+            ctx.chainData?.triggerNotification === true && ctx.chainData?.allTasksComplete === true
+
+          if (!isTaskCompletion) {
+            return { success: true, data: { skipped: true, reason: "not a completion transition" } }
+          }
+
+          eventType = "task.complete"
+          shouldNotify = cfg.notifyOn.taskComplete === true
+        } else if (ctx.lifecycle === "session.idle") {
+          shouldNotify = cfg.notifyOn.sessionIdle === true
+        } else if (ctx.lifecycle === "session.error") {
+          shouldNotify = cfg.notifyOn.error === true
+        } else if (eventType === "task.complete") {
+          shouldNotify = cfg.notifyOn.taskComplete === true
+        } else if (eventType === "error" || eventType === "session.error") {
+          shouldNotify = cfg.notifyOn.error === true
         }
 
         if (!shouldNotify) {

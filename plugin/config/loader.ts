@@ -72,40 +72,70 @@ export function parseJsoncContent<T>(content: string): T {
 }
 
 /**
+ * Keys that must never be merged/assigned from untrusted input.
+ *
+ * These are the common gadget keys used for prototype pollution.
+ */
+const FORBIDDEN_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"])
+
+function isForbiddenObjectKey(key: string): boolean {
+  return FORBIDDEN_OBJECT_KEYS.has(key)
+}
+
+function isMergeableObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false
+  }
+
+  // Only merge plain objects (or null-prototype maps)
+  const proto = Object.getPrototypeOf(value)
+  return proto === Object.prototype || proto === null
+}
+
+/**
  * Deep merge two objects, with source overwriting target.
  * Arrays are replaced, not merged.
+ *
+ * SECURITY: Defends against prototype pollution by:
+ * - using null-prototype result objects (Object.create(null))
+ * - skipping forbidden gadget keys (__proto__/constructor/prototype)
  *
  * @param target - The base object
  * @param source - The object to merge in
  * @returns Merged object
  */
 export function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
-  const result = { ...target }
+  const result = Object.create(null) as T
 
-  for (const key of Object.keys(source) as Array<keyof T>) {
-    const sourceValue = source[key]
-    const targetValue = target[key]
+  // Copy existing keys from target (excluding forbidden keys)
+  for (const [key, value] of Object.entries(target)) {
+    if (isForbiddenObjectKey(key)) continue
+    ;(result as Record<string, unknown>)[key] = value
+  }
+
+  if (!isMergeableObject(source)) {
+    return result
+  }
+
+  for (const key of Object.keys(source)) {
+    if (isForbiddenObjectKey(key)) {
+      continue
+    }
+
+    const sourceValue = (source as Record<string, unknown>)[key]
+    const targetValue = (target as Record<string, unknown>)[key]
 
     if (sourceValue === undefined) {
       continue
     }
 
-    if (
-      sourceValue !== null &&
-      typeof sourceValue === "object" &&
-      !Array.isArray(sourceValue) &&
-      targetValue !== null &&
-      typeof targetValue === "object" &&
-      !Array.isArray(targetValue)
-    ) {
-      // Recursively merge objects
-      result[key] = deepMerge(
+    if (isMergeableObject(sourceValue) && isMergeableObject(targetValue)) {
+      ;(result as Record<string, unknown>)[key] = deepMerge(
         targetValue as Record<string, unknown>,
         sourceValue as Record<string, unknown>,
-      ) as T[keyof T]
+      )
     } else {
-      // Replace value (including arrays)
-      result[key] = sourceValue as T[keyof T]
+      ;(result as Record<string, unknown>)[key] = sourceValue
     }
   }
 

@@ -29,6 +29,15 @@ interface SkillFrontmatter {
   subtask?: string | boolean
 }
 
+/**
+ * Keys that must never be used as object properties when building maps from filenames.
+ */
+const FORBIDDEN_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"])
+
+function isForbiddenObjectKey(key: string): boolean {
+  return FORBIDDEN_OBJECT_KEYS.has(key)
+}
+
 // TODO(review): Consider using js-yaml for multiline YAML support
 
 /**
@@ -86,7 +95,7 @@ function loadSkillsFromDir(
     return {}
   }
 
-  const result: Record<string, SkillConfig> = {}
+  const result: Record<string, SkillConfig> = Object.create(null)
 
   try {
     const entries = readdirSync(skillsDir, { withFileTypes: true })
@@ -95,6 +104,9 @@ function loadSkillsFromDir(
       if (!entry.isDirectory()) continue
 
       const skillName = entry.name
+
+      // SECURITY: Skip forbidden gadget keys
+      if (isForbiddenObjectKey(skillName)) continue
 
       // Skip disabled skills
       if (disabledSkills.has(skillName)) continue
@@ -160,11 +172,11 @@ export function loadRingSkills(
   const userDir = join(projectRoot, ".opencode", "skill")
   const userSkills = loadSkillsFromDir(userDir, disabledSet)
 
-  // Merge with user's taking priority
-  return {
-    ...builtInSkills,
-    ...userSkills,
-  }
+  // Merge with user's taking priority, using a null-prototype map
+  const merged: Record<string, SkillConfig> = Object.create(null)
+  Object.assign(merged, builtInSkills)
+  Object.assign(merged, userSkills)
+  return merged
 }
 
 /**

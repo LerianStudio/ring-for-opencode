@@ -12,6 +12,7 @@
 export type HookLifecycle =
   | "session.created" // Session initialized
   | "session.idle" // Session became idle
+  | "session.error" // Session encountered an error
   | "session.compacting" // Context being compacted
   | "chat.message" // User message received
   | "chat.params" // Chat parameters being set

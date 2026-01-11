@@ -99,11 +99,12 @@ Example `opencode.json`:
 
 ```json
 {
-  "$schema": ".opencode/schema.json",
-  "permissions": {
-    "allow": ["Write(*)", "Edit(*)", "Bash(*)"]
+  "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json",
+  "permission": {
+    "edit": "allow",
+    "bash": "allow"
   },
-  "agents": {
+  "agent": {
     "code-reviewer": { "model": "anthropic/claude-sonnet-4-20250514" },
     "write-plan": { "model": "anthropic/claude-opus-4-5-20251101" }
   }

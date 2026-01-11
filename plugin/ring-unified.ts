@@ -89,31 +89,6 @@ function buildHookContext(
 }
 
 /**
- * Platform-specific notification sender.
- */
-async function sendNotification(
-  title: string,
-  message: string,
-  $: PluginInput["$"],
-): Promise<void> {
-  const platform = process.platform
-  // Sanitize content for shell safety
-  const safeTitle = title.replace(/[^a-zA-Z0-9 .,!?:;()-]/g, "").slice(0, 50)
-  const safeMessage = message.replace(/[^a-zA-Z0-9 .,!?:;()-]/g, "").slice(0, 100)
-
-  try {
-    if (platform === "darwin") {
-      const appleScript = `display notification "${safeMessage}" with title "${safeTitle}"`
-      await $`osascript -e ${appleScript}`
-    } else if (platform === "linux") {
-      await $`notify-send ${[safeTitle]} ${[safeMessage]}`
-    }
-  } catch {
-    // Notification not critical - silent failure
-  }
-}
-
-/**
  * Ring Unified Plugin
  *
  * Matches oh-my-opencode's Plugin signature:

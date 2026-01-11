@@ -529,7 +529,13 @@ export class BackgroundManager {
           })
 
           // If no pending todos or all completed, task is done
-          const todos = todoResult.data ?? []
+          // NOTE: Some OpenCode responses may omit `data` temporarily; treat that as "unknown"
+          // instead of "no todos" to avoid premature completion.
+          const todos = todoResult.data
+          if (!todos) {
+            continue
+          }
+
           const allComplete = todos.every((t) => t.status === "completed")
 
           if (allComplete || todos.length === 0) {

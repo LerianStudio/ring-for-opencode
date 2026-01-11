@@ -5,8 +5,14 @@
  * Provides compact versions of rules, skills, commands, and agents references.
  */
 
+import * as fs from "node:fs"
 import * as path from "node:path"
-import { findMostRecentFile, readFileSafe, sanitizeForPrompt } from "../../utils/state.js"
+import {
+  findMostRecentFile,
+  isPathWithinRoot,
+  readFileSafe,
+  sanitizeForPrompt,
+} from "../../utils/state.js"
 import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 
 /**
@@ -78,11 +84,44 @@ Dispatch via dev-cycle or pre-dev workflows.
 `.trim()
 
 /**
+ * Find most recent continuity ledger, with path validation.
+ *
+ * SECURITY: Mirrors the root/symlink checks from session-start.
+ */
+function findActiveLedgerPath(directory: string): string | null {
+  const ledgersDir = path.join(directory, ".ring", "ledgers")
+  const ledgerPath = findMostRecentFile(ledgersDir, /\.md$/)
+
+  if (!ledgerPath) {
+    return null
+  }
+
+  // Validate path is within project root (prevent path traversal)
+  if (!isPathWithinRoot(ledgerPath, directory)) {
+    return null
+  }
+
+  // Check for symlinks and validate target
+  try {
+    const stats = fs.lstatSync(ledgerPath)
+    if (stats.isSymbolicLink()) {
+      const realPath = fs.realpathSync(ledgerPath)
+      if (!isPathWithinRoot(realPath, directory)) {
+        return null
+      }
+    }
+  } catch {
+    return null
+  }
+
+  return ledgerPath
+}
+
+/**
  * Find and summarize continuity ledger for compaction.
  */
 function getLedgerSummary(directory: string, maxLength: number): string | null {
-  const ledgersDir = path.join(directory, ".ring", "ledgers")
-  const ledgerPath = findMostRecentFile(ledgersDir, /\.md$/)
+  const ledgerPath = findActiveLedgerPath(directory)
 
   if (!ledgerPath) {
     return null
