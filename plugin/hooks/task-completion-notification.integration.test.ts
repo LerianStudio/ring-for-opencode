@@ -11,9 +11,18 @@ import { createTaskCompletionHook } from "./factories/task-completion.js"
 let execCalls: Array<{ cmd: string; args: string[] }> = []
 mock.module("node:child_process", () => {
   return {
-    execFile: (cmd: string, args: string[], cb: (err: Error | null) => void) => {
-      execCalls.push({ cmd, args })
-      cb(null)
+    execFile: (cmd: string, args: string[] | undefined, ...rest: Array<unknown>): void => {
+      let cb: ((err: Error | null) => void) | undefined
+      for (let i = rest.length - 1; i >= 0; i--) {
+        const candidate = rest[i]
+        if (typeof candidate === "function") {
+          cb = candidate as (err: Error | null) => void
+          break
+        }
+      }
+
+      execCalls.push({ cmd, args: args ?? [] })
+      cb?.(null)
     },
   }
 })
