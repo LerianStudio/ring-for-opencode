@@ -1,8 +1,11 @@
 /**
  * Ring Command Loader
  *
- * Loads Ring commands from .opencode/command/*.md files.
- * Commands become slash commands available via OpenCode.
+ * Loads Ring commands from:
+ * 1. Plugin's assets/command/*.md files (Ring's built-in commands)
+ * 2. User's .opencode/command/*.md files (user customizations)
+ *
+ * User's commands take priority over Ring's built-in commands.
  */
 
 import { existsSync, readdirSync, readFileSync } from "node:fs"
@@ -128,28 +131,66 @@ function loadCommandsFromDir(
 }
 
 /**
- * Load Ring commands from .opencode/command/ directory.
+ * Load Ring commands from both plugin's assets/ and user's .opencode/ directories.
+ *
+ * @param pluginRoot - Path to the plugin directory (contains assets/)
+ * @param projectRoot - Path to the user's project directory (contains .opencode/)
+ * @param disabledCommands - List of command names to skip
+ * @returns Merged command configs with user's taking priority
  */
 export function loadRingCommands(
+  pluginRoot: string,
   projectRoot: string,
   disabledCommands: string[] = [],
 ): Record<string, CommandConfig> {
-  const commandsDir = join(projectRoot, ".opencode", "command")
   const disabledSet = new Set(disabledCommands)
-  return loadCommandsFromDir(commandsDir, disabledSet)
+
+  // Load Ring's built-in commands from assets/command/
+  const builtInDir = join(pluginRoot, "assets", "command")
+  const builtInCommands = loadCommandsFromDir(builtInDir, disabledSet)
+
+  // Load user's custom commands from .opencode/command/
+  const userDir = join(projectRoot, ".opencode", "command")
+  const userCommands = loadCommandsFromDir(userDir, disabledSet)
+
+  // Merge with user's taking priority
+  return {
+    ...builtInCommands,
+    ...userCommands,
+  }
 }
 
 /**
- * Get count of available commands.
+ * Get count of available commands from both plugin's assets/ and user's .opencode/.
  */
-export function countRingCommands(projectRoot: string): number {
-  const commandsDir = join(projectRoot, ".opencode", "command")
-  if (!existsSync(commandsDir)) return 0
+export function countRingCommands(pluginRoot: string, projectRoot: string): number {
+  const uniqueCommands = new Set<string>()
 
-  try {
-    const entries = readdirSync(commandsDir)
-    return entries.filter((f) => f.endsWith(".md")).length
-  } catch {
-    return 0
+  // Count built-in commands
+  const builtInDir = join(pluginRoot, "assets", "command")
+  if (existsSync(builtInDir)) {
+    try {
+      const entries = readdirSync(builtInDir)
+      for (const f of entries) {
+        if (f.endsWith(".md")) uniqueCommands.add(f)
+      }
+    } catch {
+      // Ignore errors
+    }
   }
+
+  // Count user commands
+  const userDir = join(projectRoot, ".opencode", "command")
+  if (existsSync(userDir)) {
+    try {
+      const entries = readdirSync(userDir)
+      for (const f of entries) {
+        if (f.endsWith(".md")) uniqueCommands.add(f)
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  return uniqueCommands.size
 }

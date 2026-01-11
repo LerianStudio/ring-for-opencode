@@ -11,10 +11,16 @@
  * }
  */
 
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { loadRingAgents } from "../loaders/agent-loader.js"
 import { loadRingCommands } from "../loaders/command-loader.js"
 import { loadRingSkills } from "../loaders/skill-loader.js"
 import type { RingConfig } from "./schema.js"
+
+// Determine plugin root directory (where assets/ is located)
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const pluginRoot = join(__dirname, "..")
 
 /**
  * OpenCode config structure (subset used by Ring).
@@ -51,9 +57,11 @@ export interface ConfigHandlerDeps {
  *
  * This handler is called by OpenCode to modify the configuration
  * before the session starts. We use this to inject:
- * - Ring agents (16 agents from .opencode/agent/)
- * - Ring skills (30 skills from .opencode/skill/)
- * - Ring commands (16 commands from .opencode/command/)
+ * - Ring agents (from plugin's assets/agent/ + user's .opencode/agent/)
+ * - Ring skills (from plugin's assets/skill/ + user's .opencode/skill/)
+ * - Ring commands (from plugin's assets/command/ + user's .opencode/command/)
+ *
+ * User's customizations take priority over Ring's built-in assets.
  */
 export function createConfigHandler(deps: ConfigHandlerDeps) {
   const { projectRoot, ringConfig } = deps
@@ -61,8 +69,8 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
   return async (config: OpenCodeConfig): Promise<void> => {
     const debug = process.env.DEBUG === "true" || process.env.RING_DEBUG === "true"
 
-    // Load Ring agents
-    const ringAgents = loadRingAgents(projectRoot, ringConfig.disabled_agents)
+    // Load Ring agents (from plugin's assets/ + user's .opencode/)
+    const ringAgents = loadRingAgents(pluginRoot, projectRoot, ringConfig.disabled_agents)
 
     if (debug) {
       const agentNames = Object.keys(ringAgents)
@@ -73,8 +81,8 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       )
     }
 
-    // Load Ring skills (as commands)
-    const ringSkills = loadRingSkills(projectRoot, ringConfig.disabled_skills)
+    // Load Ring skills (from plugin's assets/ + user's .opencode/)
+    const ringSkills = loadRingSkills(pluginRoot, projectRoot, ringConfig.disabled_skills)
 
     if (debug) {
       const skillNames = Object.keys(ringSkills)
@@ -85,8 +93,8 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       )
     }
 
-    // Load Ring commands
-    const ringCommands = loadRingCommands(projectRoot, ringConfig.disabled_commands)
+    // Load Ring commands (from plugin's assets/ + user's .opencode/)
+    const ringCommands = loadRingCommands(pluginRoot, projectRoot, ringConfig.disabled_commands)
 
     if (debug) {
       const commandNames = Object.keys(ringCommands)
@@ -112,13 +120,6 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       ...ringSkills,
       ...ringCommands,
       ...(config.command ?? {}),
-    }
-
-    // Set permissions for Ring tools
-    config.permission = {
-      ...(config.permission ?? {}),
-      webfetch: "allow",
-      external_directory: "allow",
     }
 
     // Disable recursive agent calls in certain agents

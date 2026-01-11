@@ -124,10 +124,6 @@ if [[ -d "$SOURCE_PLUGIN" ]]; then
   done < <(find "$SOURCE_PLUGIN" -type f -name "*.ts" -print0)
 fi
 
-# Back up schema files
-backup_if_exists "ring-config.schema.json"
-backup_if_exists "background-tasks.schema.json"
-
 # Copy plugin directory from root level
 echo "Copying plugin directory..."
 copy_tree_no_delete "plugin" "$SCRIPT_DIR"

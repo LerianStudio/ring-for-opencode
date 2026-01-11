@@ -1,8 +1,11 @@
 /**
  * Ring Agent Loader
  *
- * Loads Ring agents from .opencode/agent/*.md files.
- * Parses YAML frontmatter and markdown body into agent configs.
+ * Loads Ring agents from:
+ * 1. Plugin's assets/agent/*.md files (Ring's built-in agents)
+ * 2. User's .opencode/agent/*.md files (user customizations)
+ *
+ * User's agents take priority over Ring's built-in agents.
  */
 
 import { existsSync, readdirSync, readFileSync } from "node:fs"
@@ -175,28 +178,66 @@ function loadAgentsFromDir(
 }
 
 /**
- * Load Ring agents from .opencode/agent/ directory.
+ * Load Ring agents from both plugin's assets/ and user's .opencode/ directories.
+ *
+ * @param pluginRoot - Path to the plugin directory (contains assets/)
+ * @param projectRoot - Path to the user's project directory (contains .opencode/)
+ * @param disabledAgents - List of agent names to skip
+ * @returns Merged agent configs with user's taking priority
  */
 export function loadRingAgents(
+  pluginRoot: string,
   projectRoot: string,
   disabledAgents: string[] = [],
 ): Record<string, AgentConfig> {
-  const agentsDir = join(projectRoot, ".opencode", "agent")
   const disabledSet = new Set(disabledAgents)
-  return loadAgentsFromDir(agentsDir, disabledSet)
+
+  // Load Ring's built-in agents from assets/agent/
+  const builtInDir = join(pluginRoot, "assets", "agent")
+  const builtInAgents = loadAgentsFromDir(builtInDir, disabledSet)
+
+  // Load user's custom agents from .opencode/agent/
+  const userDir = join(projectRoot, ".opencode", "agent")
+  const userAgents = loadAgentsFromDir(userDir, disabledSet)
+
+  // Merge with user's taking priority
+  return {
+    ...builtInAgents,
+    ...userAgents,
+  }
 }
 
 /**
- * Get count of available agents.
+ * Get count of available agents from both plugin's assets/ and user's .opencode/.
  */
-export function countRingAgents(projectRoot: string): number {
-  const agentsDir = join(projectRoot, ".opencode", "agent")
-  if (!existsSync(agentsDir)) return 0
+export function countRingAgents(pluginRoot: string, projectRoot: string): number {
+  const uniqueAgents = new Set<string>()
 
-  try {
-    const entries = readdirSync(agentsDir)
-    return entries.filter((f) => f.endsWith(".md")).length
-  } catch {
-    return 0
+  // Count built-in agents
+  const builtInDir = join(pluginRoot, "assets", "agent")
+  if (existsSync(builtInDir)) {
+    try {
+      const entries = readdirSync(builtInDir)
+      for (const f of entries) {
+        if (f.endsWith(".md")) uniqueAgents.add(f)
+      }
+    } catch {
+      // Ignore errors
+    }
   }
+
+  // Count user agents
+  const userDir = join(projectRoot, ".opencode", "agent")
+  if (existsSync(userDir)) {
+    try {
+      const entries = readdirSync(userDir)
+      for (const f of entries) {
+        if (f.endsWith(".md")) uniqueAgents.add(f)
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  return uniqueAgents.size
 }

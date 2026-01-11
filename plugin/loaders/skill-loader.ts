@@ -1,8 +1,11 @@
 /**
  * Ring Skill Loader
  *
- * Loads Ring skills from .opencode/skill/{name}/SKILL.md files.
- * Skills are exposed as commands in OpenCode's system.
+ * Loads Ring skills from:
+ * 1. Plugin's assets/skill/{name}/SKILL.md files (Ring's built-in skills)
+ * 2. User's .opencode/skill/{name}/SKILL.md files (user customizations)
+ *
+ * User's skills take priority over Ring's built-in skills.
  */
 
 import { existsSync, readdirSync, readFileSync } from "node:fs"
@@ -135,35 +138,72 @@ function loadSkillsFromDir(
 }
 
 /**
- * Load Ring skills from .opencode/skill/ directory.
+ * Load Ring skills from both plugin's assets/ and user's .opencode/ directories.
+ *
+ * @param pluginRoot - Path to the plugin directory (contains assets/)
+ * @param projectRoot - Path to the user's project directory (contains .opencode/)
+ * @param disabledSkills - List of skill names to skip
+ * @returns Merged skill configs with user's taking priority
  */
 export function loadRingSkills(
+  pluginRoot: string,
   projectRoot: string,
   disabledSkills: string[] = [],
 ): Record<string, SkillConfig> {
-  const skillsDir = join(projectRoot, ".opencode", "skill")
   const disabledSet = new Set(disabledSkills)
-  return loadSkillsFromDir(skillsDir, disabledSet)
+
+  // Load Ring's built-in skills from assets/skill/
+  const builtInDir = join(pluginRoot, "assets", "skill")
+  const builtInSkills = loadSkillsFromDir(builtInDir, disabledSet)
+
+  // Load user's custom skills from .opencode/skill/
+  const userDir = join(projectRoot, ".opencode", "skill")
+  const userSkills = loadSkillsFromDir(userDir, disabledSet)
+
+  // Merge with user's taking priority
+  return {
+    ...builtInSkills,
+    ...userSkills,
+  }
 }
 
 /**
- * Get count of available skills.
+ * Get count of available skills from both plugin's assets/ and user's .opencode/.
  */
-export function countRingSkills(projectRoot: string): number {
-  const skillsDir = join(projectRoot, ".opencode", "skill")
-  if (!existsSync(skillsDir)) return 0
+export function countRingSkills(pluginRoot: string, projectRoot: string): number {
+  const uniqueSkills = new Set<string>()
 
-  try {
-    const entries = readdirSync(skillsDir, { withFileTypes: true })
-    let count = 0
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const skillFile = join(skillsDir, entry.name, "SKILL.md")
-        if (existsSync(skillFile)) count++
+  // Count built-in skills
+  const builtInDir = join(pluginRoot, "assets", "skill")
+  if (existsSync(builtInDir)) {
+    try {
+      const entries = readdirSync(builtInDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const skillFile = join(builtInDir, entry.name, "SKILL.md")
+          if (existsSync(skillFile)) uniqueSkills.add(entry.name)
+        }
       }
+    } catch {
+      // Ignore errors
     }
-    return count
-  } catch {
-    return 0
   }
+
+  // Count user skills
+  const userDir = join(projectRoot, ".opencode", "skill")
+  if (existsSync(userDir)) {
+    try {
+      const entries = readdirSync(userDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const skillFile = join(userDir, entry.name, "SKILL.md")
+          if (existsSync(skillFile)) uniqueSkills.add(entry.name)
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  return uniqueSkills.size
 }
