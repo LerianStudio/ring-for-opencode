@@ -542,7 +542,7 @@ describe("Integration: writeState + readState roundtrip", () => {
 // State Migration Tests
 // ============================================================================
 
-import { migrateStateFiles, getMigrationStatus } from "../utils/state"
+import { migrateStateFiles, getMigrationStatus, cleanupLegacyState } from "../utils/state"
 
 describe("migrateStateFiles", () => {
   let tempDir: string
@@ -632,5 +632,69 @@ describe("migrateStateFiles", () => {
     // Second migration should still work for new files
     const result2 = migrateStateFiles(tempDir)
     expect(result2.migrated).toBe(1)
+  })
+})
+
+// ============================================================================
+// cleanupLegacyState Tests
+// ============================================================================
+
+describe("cleanupLegacyState", () => {
+  let tempDir: string
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "ring-cleanup-test-"))
+  })
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  test("removes legacy directory after successful migration", () => {
+    // Setup: Create legacy and new directories
+    const legacyDir = join(tempDir, ".ring", "state")
+    mkdirSync(legacyDir, { recursive: true })
+    writeFileSync(join(legacyDir, "old-session.json"), JSON.stringify({ old: true }))
+
+    // Run migration first
+    migrateStateFiles(tempDir)
+
+    // Now cleanup
+    const result = cleanupLegacyState(tempDir)
+
+    expect(result.removed).toBe(true)
+    expect(existsSync(legacyDir)).toBe(false)
+  })
+
+  test("refuses to remove if migration not completed", () => {
+    // Create legacy directory without migration
+    const legacyDir = join(tempDir, ".ring", "state")
+    const newDir = join(tempDir, ".opencode", "state")
+    mkdirSync(legacyDir, { recursive: true })
+    mkdirSync(newDir, { recursive: true })
+    writeFileSync(join(legacyDir, "file.json"), "{}")
+
+    const result = cleanupLegacyState(tempDir)
+
+    expect(result.removed).toBe(false)
+    expect(result.reason).toContain("Migration has not been completed")
+    expect(existsSync(legacyDir)).toBe(true)
+  })
+
+  test("returns gracefully if legacy directory does not exist", () => {
+    const result = cleanupLegacyState(tempDir)
+
+    expect(result.removed).toBe(false)
+    expect(result.reason).toContain("does not exist")
+  })
+
+  test("refuses if new state directory does not exist", () => {
+    const legacyDir = join(tempDir, ".ring", "state")
+    mkdirSync(legacyDir, { recursive: true })
+
+    const result = cleanupLegacyState(tempDir)
+
+    expect(result.removed).toBe(false)
+    expect(result.reason).toContain("run migration first")
   })
 })
