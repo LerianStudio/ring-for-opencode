@@ -5,7 +5,10 @@ import * as path from "node:path"
 
 import { deepMerge } from "../../plugin/config/loader.js"
 import { createContextInjectionHook } from "../../plugin/hooks/factories/context-injection.js"
-import { buildNotifySendArgs, buildOsaScriptArgs } from "../../plugin/hooks/factories/notification.js"
+import {
+  buildNotifySendArgs,
+  buildOsaScriptArgs,
+} from "../../plugin/hooks/factories/notification.js"
 import { loadRingAgents } from "../../plugin/loaders/agent-loader.js"
 import { loadRingCommands } from "../../plugin/loaders/command-loader.js"
 import { loadRingSkills } from "../../plugin/loaders/skill-loader.js"
