@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+/// <reference types="bun-types" />
 import * as z from "zod"
 import { RingOpenCodeConfigSchema } from "../src/config/schema"
 
