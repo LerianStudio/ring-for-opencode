@@ -19,7 +19,7 @@ set -euo pipefail
 # - Copies JSON schema files for IDE autocomplete support
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_OPENCODE="$SCRIPT_DIR/.opencode"
+SOURCE_ASSETS="$SCRIPT_DIR/assets"
 SOURCE_PLUGIN="$SCRIPT_DIR/plugin"
 TARGET_ROOT="${OPENCODE_CONFIG_DIR:-"$HOME/.config/opencode"}"
 
@@ -49,10 +49,10 @@ check_node_version() {
 
 check_node_version
 
-if [[ ! -d "$SOURCE_OPENCODE" ]]; then
-  echo "ERROR: Source directory not found: $SOURCE_OPENCODE" >&2
+if [[ ! -d "$SOURCE_ASSETS" ]]; then
+  echo "ERROR: Source directory not found: $SOURCE_ASSETS" >&2
   echo "Expected this script to live at: ring-for-opencode/installer.sh" >&2
-  echo "And source at: ring-for-opencode/.opencode/" >&2
+  echo "And source at: ring-for-opencode/assets/" >&2
   exit 1
 fi
 
@@ -70,7 +70,7 @@ mkdir -p "$BACKUP_DIR"
 
 backup_if_exists() {
   local rel="$1"
-  local source_base="${2:-$SOURCE_OPENCODE}"
+  local source_base="${2:-$SOURCE_ASSETS}"
   local src="$source_base/$rel"
   local dst="$TARGET_ROOT/$rel"
 
@@ -85,7 +85,7 @@ backup_if_exists() {
 
 copy_tree_no_delete() {
   local rel_dir="$1"
-  local source_base="${2:-$SOURCE_OPENCODE}"
+  local source_base="${2:-$SOURCE_ASSETS}"
 
   # Ensure destination exists
   mkdir -p "$TARGET_ROOT/$rel_dir"
@@ -98,7 +98,7 @@ copy_tree_no_delete() {
 
 copy_file() {
   local rel="$1"
-  local source_base="${2:-$SOURCE_OPENCODE}"
+  local source_base="${2:-$SOURCE_ASSETS}"
   local src="$source_base/$rel"
   local dst="$TARGET_ROOT/$rel"
 
@@ -132,18 +132,18 @@ backup_if_exists "background-tasks.schema.json"
 echo "Copying plugin directory..."
 copy_tree_no_delete "plugin" "$SCRIPT_DIR"
 
-# Copy skill/command/agent from .opencode
+# Copy skill/command/agent from assets
 echo "Copying skill/command/agent directories..."
 for d in skill command agent; do
-  if [[ -d "$SOURCE_OPENCODE/$d" ]]; then
-    copy_tree_no_delete "$d" "$SOURCE_OPENCODE"
+  if [[ -d "$SOURCE_ASSETS/$d" ]]; then
+    copy_tree_no_delete "$d" "$SOURCE_ASSETS"
   fi
 done
 
 # Copy schema files for IDE autocomplete
 echo "Copying schema files..."
-copy_file "ring-config.schema.json" "$SOURCE_OPENCODE"
-copy_file "background-tasks.schema.json" "$SOURCE_OPENCODE"
+copy_file "ring-config.schema.json" "$SOURCE_ASSETS"
+copy_file "background-tasks.schema.json" "$SOURCE_ASSETS"
 
 # Ensure global state dir exists in user config (no overwrite)
 # Note: Project-level state is in <project>/.opencode/state/ and created dynamically
@@ -234,7 +234,7 @@ echo "=========================================="
 echo ""
 echo "Installed components:"
 echo "  - RingUnifiedPlugin (unified plugin with hook-based architecture)"
-echo "  - Skills, commands, and agents from .opencode/"
+echo "  - Skills, commands, and agents from assets/"
 echo "  - JSON schemas for IDE autocomplete"
 echo ""
 echo "Backup location (if any): $BACKUP_DIR"

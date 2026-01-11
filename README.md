@@ -10,8 +10,8 @@ git clone https://github.com/LerianStudio/ring-for-opencode.git
 cd ring-for-opencode
 ./installer.sh
 
-# Or install per-project
-cp -r .opencode/ /your/project/
+# Or install per-project (copies assets/ to your project's .opencode/)
+cp -r assets/ /your/project/.opencode/
 cp opencode.json /your/project/
 ```
 
@@ -19,9 +19,9 @@ cp opencode.json /your/project/
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Agents | 16 | `.opencode/agent/` |
-| Skills | 30 | `.opencode/skill/` |
-| Commands | 16 | `.opencode/command/` |
+| Agents | 16 | `assets/agent/` |
+| Skills | 30 | `assets/skill/` |
+| Commands | 16 | `assets/command/` |
 | Plugin | 1 (unified) | `plugin/` |
 
 ## Architecture
@@ -119,11 +119,11 @@ Features:
 ## Directory Structure
 
 ```
-.opencode/
+assets/              # Source assets (installed to user's .opencode/)
 ├── agent/           # 16 specialized agents
 ├── command/         # 16 slash commands
 ├── skill/           # 30 skills with workflows
-└── state/           # Runtime state (gitignored)
+└── *.schema.json    # JSON schemas for validation
 
 plugin/              # Unified plugin system
 ├── ring-unified.ts  # Main entry point

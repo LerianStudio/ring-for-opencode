@@ -97,7 +97,7 @@ RESULT: [Agent: ___] or [Direct: why]
 
 When you have genuine uncertainty and need the human to decide:
 - Use the `ring_doubt` tool to present options and proceed based on their reply.
-- See `opencode/.opencode/skill/shared-patterns/doubt-resolver.md`.
+- See `shared-patterns/doubt-resolver.md`.
 
 ## MANDATORY FIRST RESPONSE PROTOCOL
 

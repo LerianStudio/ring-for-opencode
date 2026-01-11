@@ -10,12 +10,12 @@ Ring is a comprehensive skills library that enforces proven software engineering
 
 ## Available Skills
 
-Skills are loaded on-demand via the native `skill` tool. See `.opencode/skill/` for available skills.
+Skills are loaded on-demand via the native `skill` tool. See `assets/skill/` for available skills.
 
 ## Interactive Tooling
 
 - `ring_doubt` tool: when you have genuine uncertainty, present options and ask the user to choose.
-  See `.opencode/skill/shared-patterns/doubt-resolver.md`.
+  See `assets/skill/shared-patterns/doubt-resolver.md`.
 
 ### Core Skills
 - `test-driven-development` - RED-GREEN-REFACTOR methodology
