@@ -7,8 +7,13 @@
 
 import * as fs from "node:fs"
 import * as path from "node:path"
+import {
+  findMostRecentFile,
+  isPathWithinRoot,
+  readFileSafe,
+  sanitizeForPrompt,
+} from "../../utils/state.js"
 import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
-import { findMostRecentFile, isPathWithinRoot, readFileSafe, sanitizeForPrompt } from "../../utils/state.js"
 
 /**
  * Configuration for session start hook.
@@ -159,7 +164,7 @@ ${sanitized}
  * Create a session start hook.
  */
 export const createSessionStartHook: HookFactory<SessionStartConfig> = (
-  config?: SessionStartConfig
+  config?: SessionStartConfig,
 ): Hook => {
   const cfg = { ...DEFAULT_CONFIG, ...config }
 
@@ -199,10 +204,7 @@ export const createSessionStartHook: HookFactory<SessionStartConfig> = (
           ledgerContent = findActiveLedger(ctx.directory)
 
           if (ledgerContent) {
-            const formattedLedger = formatLedgerContent(
-              ledgerContent,
-              cfg.maxLedgerLength
-            )
+            const formattedLedger = formatLedgerContent(ledgerContent, cfg.maxLedgerLength)
             systemInjections.push(formattedLedger)
           }
         }

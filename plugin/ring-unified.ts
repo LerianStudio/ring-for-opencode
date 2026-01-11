@@ -14,30 +14,25 @@
 
 import type { Plugin, PluginInput } from "@opencode-ai/plugin"
 import type { Config as OpenCodeSdkConfig } from "@opencode-ai/sdk"
-
-// Config
-import { loadConfig, createConfigHandler } from "./config/index.js"
-import type { RingConfig } from "./config/index.js"
-
-// Tools
-import { ringTools } from "./tools/index.js"
-
-// Lifecycle
-import { createLifecycleRouter } from "./lifecycle/index.js"
-
-// Hooks
-import { hookRegistry } from "./hooks/index.js"
-import type { HookContext, HookOutput } from "./hooks/types.js"
-import {
-  createSessionStartHook,
-  createContextInjectionHook,
-  createNotificationHook,
-  createTaskCompletionHook,
-} from "./hooks/factories/index.js"
-
 // Background
 import { BackgroundManager } from "./background/index.js"
 import type { BackgroundClient } from "./background/types.js"
+import type { RingConfig } from "./config/index.js"
+// Config
+import { createConfigHandler, loadConfig } from "./config/index.js"
+import {
+  createContextInjectionHook,
+  createNotificationHook,
+  createSessionStartHook,
+  createTaskCompletionHook,
+} from "./hooks/factories/index.js"
+// Hooks
+import { hookRegistry } from "./hooks/index.js"
+import type { HookContext, HookOutput } from "./hooks/types.js"
+// Lifecycle
+import { createLifecycleRouter } from "./lifecycle/index.js"
+// Tools
+import { ringTools } from "./tools/index.js"
 
 // Utils
 import { getSessionId } from "./utils/state.js"
@@ -60,13 +55,15 @@ function initializeHooks(config: RingConfig): void {
   }
 
   if (!isDisabled("notification")) {
-    hookRegistry.register(createNotificationHook({
-      enabled: config.notifications.enabled,
-      notifyOn: {
-        sessionIdle: config.notifications.onIdle,
-        error: config.notifications.onError,
-      },
-    }))
+    hookRegistry.register(
+      createNotificationHook({
+        enabled: config.notifications.enabled,
+        notifyOn: {
+          sessionIdle: config.notifications.onIdle,
+          error: config.notifications.onError,
+        },
+      }),
+    )
   }
 
   if (!isDisabled("task-completion")) {
@@ -81,7 +78,7 @@ function buildHookContext(
   sessionId: string,
   directory: string,
   lifecycle: HookContext["lifecycle"],
-  event?: { type: string; properties?: Record<string, unknown> }
+  event?: { type: string; properties?: Record<string, unknown> },
 ): HookContext {
   return {
     sessionId,
@@ -97,12 +94,12 @@ function buildHookContext(
 async function sendNotification(
   title: string,
   message: string,
-  $: PluginInput["$"]
+  $: PluginInput["$"],
 ): Promise<void> {
   const platform = process.platform
   // Sanitize content for shell safety
-  const safeTitle = title.replace(/[^a-zA-Z0-9 .,!?:;()\-]/g, "").slice(0, 50)
-  const safeMessage = message.replace(/[^a-zA-Z0-9 .,!?:;()\-]/g, "").slice(0, 100)
+  const safeTitle = title.replace(/[^a-zA-Z0-9 .,!?:;()-]/g, "").slice(0, 50)
+  const safeMessage = message.replace(/[^a-zA-Z0-9 .,!?:;()-]/g, "").slice(0, 100)
 
   try {
     if (platform === "darwin") {
@@ -144,7 +141,7 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
   const backgroundManager = new BackgroundManager(
     client as unknown as BackgroundClient,
     directory,
-    config.background_tasks
+    config.background_tasks,
   )
 
   // Create config handler for OpenCode config injection
@@ -202,7 +199,12 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
 
       // Execute hooks based on event type
       if (event.type === "session.created") {
-        const hookCtx = buildHookContext(eventSessionId, directory, "session.created", normalizedEvent)
+        const hookCtx = buildHookContext(
+          eventSessionId,
+          directory,
+          "session.created",
+          normalizedEvent,
+        )
         await hookRegistry.executeLifecycle("session.created", hookCtx, output)
       }
 
@@ -220,7 +222,7 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
     // System prompt transformation
     "experimental.chat.system.transform": async (
       _input: Record<string, unknown>,
-      output: { system: string[] }
+      output: { system: string[] },
     ) => {
       if (!output?.system || !Array.isArray(output.system)) return
 
@@ -232,7 +234,7 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
     // Compaction context injection
     "experimental.session.compacting": async (
       input: { sessionID: string },
-      output: { context: string[] }
+      output: { context: string[] },
     ) => {
       if (!output?.context || !Array.isArray(output.context)) return
 

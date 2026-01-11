@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs"
-import type { CheckResult, CheckDefinition } from "../types"
-import { CHECK_IDS, CHECK_NAMES } from "../constants"
-import { getConfigPath, validateConfig, detectCurrentConfig } from "../../config-manager"
+import { detectCurrentConfig, getConfigPath, validateConfig } from "../../config-manager"
 import { SCHEMA_URL } from "../../constants"
+import { CHECK_IDS, CHECK_NAMES } from "../constants"
+import type { CheckDefinition, CheckResult } from "../types"
 
 export async function checkConfigExists(): Promise<CheckResult> {
   const configPath = getConfigPath()
@@ -13,10 +13,7 @@ export async function checkConfigExists(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.CONFIG_EXISTS],
       status: "fail",
       message: "opencode.json not found",
-      details: [
-        "Create opencode.json in project root",
-        "Run: ring install",
-      ],
+      details: ["Create opencode.json in project root", "Run: ring install"],
     }
   }
 
@@ -46,10 +43,7 @@ export async function checkConfigValidity(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.CONFIG_VALIDATION],
       status: "fail",
       message: "Configuration has validation errors",
-      details: [
-        `Path: ${configPath}`,
-        ...validation.errors.map((e) => `Error: ${e}`),
-      ],
+      details: [`Path: ${configPath}`, ...validation.errors.map((e) => `Error: ${e}`)],
     }
   }
 
@@ -77,10 +71,7 @@ export async function checkSchemaPresent(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.SCHEMA_PRESENT],
       status: "warn",
       message: "No $schema reference for IDE autocomplete",
-      details: [
-        `Add to opencode.json: "$schema": "${SCHEMA_URL}"`,
-        "Or run: ring install",
-      ],
+      details: [`Add to opencode.json: "$schema": "${SCHEMA_URL}"`, "Or run: ring install"],
     }
   }
 

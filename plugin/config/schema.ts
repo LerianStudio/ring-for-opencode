@@ -113,7 +113,7 @@ export const ExperimentalConfigSchema = z.object({
   /** Enable preemptive compaction */
   preemptiveCompaction: z.boolean().default(false),
   /** Compaction threshold (0.5-0.95) */
-  compactionThreshold: z.number().min(0.5).max(0.95).default(0.80),
+  compactionThreshold: z.number().min(0.5).max(0.95).default(0.8),
   /** Enable aggressive tool output truncation */
   aggressiveTruncation: z.boolean().default(false),
 })
@@ -154,7 +154,7 @@ export const RingConfigSchema = z.object({
   /** Experimental features */
   experimental: ExperimentalConfigSchema.optional().default({
     preemptiveCompaction: false,
-    compactionThreshold: 0.80,
+    compactionThreshold: 0.8,
     aggressiveTruncation: false,
   }),
 

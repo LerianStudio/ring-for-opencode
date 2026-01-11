@@ -6,8 +6,8 @@
  */
 
 import * as path from "node:path"
-import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 import { findMostRecentFile, readFileSafe, sanitizeForPrompt } from "../../utils/state.js"
+import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 
 /**
  * Configuration for context injection hook.
@@ -111,9 +111,9 @@ function getLedgerSummary(directory: string, maxLength: number): string | null {
     const decisions = decisionsMatch[1]
       .trim()
       .split("\n")
-      .filter(line => line.trim().startsWith("-") || line.trim().startsWith("*"))
+      .filter((line) => line.trim().startsWith("-") || line.trim().startsWith("*"))
       .slice(0, 3)
-      .map(line => line.trim())
+      .map((line) => line.trim())
       .join("; ")
     if (decisions) {
       sections.push(`Decisions: ${decisions}`)
@@ -131,9 +131,7 @@ function getLedgerSummary(directory: string, maxLength: number): string | null {
 
   if (sections.length === 0) {
     // Fallback: first meaningful line
-    const firstLine = content
-      .split("\n")
-      .find(line => line.trim() && !line.startsWith("#"))
+    const firstLine = content.split("\n").find((line) => line.trim() && !line.startsWith("#"))
     if (firstLine) {
       sections.push(firstLine.trim())
     }
@@ -158,7 +156,7 @@ Ledger: ${summary}
  * Create a context injection hook.
  */
 export const createContextInjectionHook: HookFactory<ContextInjectionConfig> = (
-  config?: ContextInjectionConfig
+  config?: ContextInjectionConfig,
 ): Hook => {
   const cfg = { ...DEFAULT_CONFIG, ...config }
 

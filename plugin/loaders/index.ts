@@ -6,21 +6,19 @@
 
 // Agent loader
 export {
-  loadRingAgents,
-  countRingAgents,
   type AgentConfig,
+  countRingAgents,
+  loadRingAgents,
 } from "./agent-loader.js"
-
-// Skill loader
-export {
-  loadRingSkills,
-  countRingSkills,
-  type SkillConfig,
-} from "./skill-loader.js"
-
 // Command loader
 export {
-  loadRingCommands,
-  countRingCommands,
   type CommandConfig,
+  countRingCommands,
+  loadRingCommands,
 } from "./command-loader.js"
+// Skill loader
+export {
+  countRingSkills,
+  loadRingSkills,
+  type SkillConfig,
+} from "./skill-loader.js"

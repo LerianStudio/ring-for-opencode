@@ -6,7 +6,7 @@
  */
 
 import type { RingConfig } from "../config/index.js"
-import { getSessionId, cleanupOldState, deleteState } from "../utils/state.js"
+import { cleanupOldState, deleteState, getSessionId } from "../utils/state.js"
 
 /**
  * OpenCode event structure.

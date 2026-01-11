@@ -5,8 +5,8 @@
  * Commands become slash commands available via OpenCode.
  */
 
-import { existsSync, readdirSync, readFileSync } from "fs"
-import { join, basename } from "path"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { basename, join } from "node:path"
 
 /**
  * Command configuration compatible with OpenCode SDK.
@@ -52,8 +52,10 @@ function parseFrontmatter(content: string): { data: CommandFrontmatter; body: st
     const key = line.slice(0, colonIndex).trim()
     let value = line.slice(colonIndex + 1).trim()
 
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1)
     }
 
@@ -72,7 +74,7 @@ function parseFrontmatter(content: string): { data: CommandFrontmatter; body: st
  */
 function loadCommandsFromDir(
   commandsDir: string,
-  disabledCommands: Set<string>
+  disabledCommands: Set<string>,
 ): Record<string, CommandConfig> {
   if (!existsSync(commandsDir)) {
     return {}
@@ -113,7 +115,6 @@ function loadCommandsFromDir(
         if (process.env.RING_DEBUG === "true") {
           console.debug(`[ring] Failed to parse ${commandPath}:`, error)
         }
-        continue
       }
     }
   } catch (error) {
@@ -131,7 +132,7 @@ function loadCommandsFromDir(
  */
 export function loadRingCommands(
   projectRoot: string,
-  disabledCommands: string[] = []
+  disabledCommands: string[] = [],
 ): Record<string, CommandConfig> {
   const commandsDir = join(projectRoot, ".opencode", "command")
   const disabledSet = new Set(disabledCommands)

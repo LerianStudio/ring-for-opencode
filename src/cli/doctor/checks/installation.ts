@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import type { CheckResult, CheckDefinition } from "../types"
+import { getOpenCodeVersion, isOpenCodeInstalled } from "../../config-manager"
 import { CHECK_IDS, CHECK_NAMES } from "../constants"
-import { isOpenCodeInstalled, getOpenCodeVersion } from "../../config-manager"
+import type { CheckDefinition, CheckResult } from "../types"
 
 export async function checkOpenCodeInstallation(): Promise<CheckResult> {
   const installed = await isOpenCodeInstalled()

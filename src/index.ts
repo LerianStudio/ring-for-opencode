@@ -4,32 +4,27 @@
  * Configuration schema validation and CLI tools for OpenCode.
  */
 
-// Config exports
-export {
-  RingOpenCodeConfigSchema,
-  RingHookNameSchema,
-} from "./config"
-
 export type {
-  RingOpenCodeConfig,
   AgentConfig,
   AgentPermission,
-  Permission,
-  SkillsConfig,
-  SkillDefinition,
-  StateConfig,
   NotificationConfig,
+  Permission,
   RingHookName,
+  RingOpenCodeConfig,
+  SkillDefinition,
+  SkillsConfig,
+  StateConfig,
 } from "./config"
-
+// Config exports
+export {
+  RingHookNameSchema,
+  RingOpenCodeConfigSchema,
+} from "./config"
+export type { JsoncParseResult } from "./shared"
 // Shared utilities
 export {
+  detectConfigFile,
   parseJsonc,
   parseJsoncSafe,
   readJsoncFile,
-  detectConfigFile,
-} from "./shared"
-
-export type {
-  JsoncParseResult,
 } from "./shared"

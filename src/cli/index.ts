@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 import { Command } from "commander"
-import { install } from "./install"
-import { doctor } from "./doctor"
-import { version as versionCmd } from "./version"
-import type { InstallArgs } from "./types"
 import type { DoctorOptions } from "./doctor"
+import { doctor } from "./doctor"
+import { install } from "./install"
+import type { InstallArgs } from "./types"
+import { version as versionCmd } from "./version"
 
 const packageJson = await import("../../package.json")
 const VERSION = packageJson.version ?? "0.0.0"
@@ -21,7 +21,9 @@ program
   .description("Install and configure Ring with schema validation")
   .option("--no-tui", "Run in non-interactive mode")
   .option("--skip-validation", "Skip config validation after install")
-  .addHelpText("after", `
+  .addHelpText(
+    "after",
+    `
 Examples:
   $ ring install
   $ ring install --no-tui
@@ -31,7 +33,8 @@ This command:
   - Adds $schema to opencode.json for IDE autocomplete
   - Validates configuration against Ring schema
   - Creates opencode.json if it doesn't exist
-`)
+`,
+  )
   .action(async (options) => {
     const args: InstallArgs = {
       tui: options.tui !== false,
@@ -46,8 +49,13 @@ program
   .description("Check Ring installation health and diagnose issues")
   .option("--verbose", "Show detailed diagnostic information")
   .option("--json", "Output results in JSON format")
-  .option("--category <category>", "Run only specific category (installation, configuration, plugins, dependencies)")
-  .addHelpText("after", `
+  .option(
+    "--category <category>",
+    "Run only specific category (installation, configuration, plugins, dependencies)",
+  )
+  .addHelpText(
+    "after",
+    `
 Examples:
   $ ring doctor
   $ ring doctor --verbose
@@ -59,7 +67,8 @@ Categories:
   configuration    Validate configuration files
   plugins          Check plugin and skill directories
   dependencies     Check runtime dependencies (bun, git)
-`)
+`,
+  )
   .action(async (options) => {
     const doctorOptions: DoctorOptions = {
       verbose: options.verbose ?? false,

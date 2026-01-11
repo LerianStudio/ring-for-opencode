@@ -1,14 +1,14 @@
 import * as p from "@clack/prompts"
 import color from "picocolors"
-import type { InstallArgs, InstallConfig } from "./types"
 import {
   addSchemaToConfig,
-  isOpenCodeInstalled,
-  getOpenCodeVersion,
   detectCurrentConfig,
+  getOpenCodeVersion,
+  isOpenCodeInstalled,
   validateConfig,
 } from "./config-manager"
-import { SYMBOLS, SCHEMA_URL } from "./constants"
+import { SCHEMA_URL, SYMBOLS } from "./constants"
+import type { InstallArgs } from "./types"
 
 function printHeader(isUpdate: boolean): void {
   const mode = isUpdate ? "Update" : "Install"
@@ -102,7 +102,7 @@ async function runTuiInstall(): Promise<number> {
     `Your opencode.json now has schema validation.\n` +
       `IDE autocomplete is available via the $schema field.\n\n` +
       `Schema URL: ${color.cyan(SCHEMA_URL)}`,
-    isUpdate ? "Configuration Updated" : "Installation Complete"
+    isUpdate ? "Configuration Updated" : "Installation Complete",
   )
 
   p.log.success(color.bold(isUpdate ? "Ring configuration updated!" : "Ring installed!"))

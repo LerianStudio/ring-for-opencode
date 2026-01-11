@@ -5,8 +5,8 @@
  * Parses YAML frontmatter and markdown body into agent configs.
  */
 
-import { existsSync, readdirSync, readFileSync } from "fs"
-import { join, basename } from "path"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { basename, join } from "node:path"
 
 /**
  * Agent configuration compatible with OpenCode SDK.
@@ -60,8 +60,10 @@ function parseFrontmatter(content: string): { data: AgentFrontmatter; body: stri
     let value = line.slice(colonIndex + 1).trim()
 
     // Remove quotes if present
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1)
     }
 
@@ -81,7 +83,10 @@ function parseFrontmatter(content: string): { data: AgentFrontmatter; body: stri
 function parseToolsConfig(toolsStr?: string): Record<string, boolean> | undefined {
   if (!toolsStr) return undefined
 
-  const tools = toolsStr.split(",").map((t) => t.trim()).filter(Boolean)
+  const tools = toolsStr
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean)
   if (tools.length === 0) return undefined
 
   const result: Record<string, boolean> = {}
@@ -101,7 +106,7 @@ function parseToolsConfig(toolsStr?: string): Record<string, boolean> | undefine
  */
 function loadAgentsFromDir(
   agentsDir: string,
-  disabledAgents: Set<string>
+  disabledAgents: Set<string>,
 ): Record<string, AgentConfig> {
   if (!existsSync(agentsDir)) {
     return {}
@@ -127,12 +132,14 @@ function loadAgentsFromDir(
 
         // Validate mode before casting
         const validModes = ["primary", "subagent"] as const
-        const mode = validModes.includes(data.mode as typeof validModes[number])
+        const mode = validModes.includes(data.mode as (typeof validModes)[number])
           ? (data.mode as "primary" | "subagent")
           : "subagent"
 
         const config: AgentConfig = {
-          description: data.description ? `(ring) ${data.description}` : `(ring) ${agentName} agent`,
+          description: data.description
+            ? `(ring) ${data.description}`
+            : `(ring) ${agentName} agent`,
           mode,
           prompt: body.trim(),
         }
@@ -155,7 +162,6 @@ function loadAgentsFromDir(
         if (process.env.RING_DEBUG === "true") {
           console.debug(`[ring] Failed to parse ${agentPath}:`, error)
         }
-        continue
       }
     }
   } catch (error) {
@@ -173,7 +179,7 @@ function loadAgentsFromDir(
  */
 export function loadRingAgents(
   projectRoot: string,
-  disabledAgents: string[] = []
+  disabledAgents: string[] = [],
 ): Record<string, AgentConfig> {
   const agentsDir = join(projectRoot, ".opencode", "agent")
   const disabledSet = new Set(disabledAgents)

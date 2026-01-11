@@ -12,8 +12,8 @@
  */
 
 import { loadRingAgents } from "../loaders/agent-loader.js"
-import { loadRingSkills } from "../loaders/skill-loader.js"
 import { loadRingCommands } from "../loaders/command-loader.js"
+import { loadRingSkills } from "../loaders/skill-loader.js"
 import type { RingConfig } from "./schema.js"
 
 /**
@@ -62,36 +62,39 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     const debug = process.env.DEBUG === "true" || process.env.RING_DEBUG === "true"
 
     // Load Ring agents
-    const ringAgents = loadRingAgents(
-      projectRoot,
-      ringConfig.disabled_agents
-    )
+    const ringAgents = loadRingAgents(projectRoot, ringConfig.disabled_agents)
 
     if (debug) {
       const agentNames = Object.keys(ringAgents)
-      console.debug(`[ring] Loaded ${agentNames.length} agents:`, agentNames.slice(0, 5).join(", "), agentNames.length > 5 ? "..." : "")
+      console.debug(
+        `[ring] Loaded ${agentNames.length} agents:`,
+        agentNames.slice(0, 5).join(", "),
+        agentNames.length > 5 ? "..." : "",
+      )
     }
 
     // Load Ring skills (as commands)
-    const ringSkills = loadRingSkills(
-      projectRoot,
-      ringConfig.disabled_skills
-    )
+    const ringSkills = loadRingSkills(projectRoot, ringConfig.disabled_skills)
 
     if (debug) {
       const skillNames = Object.keys(ringSkills)
-      console.debug(`[ring] Loaded ${skillNames.length} skills:`, skillNames.slice(0, 5).join(", "), skillNames.length > 5 ? "..." : "")
+      console.debug(
+        `[ring] Loaded ${skillNames.length} skills:`,
+        skillNames.slice(0, 5).join(", "),
+        skillNames.length > 5 ? "..." : "",
+      )
     }
 
     // Load Ring commands
-    const ringCommands = loadRingCommands(
-      projectRoot,
-      ringConfig.disabled_commands
-    )
+    const ringCommands = loadRingCommands(projectRoot, ringConfig.disabled_commands)
 
     if (debug) {
       const commandNames = Object.keys(ringCommands)
-      console.debug(`[ring] Loaded ${commandNames.length} commands:`, commandNames.slice(0, 5).join(", "), commandNames.length > 5 ? "..." : "")
+      console.debug(
+        `[ring] Loaded ${commandNames.length} commands:`,
+        commandNames.slice(0, 5).join(", "),
+        commandNames.length > 5 ? "..." : "",
+      )
     }
 
     // Inject agents into config

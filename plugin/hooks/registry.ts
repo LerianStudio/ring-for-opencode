@@ -8,7 +8,6 @@
 import type {
   Hook,
   HookContext,
-  HookFactory,
   HookLifecycle,
   HookName,
   HookOutput,
@@ -55,7 +54,7 @@ export class HookRegistry {
    */
   instantiate<TConfig extends Record<string, unknown> = Record<string, unknown>>(
     name: HookName,
-    config?: TConfig
+    config?: TConfig,
   ): Hook | null {
     const entry = this.factories.get(name)
     if (!entry) {
@@ -175,7 +174,7 @@ export class HookRegistry {
   async executeLifecycle(
     lifecycle: HookLifecycle,
     ctx: HookContext,
-    output: HookOutput
+    output: HookOutput,
   ): Promise<HookResult[]> {
     const hooks = this.getHooksForLifecycle(lifecycle)
     const results: HookResult[] = []

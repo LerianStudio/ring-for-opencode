@@ -10,15 +10,15 @@
  * Each event corresponds to a specific point in the OpenCode pipeline.
  */
 export type HookLifecycle =
-  | "session.created"        // Session initialized
-  | "session.idle"           // Session became idle
-  | "session.compacting"     // Context being compacted
-  | "chat.message"           // User message received
-  | "chat.params"            // Chat parameters being set
-  | "tool.before"            // Before tool execution
-  | "tool.after"             // After tool execution
-  | "todo.updated"           // Todo list changed
-  | "event"                  // Generic event handler
+  | "session.created" // Session initialized
+  | "session.idle" // Session became idle
+  | "session.compacting" // Context being compacted
+  | "chat.message" // User message received
+  | "chat.params" // Chat parameters being set
+  | "tool.before" // Before tool execution
+  | "tool.after" // After tool execution
+  | "todo.updated" // Todo list changed
+  | "event" // Generic event handler
 
 /**
  * Hook execution result indicating success/failure.
@@ -87,9 +87,7 @@ export interface HookOutput {
  * Hook factory function signature.
  * All hooks are created via factory functions for consistent initialization.
  */
-export type HookFactory<TConfig = Record<string, unknown>> = (
-  config?: TConfig
-) => Hook
+export type HookFactory<TConfig = Record<string, unknown>> = (config?: TConfig) => Hook
 
 /**
  * Built-in hook names supported by Ring.
@@ -120,14 +118,16 @@ export interface HookRegistryEntry {
 /**
  * Event handler signature for hooks.
  */
-export type HookEventHandler = (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+export type HookEventHandler = (input: {
+  event: { type: string; properties?: unknown }
+}) => Promise<void>
 
 /**
  * Chat message handler signature.
  */
 export type HookChatHandler = (
   input: { sessionID: string; agent?: string },
-  output: { parts: Array<{ type: string; text?: string }> }
+  output: { parts: Array<{ type: string; text?: string }> },
 ) => Promise<void>
 
 /**
@@ -135,7 +135,7 @@ export type HookChatHandler = (
  */
 export type HookCompactionHandler = (
   input: { sessionID: string },
-  output: { context: string[] }
+  output: { context: string[] },
 ) => Promise<void>
 
 /**
@@ -143,5 +143,5 @@ export type HookCompactionHandler = (
  */
 export type HookSystemHandler = (
   input: Record<string, unknown>,
-  output: { system: string[] }
+  output: { system: string[] },
 ) => Promise<void>

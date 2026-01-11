@@ -10,11 +10,7 @@ export interface CheckResult {
 
 export type CheckFunction = () => Promise<CheckResult>
 
-export type CheckCategory =
-  | "installation"
-  | "configuration"
-  | "plugins"
-  | "dependencies"
+export type CheckCategory = "installation" | "configuration" | "plugins" | "dependencies"
 
 export interface CheckDefinition {
   id: string

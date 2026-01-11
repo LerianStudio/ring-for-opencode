@@ -73,12 +73,12 @@ export interface BackgroundTask {
  * Background task types.
  */
 export type BackgroundTaskType =
-  | "exploration"    // Codebase exploration
-  | "review"         // Code review
-  | "validation"     // Test/lint validation
-  | "generation"     // Code generation
-  | "analysis"       // Analysis task
-  | "custom"         // Custom task
+  | "exploration" // Codebase exploration
+  | "review" // Code review
+  | "validation" // Test/lint validation
+  | "generation" // Code generation
+  | "analysis" // Analysis task
+  | "custom" // Custom task
 
 /**
  * Input for launching a new background task.
@@ -144,7 +144,9 @@ export interface BackgroundManagerEvents {
  */
 export interface BackgroundClient {
   session: {
-    create: (opts: { body: { parentID?: string; title?: string } }) => Promise<{ data: { id: string }; error?: unknown }>
+    create: (opts: {
+      body: { parentID?: string; title?: string }
+    }) => Promise<{ data: { id: string }; error?: unknown }>
     prompt: (opts: {
       path: { id: string }
       body: {
@@ -156,7 +158,9 @@ export interface BackgroundClient {
         noReply?: boolean
       }
     }) => Promise<void>
-    messages: (opts: { path: { id: string } }) => Promise<{ data?: Array<unknown>; error?: unknown }>
+    messages: (opts: {
+      path: { id: string }
+    }) => Promise<{ data?: Array<unknown>; error?: unknown }>
     status: () => Promise<{ data?: Record<string, { type: string }>; error?: unknown }>
     todo: (opts: { path: { id: string } }) => Promise<{ data?: Array<{ status: string }> }>
   }

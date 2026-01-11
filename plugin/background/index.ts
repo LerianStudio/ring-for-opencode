@@ -22,19 +22,18 @@
  * ```
  */
 
+// Classes
+export { ConcurrencyManager } from "./concurrency"
+export { BackgroundManager } from "./manager"
 // Types
 export type {
-  BackgroundTaskStatus,
-  TaskProgress,
+  BackgroundClient,
+  BackgroundManagerEvents,
   BackgroundTask,
+  BackgroundTaskStatus,
   BackgroundTaskType,
   LaunchTaskInput,
   ResumeTaskInput,
   TaskNotification,
-  BackgroundManagerEvents,
-  BackgroundClient,
+  TaskProgress,
 } from "./types"
-
-// Classes
-export { ConcurrencyManager } from "./concurrency"
-export { BackgroundManager } from "./manager"

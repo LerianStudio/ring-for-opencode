@@ -9,17 +9,17 @@
  */
 
 import * as fs from "node:fs"
-import * as path from "node:path"
 import * as os from "node:os"
+import * as path from "node:path"
 import { parse as parseJsonc } from "jsonc-parser"
 import {
-  RingConfigSchema,
+  AgentNameSchema,
+  CommandNameSchema,
   DEFAULT_RING_CONFIG,
   HookNameSchema,
-  AgentNameSchema,
-  SkillNameSchema,
-  CommandNameSchema,
   type RingConfig,
+  RingConfigSchema,
+  SkillNameSchema,
 } from "./schema"
 
 /**
@@ -63,7 +63,9 @@ export function parseJsoncContent<T>(content: string): T {
 
   if (errors.length > 0) {
     const firstError = errors[0]
-    throw new Error(`JSONC parse error at offset ${firstError.offset}: error code ${firstError.error}`)
+    throw new Error(
+      `JSONC parse error at offset ${firstError.offset}: error code ${firstError.error}`,
+    )
   }
 
   return result as T
@@ -77,10 +79,7 @@ export function parseJsoncContent<T>(content: string): T {
  * @param source - The object to merge in
  * @returns Merged object
  */
-export function deepMerge<T extends Record<string, unknown>>(
-  target: T,
-  source: Partial<T>
-): T {
+export function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
   const result = { ...target }
 
   for (const key of Object.keys(source) as Array<keyof T>) {
@@ -102,7 +101,7 @@ export function deepMerge<T extends Record<string, unknown>>(
       // Recursively merge objects
       result[key] = deepMerge(
         targetValue as Record<string, unknown>,
-        sourceValue as Record<string, unknown>
+        sourceValue as Record<string, unknown>,
       ) as T[keyof T]
     } else {
       // Replace value (including arrays)
@@ -121,10 +120,7 @@ export function deepMerge<T extends Record<string, unknown>>(
  * @param withExtension - If true, use path as-is; if false, try .jsonc then .json
  * @returns Config layer with metadata
  */
-function tryLoadConfigFile(
-  filePath: string,
-  withExtension = true
-): ConfigLayer {
+function tryLoadConfigFile(filePath: string, withExtension = true): ConfigLayer {
   const layer: ConfigLayer = {
     name: path.basename(filePath),
     path: null,
@@ -133,9 +129,7 @@ function tryLoadConfigFile(
     config: null,
   }
 
-  const pathsToTry = withExtension
-    ? [filePath]
-    : [`${filePath}.jsonc`, `${filePath}.json`]
+  const pathsToTry = withExtension ? [filePath] : [`${filePath}.jsonc`, `${filePath}.json`]
 
   for (const tryPath of pathsToTry) {
     try {
@@ -284,10 +278,7 @@ export function checkConfigChanged(): boolean {
  * @param root - Project root directory
  * @param onChange - Callback when config changes
  */
-export function startConfigWatch(
-  root: string,
-  onChange: (config: RingConfig) => void
-): void {
+export function startConfigWatch(root: string, onChange: (config: RingConfig) => void): void {
   // Stop any existing watchers
   stopConfigWatch()
 
@@ -317,7 +308,7 @@ export function startConfigWatch(
       // Ensure parent directory exists before watching
       const dir = path.dirname(watchPath)
       if (fs.existsSync(dir)) {
-        const watcher = fs.watch(dir, (eventType, filename) => {
+        const watcher = fs.watch(dir, (_eventType, filename) => {
           if (filename && path.join(dir, filename) === watchPath) {
             debouncedReload()
           }

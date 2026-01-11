@@ -1,5 +1,5 @@
 // Re-export shared constants from parent module
-export { SYMBOLS, STATUS_COLORS, EXIT_CODES } from "../constants"
+export { EXIT_CODES, STATUS_COLORS, SYMBOLS } from "../constants"
 
 export const CHECK_IDS = {
   OPENCODE_INSTALLATION: "opencode-installation",

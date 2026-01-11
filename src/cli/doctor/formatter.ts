@@ -1,6 +1,6 @@
 import color from "picocolors"
-import type { CheckResult, DoctorSummary, CheckCategory, DoctorResult } from "./types"
-import { SYMBOLS, STATUS_COLORS, CATEGORY_NAMES } from "./constants"
+import { CATEGORY_NAMES, STATUS_COLORS, SYMBOLS } from "./constants"
+import type { CheckCategory, CheckResult, DoctorResult, DoctorSummary } from "./types"
 
 export function formatStatusSymbol(status: CheckResult["status"]): string {
   switch (status) {
@@ -27,8 +27,10 @@ export function formatCheckResult(result: CheckResult, verbose: boolean): string
   }
 
   if (verbose && result.details && result.details.length > 0) {
-    const detailLines = result.details.map((d) => `      ${SYMBOLS.bullet} ${color.dim(d)}`).join("\n")
-    line += "\n" + detailLines
+    const detailLines = result.details
+      .map((d) => `      ${SYMBOLS.bullet} ${color.dim(d)}`)
+      .join("\n")
+    line += `\n${detailLines}`
   }
 
   return line
@@ -46,9 +48,12 @@ export function formatSummary(summary: DoctorSummary): string {
   lines.push(color.dim("\u2500".repeat(40)))
   lines.push("")
 
-  const passText = summary.passed > 0 ? color.green(`${summary.passed} passed`) : color.dim("0 passed")
-  const failText = summary.failed > 0 ? color.red(`${summary.failed} failed`) : color.dim("0 failed")
-  const warnText = summary.warnings > 0 ? color.yellow(`${summary.warnings} warnings`) : color.dim("0 warnings")
+  const passText =
+    summary.passed > 0 ? color.green(`${summary.passed} passed`) : color.dim("0 passed")
+  const failText =
+    summary.failed > 0 ? color.red(`${summary.failed} failed`) : color.dim("0 failed")
+  const warnText =
+    summary.warnings > 0 ? color.yellow(`${summary.warnings} warnings`) : color.dim("0 warnings")
   const skipText = summary.skipped > 0 ? color.dim(`${summary.skipped} skipped`) : ""
 
   const parts = [passText, failText, warnText]

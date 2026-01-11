@@ -1,21 +1,21 @@
-import type {
-  DoctorOptions,
-  DoctorResult,
-  CheckDefinition,
-  CheckResult,
-  DoctorSummary,
-  CheckCategory,
-} from "./types"
 import { getAllCheckDefinitions } from "./checks"
 import { EXIT_CODES } from "./constants"
 import {
-  formatHeader,
   formatCategoryHeader,
   formatCheckResult,
-  formatSummary,
   formatFooter,
+  formatHeader,
   formatJsonOutput,
+  formatSummary,
 } from "./formatter"
+import type {
+  CheckCategory,
+  CheckDefinition,
+  CheckResult,
+  DoctorOptions,
+  DoctorResult,
+  DoctorSummary,
+} from "./types"
 
 export async function runCheck(check: CheckDefinition): Promise<CheckResult> {
   const start = performance.now()
@@ -51,14 +51,14 @@ export function determineExitCode(results: CheckResult[]): number {
 
 export function filterChecksByCategory(
   checks: CheckDefinition[],
-  category?: CheckCategory
+  category?: CheckCategory,
 ): CheckDefinition[] {
   if (!category) return checks
   return checks.filter((c) => c.category === category)
 }
 
 export function groupChecksByCategory(
-  checks: CheckDefinition[]
+  checks: CheckDefinition[],
 ): Map<CheckCategory, CheckDefinition[]> {
   const groups = new Map<CheckCategory, CheckDefinition[]>()
 
@@ -71,12 +71,7 @@ export function groupChecksByCategory(
   return groups
 }
 
-const CATEGORY_ORDER: CheckCategory[] = [
-  "installation",
-  "configuration",
-  "plugins",
-  "dependencies",
-]
+const CATEGORY_ORDER: CheckCategory[] = ["installation", "configuration", "plugins", "dependencies"]
 
 export async function runDoctor(options: DoctorOptions): Promise<DoctorResult> {
   const start = performance.now()

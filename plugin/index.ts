@@ -35,180 +35,162 @@ export { RingPlugin, RingPlugin as default } from "./ring-plugin.js"
 // Hook System Exports
 // ============================================================================
 
-// Registry and utilities
-export { HookRegistry, hookRegistry, isHookDisabled } from "./hooks/index.js"
-export type { HookConfig } from "./hooks/index.js"
-
+// Hook factory config types
+export type {
+  ContextInjectionConfig,
+  NotificationConfig as HookNotificationConfig,
+  SessionStartConfig,
+  TaskCompletionConfig,
+} from "./hooks/factories/index.js"
+// Hook factories
+export {
+  builtInHookEntries,
+  createContextInjectionHook,
+  createNotificationHook,
+  createSessionStartHook,
+  createTaskCompletionHook,
+  registerBuiltInHooks,
+} from "./hooks/factories/index.js"
 // Type definitions
 export type {
   Hook,
-  HookFactory,
-  HookName,
-  HookLifecycle,
-  HookContext,
-  HookOutput,
-  HookResult,
-  HookRegistryEntry,
-  HookEventHandler,
   HookChatHandler,
   HookCompactionHandler,
+  HookConfig,
+  HookContext,
+  HookEventHandler,
+  HookFactory,
+  HookLifecycle,
+  HookName,
+  HookOutput,
+  HookRegistryEntry,
+  HookResult,
   HookSystemHandler,
 } from "./hooks/index.js"
-
-// Hook factories
-export {
-  createSessionStartHook,
-  createContextInjectionHook,
-  createNotificationHook,
-  createTaskCompletionHook,
-  builtInHookEntries,
-  registerBuiltInHooks,
-} from "./hooks/factories/index.js"
-
-// Hook factory config types
-export type {
-  SessionStartConfig,
-  ContextInjectionConfig,
-  NotificationConfig as HookNotificationConfig,
-  TaskCompletionConfig,
-} from "./hooks/factories/index.js"
+// Registry and utilities
+export { HookRegistry, hookRegistry, isHookDisabled } from "./hooks/index.js"
 
 // ============================================================================
 // Configuration Exports
 // ============================================================================
 
-// Core config functions
-export {
-  loadConfig,
-  getConfigLayers,
-  startConfigWatch,
-  stopConfigWatch,
-  clearConfigCache,
-  getCachedConfig,
-  checkConfigChanged,
-} from "./config/index.js"
-
-// Disabled item checks
-export {
-  isHookDisabledInConfig,
-  isAgentDisabledInConfig,
-  isSkillDisabledInConfig,
-  isCommandDisabledInConfig,
-} from "./config/index.js"
-
-// Config getters
-export {
-  getHookConfig,
-  getBackgroundTaskConfig,
-  getNotificationConfig,
-  getExperimentalConfig,
-} from "./config/index.js"
-
-// Config utilities
-export {
-  parseJsoncContent,
-  deepMerge,
-} from "./config/index.js"
-
-// Default values
-export { DEFAULT_RING_CONFIG } from "./config/index.js"
-
 // Config types
 export type {
-  RingConfig,
-  HookName as ConfigHookName,
   AgentName,
-  SkillName,
-  CommandName,
   BackgroundTaskConfig,
-  NotificationConfig,
-  ExperimentalConfig,
+  CommandName,
   ConfigLayer,
+  ExperimentalConfig,
+  HookName as ConfigHookName,
+  NotificationConfig,
+  RingConfig,
+  SkillName,
+} from "./config/index.js"
+// Core config functions
+// Disabled item checks
+// Config getters
+// Config utilities
+// Default values
+export {
+  checkConfigChanged,
+  clearConfigCache,
+  DEFAULT_RING_CONFIG,
+  deepMerge,
+  getBackgroundTaskConfig,
+  getCachedConfig,
+  getConfigLayers,
+  getExperimentalConfig,
+  getHookConfig,
+  getNotificationConfig,
+  isAgentDisabledInConfig,
+  isCommandDisabledInConfig,
+  isHookDisabledInConfig,
+  isSkillDisabledInConfig,
+  loadConfig,
+  parseJsoncContent,
+  startConfigWatch,
+  stopConfigWatch,
 } from "./config/index.js"
 
 // ============================================================================
 // Background Task Exports
 // ============================================================================
 
-// Classes
-export { BackgroundManager, ConcurrencyManager } from "./background/index.js"
-
 // Types
 export type {
+  BackgroundClient,
+  BackgroundManagerEvents,
   BackgroundTask,
   BackgroundTaskStatus,
   BackgroundTaskType,
   LaunchTaskInput,
   ResumeTaskInput,
-  TaskProgress,
   TaskNotification,
-  BackgroundManagerEvents,
-  BackgroundClient,
+  TaskProgress,
 } from "./background/index.js"
+// Classes
+export { BackgroundManager, ConcurrencyManager } from "./background/index.js"
 
 // ============================================================================
 // State Utilities
 // ============================================================================
 
 export {
-  getSessionId,
-  writeState,
-  readState,
-  deleteState,
   cleanupOldState,
-  sanitizeForPrompt,
+  deleteState,
   escapeAngleBrackets,
-  isPathWithinRoot,
   findMostRecentFile,
+  getSessionId,
+  isPathWithinRoot,
   readFileSafe,
+  readState,
+  sanitizeForPrompt,
+  writeState,
 } from "./utils/state.js"
 
 // ============================================================================
 // Component Loaders (for unified plugin)
 // ============================================================================
 
-export {
-  loadRingAgents,
-  loadRingSkills,
-  loadRingCommands,
-  countRingAgents,
-  countRingSkills,
-  countRingCommands,
-} from "./loaders/index.js"
-
 export type {
   AgentConfig,
-  SkillConfig,
   CommandConfig,
+  SkillConfig,
+} from "./loaders/index.js"
+export {
+  countRingAgents,
+  countRingCommands,
+  countRingSkills,
+  loadRingAgents,
+  loadRingCommands,
+  loadRingSkills,
 } from "./loaders/index.js"
 
 // ============================================================================
 // Tools (for unified plugin)
 // ============================================================================
 
-export { ringTools, ringDoubtTool } from "./tools/index.js"
+export { ringDoubtTool, ringTools } from "./tools/index.js"
 
 // ============================================================================
 // Lifecycle Router (for unified plugin)
 // ============================================================================
 
+export type {
+  LifecycleRouterDeps,
+  OpenCodeEvent,
+} from "./lifecycle/index.js"
 export {
   createLifecycleRouter,
   EVENTS,
-} from "./lifecycle/index.js"
-
-export type {
-  OpenCodeEvent,
-  LifecycleRouterDeps,
 } from "./lifecycle/index.js"
 
 // ============================================================================
 // Config Handler (for unified plugin)
 // ============================================================================
 
-export { createConfigHandler } from "./config/index.js"
-
 export type {
-  OpenCodeConfig,
   ConfigHandlerDeps,
+  OpenCodeConfig,
 } from "./config/index.js"
+export { createConfigHandler } from "./config/index.js"

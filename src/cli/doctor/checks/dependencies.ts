@@ -1,7 +1,10 @@
-import type { CheckResult, CheckDefinition } from "../types"
 import { CHECK_IDS, CHECK_NAMES } from "../constants"
+import type { CheckDefinition, CheckResult } from "../types"
 
-async function checkCommandExists(command: string, args: string[]): Promise<{ exists: boolean; version: string | null }> {
+async function checkCommandExists(
+  command: string,
+  args: string[],
+): Promise<{ exists: boolean; version: string | null }> {
   try {
     const proc = Bun.spawn([command, ...args], {
       stdout: "pipe",
@@ -27,9 +30,7 @@ export async function checkBunInstalled(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.BUN_INSTALLED],
       status: "fail",
       message: "Bun is not installed",
-      details: [
-        "Install Bun: curl -fsSL https://bun.sh/install | bash",
-      ],
+      details: ["Install Bun: curl -fsSL https://bun.sh/install | bash"],
     }
   }
 
@@ -48,10 +49,7 @@ export async function checkGitInstalled(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.GIT_INSTALLED],
       status: "warn",
       message: "Git is not installed",
-      details: [
-        "Git is recommended for version control",
-        "Install: https://git-scm.com/downloads",
-      ],
+      details: ["Git is recommended for version control", "Install: https://git-scm.com/downloads"],
     }
   }
 

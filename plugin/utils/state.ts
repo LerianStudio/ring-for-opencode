@@ -4,9 +4,9 @@
  * Provides state persistence and utility functions for hooks.
  */
 
+import { randomBytes } from "node:crypto"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { randomBytes } from "node:crypto"
 
 /** State directory name within .ring */
 const STATE_DIR = ".ring/state"
@@ -105,9 +105,7 @@ export function getSessionId(): string {
  * Escape angle brackets to prevent XML/HTML injection in prompts.
  */
 export function escapeAngleBrackets(str: string): string {
-  return str
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
+  return str.replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
 /**
@@ -127,7 +125,7 @@ export function sanitizeForPrompt(str: string, maxLength: number): string {
 
   // Truncate if needed
   if (sanitized.length > maxLength) {
-    sanitized = sanitized.substring(0, maxLength - 3) + "..."
+    sanitized = `${sanitized.substring(0, maxLength - 3)}...`
   }
 
   return sanitized
@@ -142,9 +140,7 @@ export function isPathWithinRoot(targetPath: string, rootPath: string): boolean 
   const resolvedRoot = path.resolve(rootPath)
 
   // Ensure root ends with separator for proper prefix matching
-  const rootWithSep = resolvedRoot.endsWith(path.sep)
-    ? resolvedRoot
-    : resolvedRoot + path.sep
+  const rootWithSep = resolvedRoot.endsWith(path.sep) ? resolvedRoot : resolvedRoot + path.sep
 
   return resolvedTarget === resolvedRoot || resolvedTarget.startsWith(rootWithSep)
 }
@@ -152,12 +148,7 @@ export function isPathWithinRoot(targetPath: string, rootPath: string): boolean 
 /**
  * Write state data to a file.
  */
-export function writeState(
-  directory: string,
-  key: string,
-  data: unknown,
-  sessionId: string
-): void {
+export function writeState(directory: string, key: string, data: unknown, sessionId: string): void {
   const stateDir = getStateDir(directory)
   const filePath = getStateFilePath(directory, key, sessionId)
 
@@ -177,7 +168,7 @@ export function writeState(
 
     fs.writeFileSync(filePath, JSON.stringify(stateData, null, 2), {
       encoding: "utf-8",
-      mode: 0o600,  // Owner read/write only
+      mode: 0o600, // Owner read/write only
     })
   } catch (error) {
     // Log write errors in debug mode
@@ -193,7 +184,7 @@ export function writeState(
 export function readState<T = unknown>(
   directory: string,
   key: string,
-  sessionId: string
+  sessionId: string,
 ): T | null {
   const filePath = getStateFilePath(directory, key, sessionId)
 
@@ -217,10 +208,7 @@ export function readState<T = unknown>(
 /**
  * Find the most recent file matching a pattern in a directory.
  */
-export function findMostRecentFile(
-  directory: string,
-  pattern: RegExp
-): string | null {
+export function findMostRecentFile(directory: string, pattern: RegExp): string | null {
   try {
     if (!fs.existsSync(directory)) {
       return null

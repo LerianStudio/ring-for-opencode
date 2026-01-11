@@ -3,10 +3,7 @@ import { z } from "zod"
 // Permission value types
 const PermissionValue = z.enum(["ask", "allow", "deny"])
 
-const BashPermission = z.union([
-  PermissionValue,
-  z.record(z.string(), PermissionValue),
-])
+const BashPermission = z.union([PermissionValue, z.record(z.string(), PermissionValue)])
 
 // Agent permission schema
 const AgentPermissionSchema = z.object({
@@ -18,10 +15,7 @@ const AgentPermissionSchema = z.object({
 })
 
 // Skill permission schema
-const SkillPermissionSchema = z.union([
-  PermissionValue,
-  z.record(z.string(), PermissionValue),
-])
+const SkillPermissionSchema = z.union([PermissionValue, z.record(z.string(), PermissionValue)])
 
 // Global permission schema
 const PermissionSchema = z.object({

@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { parseJsonc, detectConfigFile } from "../shared"
 import { RingOpenCodeConfigSchema } from "../config"
-import { SCHEMA_URL, CONFIG_FILE_NAME } from "./constants"
+import { parseJsonc } from "../shared"
+import { CONFIG_FILE_NAME, SCHEMA_URL } from "./constants"
 import type { ConfigMergeResult, DetectedConfig } from "./types"
 
 interface NodeError extends Error {
@@ -88,9 +88,7 @@ export function validateConfig(configPath: string): { valid: boolean; errors: st
     const result = RingOpenCodeConfigSchema.safeParse(rawConfig)
 
     if (!result.success) {
-      const errors = result.error.issues.map(
-        (i) => `${i.path.join(".")}: ${i.message}`
-      )
+      const errors = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`)
       return { valid: false, errors }
     }
 
@@ -118,7 +116,7 @@ export function addSchemaToConfig(): ConfigMergeResult {
         name: "ring-opencode",
         description: "Ring configuration",
       }
-      writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n")
+      writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`)
       return { success: true, configPath }
     }
 
@@ -138,7 +136,7 @@ export function addSchemaToConfig(): ConfigMergeResult {
     const { $schema: _existingSchema, ...restConfig } = config as { $schema?: string }
     const finalConfig = { $schema: SCHEMA_URL, ...restConfig }
 
-    writeFileSync(configPath, JSON.stringify(finalConfig, null, 2) + "\n")
+    writeFileSync(configPath, `${JSON.stringify(finalConfig, null, 2)}\n`)
     return { success: true, configPath }
   } catch (err) {
     return { success: false, configPath, error: formatErrorWithSuggestion(err, "update config") }

@@ -1,11 +1,11 @@
 import type { CheckDefinition } from "../types"
-import { getInstallationCheckDefinitions, getPluginCheckDefinitions } from "./installation"
 import { getConfigCheckDefinitions } from "./config"
 import { getDependencyCheckDefinitions } from "./dependencies"
+import { getInstallationCheckDefinitions, getPluginCheckDefinitions } from "./installation"
 
-export * from "./installation"
 export * from "./config"
 export * from "./dependencies"
+export * from "./installation"
 
 export function getAllCheckDefinitions(): CheckDefinition[] {
   return [

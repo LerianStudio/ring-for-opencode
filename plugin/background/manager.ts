@@ -8,11 +8,7 @@
 import { randomBytes } from "node:crypto"
 import { AgentNameSchema, type BackgroundTaskConfig } from "../config"
 import { ConcurrencyManager } from "./concurrency"
-import type {
-  BackgroundClient,
-  BackgroundTask,
-  LaunchTaskInput,
-} from "./types"
+import type { BackgroundClient, BackgroundTask, LaunchTaskInput } from "./types"
 
 /**
  * Default polling interval for task status checks (10 seconds).
@@ -47,11 +43,7 @@ export class BackgroundManager {
    * @param _directory - Working directory for tasks (reserved for future use)
    * @param config - Background task configuration
    */
-  constructor(
-    client: BackgroundClient,
-    _directory: string,
-    config?: BackgroundTaskConfig
-  ) {
+  constructor(client: BackgroundClient, _directory: string, config?: BackgroundTaskConfig) {
     this.client = client
     // M2: directory parameter kept for API compatibility but not stored
     this.config = config ?? {
@@ -90,9 +82,7 @@ export class BackgroundManager {
 
     if (sessionResult.error || !sessionResult.data?.id) {
       this.concurrency.release(concurrencyKey)
-      throw new Error(
-        `Failed to create session: ${JSON.stringify(sessionResult.error)}`
-      )
+      throw new Error(`Failed to create session: ${JSON.stringify(sessionResult.error)}`)
     }
 
     const sessionId = sessionResult.data.id
@@ -156,10 +146,7 @@ export class BackgroundManager {
         },
       })
     } catch (error) {
-      await this.handleTaskError(
-        task,
-        error instanceof Error ? error : new Error(String(error))
-      )
+      await this.handleTaskError(task, error instanceof Error ? error : new Error(String(error)))
       throw error
     }
 
@@ -418,8 +405,7 @@ export class BackgroundManager {
    * Marks a task for notification.
    */
   private markForNotification(task: BackgroundTask): void {
-    const notifications =
-      this.pendingNotifications.get(task.parentSessionId) ?? new Set()
+    const notifications = this.pendingNotifications.get(task.parentSessionId) ?? new Set()
     notifications.add(task.id)
     this.pendingNotifications.set(task.parentSessionId, notifications)
   }
@@ -527,7 +513,7 @@ export class BackgroundManager {
               duration: 5000,
             },
           })
-          continue  // Skip completion check for timed-out tasks
+          continue // Skip completion check for timed-out tasks
         }
 
         const sessionStatus = sessionStatuses[task.sessionId]

@@ -2,7 +2,8 @@ import color from "picocolors"
 
 export const PACKAGE_NAME = "ring-opencode"
 export const CONFIG_FILE_NAME = "opencode.json"
-export const SCHEMA_URL = "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json"
+export const SCHEMA_URL =
+  "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json"
 
 export const SYMBOLS = {
   check: color.green("\u2713"),

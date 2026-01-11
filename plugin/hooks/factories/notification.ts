@@ -61,24 +61,20 @@ function getPlatform(): Platform {
  * Escape string for AppleScript.
  */
 function escapeAppleScript(str: string): string {
-  return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
 }
 
 /**
  * Sanitize string for Windows notification (remove special characters).
  */
 function sanitizeWindowsString(str: string): string {
-  return str.replace(/[^\w\s.,!?-]/g, '')
+  return str.replace(/[^\w\s.,!?-]/g, "")
 }
 
 /**
  * Send notification on macOS using osascript.
  */
-async function notifyDarwin(
-  title: string,
-  message: string,
-  sound: boolean
-): Promise<boolean> {
+async function notifyDarwin(title: string, message: string, sound: boolean): Promise<boolean> {
   try {
     const soundPart = sound ? 'sound name "Glass"' : ""
     const script = `display notification "${escapeAppleScript(message)}" with title "${escapeAppleScript(title)}" ${soundPart}`
@@ -145,11 +141,7 @@ $balloon.Dispose()
 /**
  * Send a cross-platform notification.
  */
-async function sendNotification(
-  title: string,
-  message: string,
-  sound: boolean
-): Promise<boolean> {
+async function sendNotification(title: string, message: string, sound: boolean): Promise<boolean> {
   const platform = getPlatform()
 
   switch (platform) {
@@ -186,7 +178,7 @@ function getNotificationMessage(eventType: string, properties?: Record<string, u
  * Create a notification hook.
  */
 export const createNotificationHook: HookFactory<NotificationConfig> = (
-  config?: NotificationConfig
+  config?: NotificationConfig,
 ): Hook => {
   // Deep merge to preserve nested config properties
   const cfg = {
@@ -201,7 +193,7 @@ export const createNotificationHook: HookFactory<NotificationConfig> = (
     priority: 200, // Run late, after main processing
     enabled: cfg.enabled,
 
-    async execute(ctx: HookContext, output: HookOutput): Promise<HookResult> {
+    async execute(ctx: HookContext, _output: HookOutput): Promise<HookResult> {
       if (!cfg.enabled) {
         return { success: true, data: { skipped: true, reason: "disabled" } }
       }

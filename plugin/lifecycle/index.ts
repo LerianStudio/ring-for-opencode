@@ -7,6 +7,6 @@
 export {
   createLifecycleRouter,
   EVENTS,
-  type OpenCodeEvent,
   type LifecycleRouterDeps,
+  type OpenCodeEvent,
 } from "./router.js"

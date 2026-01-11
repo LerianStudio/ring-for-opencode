@@ -7,23 +7,23 @@
  */
 
 import type { Plugin, PluginInput } from "@opencode-ai/plugin"
-import { hookRegistry } from "./hooks/index.js"
-import type { HookName, HookContext, HookOutput } from "./hooks/types.js"
-import {
-  loadConfig,
-  startConfigWatch,
-  stopConfigWatch,
-  isHookDisabledInConfig,
-  type RingConfig,
-} from "./config/index.js"
 import { BackgroundManager } from "./background/index.js"
 import type { BackgroundClient } from "./background/types.js"
 import {
-  createSessionStartHook,
+  isHookDisabledInConfig,
+  loadConfig,
+  type RingConfig,
+  startConfigWatch,
+  stopConfigWatch,
+} from "./config/index.js"
+import {
   createContextInjectionHook,
   createNotificationHook,
+  createSessionStartHook,
   createTaskCompletionHook,
 } from "./hooks/factories/index.js"
+import { hookRegistry } from "./hooks/index.js"
+import type { HookContext, HookOutput } from "./hooks/types.js"
 import { getSessionId } from "./utils/state.js"
 
 /**
@@ -48,13 +48,15 @@ function initializeHooks(config: RingConfig): void {
   }
 
   if (!isHookDisabledInConfig("notification")) {
-    hookRegistry.register(createNotificationHook({
-      enabled: config.notifications.enabled,
-      notifyOn: {
-        sessionIdle: config.notifications.onIdle,
-        error: config.notifications.onError,
-      },
-    }))
+    hookRegistry.register(
+      createNotificationHook({
+        enabled: config.notifications.enabled,
+        notifyOn: {
+          sessionIdle: config.notifications.onIdle,
+          error: config.notifications.onError,
+        },
+      }),
+    )
   }
 
   if (!isHookDisabledInConfig("task-completion")) {
@@ -75,7 +77,7 @@ function buildHookContext(
   sessionId: string,
   directory: string,
   lifecycle: HookContext["lifecycle"],
-  event?: { type: string; properties?: Record<string, unknown> }
+  event?: { type: string; properties?: Record<string, unknown> },
 ): HookContext {
   return {
     sessionId,
@@ -109,7 +111,7 @@ export const RingPlugin: Plugin = async (ctx: PluginInput) => {
   const backgroundManager = new BackgroundManager(
     client as unknown as BackgroundClient,
     directory,
-    config.background_tasks
+    config.background_tasks,
   )
 
   // Start config watch for hot-reload
@@ -157,7 +159,7 @@ export const RingPlugin: Plugin = async (ctx: PluginInput) => {
      */
     "experimental.chat.system.transform": async (
       _input: Record<string, unknown>,
-      output: { system: string[] }
+      output: { system: string[] },
     ) => {
       if (!output?.system || !Array.isArray(output.system)) return
 
@@ -172,7 +174,7 @@ export const RingPlugin: Plugin = async (ctx: PluginInput) => {
      */
     "experimental.session.compacting": async (
       input: { sessionID: string },
-      output: { context: string[] }
+      output: { context: string[] },
     ) => {
       if (!output?.context || !Array.isArray(output.context)) return
 

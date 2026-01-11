@@ -5,8 +5,8 @@
  * Persists todo state for tracking across sessions.
  */
 
-import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 import { readState, writeState } from "../../utils/state.js"
+import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 
 /**
  * Configuration for task completion hook.
@@ -57,14 +57,14 @@ function areAllTodosComplete(todos: TodoItem[]): boolean {
   if (todos.length === 0) {
     return false
   }
-  return todos.every(todo => todo.status === "completed")
+  return todos.every((todo) => todo.status === "completed")
 }
 
 /**
  * Count completed todos.
  */
 function countCompleted(todos: TodoItem[]): number {
-  return todos.filter(todo => todo.status === "completed").length
+  return todos.filter((todo) => todo.status === "completed").length
 }
 
 /**
@@ -87,7 +87,8 @@ function extractTodos(properties?: Record<string, unknown>): TodoItem[] {
       const todoItem = item as Record<string, unknown>
       return {
         id: typeof todoItem.id === "string" ? todoItem.id : undefined,
-        content: typeof todoItem.content === "string" ? todoItem.content : String(todoItem.content ?? ""),
+        content:
+          typeof todoItem.content === "string" ? todoItem.content : String(todoItem.content ?? ""),
         status: isValidStatus(todoItem.status) ? todoItem.status : "pending",
         activeForm: typeof todoItem.activeForm === "string" ? todoItem.activeForm : undefined,
       }
@@ -111,7 +112,7 @@ function isValidStatus(status: unknown): status is "pending" | "in_progress" | "
  */
 function detectCompletionTransition(
   previousTodos: TodoItem[],
-  currentTodos: TodoItem[]
+  currentTodos: TodoItem[],
 ): { wasJustCompleted: boolean; newlyCompleted: number } {
   const prevComplete = areAllTodosComplete(previousTodos)
   const currComplete = areAllTodosComplete(currentTodos)
@@ -129,7 +130,7 @@ function detectCompletionTransition(
  * Create a task completion hook.
  */
 export const createTaskCompletionHook: HookFactory<TaskCompletionConfig> = (
-  config?: TaskCompletionConfig
+  config?: TaskCompletionConfig,
 ): Hook => {
   const cfg = { ...DEFAULT_CONFIG, ...config }
 
@@ -139,7 +140,7 @@ export const createTaskCompletionHook: HookFactory<TaskCompletionConfig> = (
     priority: 100,
     enabled: true,
 
-    async execute(ctx: HookContext, output: HookOutput): Promise<HookResult> {
+    async execute(ctx: HookContext, _output: HookOutput): Promise<HookResult> {
       try {
         // Extract current todos from event
         const currentTodos = extractTodos(ctx.event?.properties)
@@ -172,7 +173,7 @@ export const createTaskCompletionHook: HookFactory<TaskCompletionConfig> = (
         // Detect completion transition
         const { wasJustCompleted, newlyCompleted } = detectCompletionTransition(
           previousTodos,
-          currentTodos
+          currentTodos,
         )
 
         // Persist current state

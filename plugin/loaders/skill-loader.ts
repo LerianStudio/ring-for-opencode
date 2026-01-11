@@ -5,8 +5,8 @@
  * Skills are exposed as commands in OpenCode's system.
  */
 
-import { existsSync, readdirSync, readFileSync } from "fs"
-import { join } from "path"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { join } from "node:path"
 
 /**
  * Skill configuration compatible with OpenCode SDK.
@@ -54,8 +54,10 @@ function parseFrontmatter(content: string): { data: SkillFrontmatter; body: stri
     const key = line.slice(0, colonIndex).trim()
     let value = line.slice(colonIndex + 1).trim()
 
-    if ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1)
     }
 
@@ -75,7 +77,7 @@ function parseFrontmatter(content: string): { data: SkillFrontmatter; body: stri
  */
 function loadSkillsFromDir(
   skillsDir: string,
-  disabledSkills: Set<string>
+  disabledSkills: Set<string>,
 ): Record<string, SkillConfig> {
   if (!existsSync(skillsDir)) {
     return {}
@@ -120,7 +122,6 @@ function loadSkillsFromDir(
         if (process.env.RING_DEBUG === "true") {
           console.debug(`[ring] Failed to parse skill ${skillFile}:`, error)
         }
-        continue
       }
     }
   } catch (error) {
@@ -138,7 +139,7 @@ function loadSkillsFromDir(
  */
 export function loadRingSkills(
   projectRoot: string,
-  disabledSkills: string[] = []
+  disabledSkills: string[] = [],
 ): Record<string, SkillConfig> {
   const skillsDir = join(projectRoot, ".opencode", "skill")
   const disabledSet = new Set(disabledSkills)

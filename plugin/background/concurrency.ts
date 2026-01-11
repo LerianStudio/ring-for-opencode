@@ -113,9 +113,7 @@ export class ConcurrencyManager {
           }
         }
         reject(
-          new Error(
-            `Concurrency slot acquisition timed out after ${timeoutMs}ms for key: ${key}`
-          )
+          new Error(`Concurrency slot acquisition timed out after ${timeoutMs}ms for key: ${key}`),
         )
       }, timeoutMs)
 
