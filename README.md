@@ -12,7 +12,9 @@ cd ring-for-opencode
 
 # Or install per-project (copies assets/ to your project's .opencode/)
 cp -r assets/ /your/project/.opencode/
-cp opencode.json /your/project/
+
+# Optional: add project Ring config
+# Create `.opencode/ring.jsonc` or `.ring/config.jsonc` in your project root
 ```
 
 ## What Ring Provides
@@ -95,18 +97,22 @@ Ring uses a unified plugin architecture with four core components:
 
 ## Configuration
 
-Example `opencode.json`:
+Ring reads config from `~/.config/opencode/ring/config.jsonc` (user scope) and from project files at `.opencode/ring.jsonc` or `.ring/config.jsonc`.
 
-```json
+Example `.opencode/ring.jsonc`:
+
+```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json",
-  "permission": {
-    "edit": "allow",
-    "bash": "allow"
+  "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
+  "disabled_agents": ["prompt-quality-reviewer"],
+  "background_tasks": {
+    "defaultConcurrency": 3
   },
-  "agent": {
-    "code-reviewer": { "model": "anthropic/claude-sonnet-4-20250514" },
-    "write-plan": { "model": "anthropic/claude-opus-4-5-20251101" }
+  "notifications": {
+    "enabled": true,
+    "onIdle": true,
+    "onError": true,
+    "onBackgroundComplete": true
   }
 }
 ```

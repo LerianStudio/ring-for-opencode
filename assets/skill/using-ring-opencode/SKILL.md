@@ -24,10 +24,12 @@ This skill library was originally designed for Claude Code and has been adapted 
 | `Task(subagent_type=...)` | Dispatch subagent / @agent-name | Launch specialized agents for focused work |
 | `AskUserQuestion` tool | Prompt for input / ask the user | Request clarification from user when needed |
 | N/A | AskUserQuestion / prompt | Request clarification when you have doubts |
-| `.ring/` directory | `.opencode/` directory | Platform-specific configuration location |
+| `.ring/` config | `.opencode/ring.jsonc` or `.ring/config.jsonc` | Project Ring configuration |
 | `$PROJECT_ROOT` | Current working directory | May need adaptation for your environment |
 
-**Path Conventions:** Skills may reference `.ring/` paths or `$PROJECT_ROOT`. In OpenCode, these typically map to `.opencode/` and your current working directory respectively.
+**User config:** `~/.config/opencode/ring/config.jsonc`.
+
+**Path Conventions:** Skills may reference `.ring/` paths or `$PROJECT_ROOT`. In OpenCode, project Ring config lives at `.opencode/ring.jsonc` or `.ring/config.jsonc`, and user config at `~/.config/opencode/ring/config.jsonc`.
 
 ---
 

@@ -12,8 +12,12 @@ export async function checkConfigExists(): Promise<CheckResult> {
     return {
       name: CHECK_NAMES[CHECK_IDS.CONFIG_EXISTS],
       status: "fail",
-      message: "opencode.json not found",
-      details: ["Create opencode.json in project root", "Run: ring install"],
+      message: "Ring config not found",
+      details: [
+        "Create .opencode/ring.jsonc or .ring/config.jsonc in project root",
+        "Or create ~/.config/opencode/ring/config.jsonc",
+        "Run: ring install",
+      ],
     }
   }
 
@@ -71,7 +75,7 @@ export async function checkSchemaPresent(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.SCHEMA_PRESENT],
       status: "warn",
       message: "No $schema reference for IDE autocomplete",
-      details: [`Add to opencode.json: "$schema": "${SCHEMA_URL}"`, "Or run: ring install"],
+      details: [`Add to Ring config: "$schema": "${SCHEMA_URL}"`, "Or run: ring install"],
     }
   }
 

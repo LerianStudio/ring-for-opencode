@@ -17,7 +17,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./schema.json": "./assets/ring-opencode.schema.json"
+    "./schema.json": "./assets/ring-config.schema.json"
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun --format esm && tsc --emitDeclarationOnly && bun build src/cli/index.ts --outdir dist/cli --target bun --format esm && bun run build:schema",

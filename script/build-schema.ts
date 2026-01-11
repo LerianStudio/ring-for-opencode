@@ -2,7 +2,7 @@
 import * as z from "zod"
 import { RingOpenCodeConfigSchema } from "../src/config/schema"
 
-const SCHEMA_OUTPUT_PATH = "assets/ring-opencode.schema.json"
+const SCHEMA_OUTPUT_PATH = "assets/ring-config.schema.json"
 
 async function main() {
   console.log("Generating JSON Schema...")
@@ -14,9 +14,9 @@ async function main() {
 
   const finalSchema = {
     $schema: "http://json-schema.org/draft-07/schema#",
-    $id: "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json",
-    title: "Ring OpenCode Configuration",
-    description: "Configuration schema for ring-opencode plugin",
+    $id: "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
+    title: "Ring Configuration",
+    description: "Configuration schema for Ring",
     ...jsonSchema,
   }
 

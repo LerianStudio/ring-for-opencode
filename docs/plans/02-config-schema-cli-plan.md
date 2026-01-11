@@ -4,6 +4,8 @@
 
 **Goal:** Add Zod-based configuration schema validation and CLI tooling (install, doctor, version commands) to Ring, following oh-my-opencode patterns.
 
+**Config Locations:** Ring reads user config from `~/.config/opencode/ring/config.jsonc` and project config from `.opencode/ring.jsonc` or `.ring/config.jsonc`.
+
 **Architecture:** Create a new `src/` directory structure for TypeScript CLI and config modules. The CLI uses Commander.js for command parsing and @clack/prompts for interactive installation. The doctor command uses a modular check system with typed results. Zod schemas are exported to JSON Schema for IDE autocomplete support.
 
 **Tech Stack:**
@@ -26,7 +28,7 @@
 bun --version        # Expected: 1.0+
 node --version       # Expected: v18+
 git status           # Expected: clean working tree
-ls opencode.json     # Expected: file exists
+ls .opencode/ring.jsonc     # Expected: file exists
 ls plugin/           # Expected: directory exists with TypeScript files
 ```
 
@@ -73,7 +75,7 @@ Open `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/package.json` and re
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./schema.json": "./assets/ring-opencode.schema.json"
+    "./schema.json": "./assets/ring-config.schema.json"
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun --format esm && tsc --emitDeclarationOnly && bun build src/cli/index.ts --outdir dist/cli --target bun --format esm && bun run build:schema",
@@ -613,7 +615,7 @@ Create file `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/script/build-
 import * as z from "zod"
 import { RingOpenCodeConfigSchema } from "../src/config/schema"
 
-const SCHEMA_OUTPUT_PATH = "assets/ring-opencode.schema.json"
+const SCHEMA_OUTPUT_PATH = "assets/ring-config.schema.json"
 
 async function main() {
   console.log("Generating JSON Schema...")
@@ -625,7 +627,7 @@ async function main() {
 
   const finalSchema = {
     $schema: "http://json-schema.org/draft-07/schema#",
-    $id: "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json",
+    $id: "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
     title: "Ring OpenCode Configuration",
     description: "Configuration schema for ring-opencode plugin",
     ...jsonSchema,
@@ -646,18 +648,18 @@ Run: `cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && bun run script
 **Expected output:**
 ```
 Generating JSON Schema...
-Done: assets/ring-opencode.schema.json
+Done: assets/ring-config.schema.json
 ```
 
 **Step 4: Verify schema was generated**
 
-Run: `head -20 /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/ring-opencode.schema.json`
+Run: `head -20 /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/ring-config.schema.json`
 
 **Expected output:**
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json",
+  "$id": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
   "title": "Ring OpenCode Configuration",
   ...
 }
@@ -670,7 +672,7 @@ cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add script/ asse
 feat(schema): add JSON schema build script and generated schema
 
 Add script/build-schema.ts to generate JSON Schema from Zod definitions.
-Export assets/ring-opencode.schema.json for IDE autocomplete support.
+Export assets/ring-config.schema.json for IDE autocomplete support.
 EOF
 )"
 ```
@@ -736,8 +738,8 @@ Create file `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/src/cli/const
 import color from "picocolors"
 
 export const PACKAGE_NAME = "ring-opencode"
-export const CONFIG_FILE_NAME = "opencode.json"
-export const SCHEMA_URL = "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json"
+export const CONFIG_FILE_NAME = ".opencode/ring.jsonc"
+export const SCHEMA_URL = "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json"
 
 export const SYMBOLS = {
   check: color.green("\u2713"),
@@ -846,7 +848,7 @@ function formatErrorWithSuggestion(err: unknown, context: string): string {
 }
 
 /**
- * Get the project root config path (opencode.json in cwd)
+ * Get the project root config path (.opencode/ring.jsonc in cwd)
  */
 export function getConfigPath(): string {
   return join(process.cwd(), CONFIG_FILE_NAME)
@@ -1137,7 +1139,7 @@ async function runTuiInstall(): Promise<number> {
   }
 
   p.note(
-    `Your opencode.json now has schema validation.\n` +
+    `Your .opencode/ring.jsonc now has schema validation.\n` +
       `IDE autocomplete is available via the $schema field.\n\n` +
       `Schema URL: ${color.cyan(SCHEMA_URL)}`,
     isUpdate ? "Configuration Updated" : "Installation Complete"
@@ -1225,7 +1227,7 @@ cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add src/cli/inst
 feat(cli): add interactive install command
 
 Implement ring install with TUI mode using @clack/prompts.
-Adds schema validation to opencode.json configuration.
+Adds schema validation to .opencode/ring.jsonc configuration.
 EOF
 )"
 ```
@@ -1590,9 +1592,9 @@ export async function checkConfigExists(): Promise<CheckResult> {
     return {
       name: CHECK_NAMES[CHECK_IDS.CONFIG_EXISTS],
       status: "fail",
-      message: "opencode.json not found",
+      message: ".opencode/ring.jsonc not found",
       details: [
-        "Create opencode.json in project root",
+        "Create .opencode/ring.jsonc in project root",
         "Run: ring install",
       ],
     }
@@ -1656,7 +1658,7 @@ export async function checkSchemaPresent(): Promise<CheckResult> {
       status: "warn",
       message: "No $schema reference for IDE autocomplete",
       details: [
-        `Add to opencode.json: "$schema": "${SCHEMA_URL}"`,
+        `Add to .opencode/ring.jsonc: "$schema": "${SCHEMA_URL}"`,
         "Or run: ring install",
       ],
     }
@@ -2275,9 +2277,9 @@ Examples:
   $ ring install --no-tui --skip-validation
 
 This command:
-  - Adds $schema to opencode.json for IDE autocomplete
+  - Adds $schema to .opencode/ring.jsonc for IDE autocomplete
   - Validates configuration against Ring schema
-  - Creates opencode.json if it doesn't exist
+  - Creates .opencode/ring.jsonc if it doesn't exist
 `)
   .action(async (options) => {
     const args: InstallArgs = {
@@ -2441,25 +2443,25 @@ EOF
 
 ---
 
-## Task 15: Update opencode.json with Schema Reference
+## Task 15: Update .opencode/ring.jsonc with Schema Reference
 
 **Files:**
-- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/opencode.json`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/.opencode/ring.jsonc`
 
 **Prerequisites:**
 - JSON schema generated (Task 5)
 
-**Step 1: Read current opencode.json**
+**Step 1: Read current .opencode/ring.jsonc**
 
-Run: `cat /Users/fredamaral/repos/fredcamaral/ring-for-opencode/opencode.json`
+Run: `cat /Users/fredamaral/repos/fredcamaral/ring-for-opencode/.opencode/ring.jsonc`
 
-**Step 2: Update opencode.json with schema reference**
+**Step 2: Update .opencode/ring.jsonc with schema reference**
 
-Replace the content of `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/opencode.json` with:
+Replace the content of `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/.opencode/ring.jsonc` with:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json",
+  "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
   "version": "1.0.0",
   "name": "ring-opencode",
   "description": "Ring skills library for OpenCode - enforces proven software engineering practices",
@@ -2508,20 +2510,20 @@ Replace the content of `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/op
 
 **Step 3: Verify JSON is valid**
 
-Run: `cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && bun -e "console.log(JSON.parse(require('fs').readFileSync('opencode.json', 'utf-8')).$schema)"`
+Run: `cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && bun -e "console.log(JSON.parse(require('fs').readFileSync('.opencode/ring.jsonc', 'utf-8')).$schema)"`
 
 **Expected output:**
 ```
-https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-opencode.schema.json
+https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json
 ```
 
 **Step 4: Commit**
 
 ```bash
-cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add opencode.json && git commit -m "$(cat <<'EOF'
+cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add .opencode/ring.jsonc && git commit -m "$(cat <<'EOF'
 feat(config): add $schema reference for IDE autocomplete
 
-Add JSON Schema reference to opencode.json for IDE validation
+Add JSON Schema reference to .opencode/ring.jsonc for IDE validation
 and autocomplete support.
 EOF
 )"
@@ -2531,8 +2533,8 @@ EOF
 
 1. **JSON parse error:**
    - Check: Valid JSON syntax
-   - Fix: Validate with `jq . opencode.json`
-   - Rollback: `git checkout -- opencode.json`
+   - Fix: Validate with `jq . .opencode/ring.jsonc`
+   - Rollback: `git checkout -- .opencode/ring.jsonc`
 
 ---
 
@@ -2551,7 +2553,7 @@ Run: `cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && bun run build`
 **Expected output:**
 ```
 Generating JSON Schema...
-Done: assets/ring-opencode.schema.json
+Done: assets/ring-config.schema.json
   src/index.ts  X.XX KB
   src/cli/index.ts  X.XX KB
 ```
@@ -2745,12 +2747,12 @@ This plan creates a complete Zod-based configuration schema and CLI tooling for 
 19. `src/cli/index.ts` - CLI entry point
 20. `src/index.ts` - Main module exports
 21. `script/build-schema.ts` - JSON schema generator
-22. `assets/ring-opencode.schema.json` - Generated JSON schema
+22. `assets/ring-config.schema.json` - Generated JSON schema
 23. `tsconfig.json` - TypeScript configuration
 
 **Modified Files:**
 1. `package.json` - Dependencies and scripts
-2. `opencode.json` - Schema reference
+2. `.opencode/ring.jsonc` - Schema reference
 3. `.gitignore` - Exclude dist/
 
 **CLI Commands Available:**

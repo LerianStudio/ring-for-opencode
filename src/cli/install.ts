@@ -99,7 +99,8 @@ async function runTuiInstall(): Promise<number> {
   }
 
   p.note(
-    `Your opencode.json now has schema validation.\n` +
+    `Your Ring config now has schema validation.\n` +
+      `Config path: ${schemaResult.configPath}\n` +
       `IDE autocomplete is available via the $schema field.\n\n` +
       `Schema URL: ${color.cyan(SCHEMA_URL)}`,
     isUpdate ? "Configuration Updated" : "Installation Complete",

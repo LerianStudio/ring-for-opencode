@@ -4,6 +4,8 @@
 
 **Goal:** Restructure ring-for-opencode to use `.opencode/` directory for native OpenCode plugin discovery.
 
+**Config Locations:** Ring reads user config from `~/.config/opencode/ring/config.jsonc` and project config from `.opencode/ring.jsonc` or `.ring/config.jsonc`.
+
 **Architecture:** Move all Ring assets (commands, agents, skills, plugins) from repository root directories into a unified `.opencode/` directory structure. This follows the oh-my-opencode pattern where OpenCode automatically discovers plugins from `.opencode/` in the project root. The installer.sh already expects this structure but the source files don't exist yet.
 
 **Tech Stack:** Bash (file operations), Git (version control), OpenCode (verification)
@@ -44,7 +46,7 @@ Proceeding with standard planning approach.
 | 4 | Move skill directories | 3 min |
 | 5 | Move plugin files | 3 min |
 | 6 | Create background-tasks.json | 2 min |
-| 7 | Update opencode.json location reference | 2 min |
+| 7 | Update .opencode/ring.jsonc location reference | 2 min |
 | 8 | Verify installer.sh compatibility | 3 min |
 | 9 | Update README.md | 5 min |
 | 10 | Update AGENTS.md references | 3 min |
@@ -452,19 +454,19 @@ cat .opencode/background-tasks.json
 
 ---
 
-### Task 7: Update opencode.json Location Reference
+### Task 7: Update .opencode/ring.jsonc Location Reference
 
 **Files:**
-- No changes needed to `opencode.json`
+- No changes needed to `.opencode/ring.jsonc`
 
 **Prerequisites:**
 - None
 
-**Step 1: Verify opencode.json doesn't need path updates**
+**Step 1: Verify .opencode/ring.jsonc doesn't need path updates**
 
 Run:
 ```bash
-cat opencode.json | grep -E "(command|agent|skill|plugin)"
+cat .opencode/ring.jsonc | grep -E "(command|agent|skill|plugin)"
 ```
 
 **Expected output:**
@@ -472,13 +474,13 @@ cat opencode.json | grep -E "(command|agent|skill|plugin)"
 (no output or only permission-related lines, no path references)
 ```
 
-**Explanation:** The opencode.json file contains configuration for permissions and agent settings, not path references. OpenCode discovers resources from `.opencode/` automatically.
+**Explanation:** The .opencode/ring.jsonc file contains configuration for permissions and agent settings, not path references. OpenCode discovers resources from `.opencode/` automatically.
 
-**Step 2: Confirm opencode.json is valid JSON**
+**Step 2: Confirm .opencode/ring.jsonc is valid JSON**
 
 Run:
 ```bash
-node -e "console.log(JSON.parse(require('fs').readFileSync('opencode.json')).name)"
+node -e "console.log(JSON.parse(require('fs').readFileSync('.opencode/ring.jsonc')).name)"
 ```
 
 **Expected output:**
@@ -489,9 +491,9 @@ ring-opencode
 **If Task Fails:**
 
 1. **Invalid JSON:**
-   - Check: `cat opencode.json`
+   - Check: `cat .opencode/ring.jsonc`
    - Fix: Correct JSON syntax errors
-   - Rollback: `git checkout opencode.json`
+   - Rollback: `git checkout .opencode/ring.jsonc`
 
 ---
 
@@ -595,9 +597,9 @@ Copy `.opencode/` directory to your project root:
 cp -r ring-for-opencode/.opencode /path/to/your/project/
 ```
 
-Copy `opencode.json` to your project root (optional, for customization):
+Copy `.opencode/ring.jsonc` to your project root (optional, for customization):
 ```bash
-cp ring-for-opencode/opencode.json /path/to/your/project/
+cp ring-for-opencode/.opencode/ring.jsonc /path/to/your/project/
 ```
 
 Copy `AGENTS.md` to your project root:
@@ -616,7 +618,7 @@ ring-for-opencode/
 │   ├── plugin/             # TypeScript plugins for session management
 │   ├── state/              # Runtime state storage
 │   └── background-tasks.json
-├── opencode.json           # OpenCode configuration
+├── .opencode/ring.jsonc           # OpenCode configuration
 ├── AGENTS.md               # Agent discovery documentation
 ├── installer.sh            # Installation script
 └── README.md

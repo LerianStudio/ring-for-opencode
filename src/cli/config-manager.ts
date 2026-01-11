@@ -1,8 +1,9 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
-import { join } from "node:path"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { homedir } from "node:os"
+import { dirname, join } from "node:path"
 import { RingOpenCodeConfigSchema } from "../config"
 import { parseJsonc } from "../shared"
-import { CONFIG_FILE_NAME, SCHEMA_URL } from "./constants"
+import { PROJECT_CONFIG_PATHS, SCHEMA_URL, USER_CONFIG_PATHS } from "./constants"
 import type { ConfigMergeResult, DetectedConfig } from "./types"
 
 interface NodeError extends Error {
@@ -37,10 +38,25 @@ function formatErrorWithSuggestion(err: unknown, context: string): string {
 }
 
 /**
- * Get the project root config path (opencode.json in cwd)
+ * Get candidate config paths (project then user)
+ */
+export function getConfigPaths(): string[] {
+  const projectPaths = PROJECT_CONFIG_PATHS.map((configPath) => join(process.cwd(), configPath))
+  const userPaths = USER_CONFIG_PATHS.map((configPath) => join(homedir(), configPath))
+  return [...projectPaths, ...userPaths]
+}
+
+/**
+ * Get the active config path
  */
 export function getConfigPath(): string {
-  return join(process.cwd(), CONFIG_FILE_NAME)
+  const configPaths = getConfigPaths()
+  for (const configPath of configPaths) {
+    if (existsSync(configPath)) {
+      return configPath
+    }
+  }
+  return configPaths[0]
 }
 
 /**
@@ -116,6 +132,7 @@ export function addSchemaToConfig(): ConfigMergeResult {
         name: "ring-opencode",
         description: "Ring configuration",
       }
+      mkdirSync(dirname(configPath), { recursive: true })
       writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`)
       return { success: true, configPath }
     }

@@ -30,9 +30,9 @@ Examples:
   $ ring install --no-tui --skip-validation
 
 This command:
-  - Adds $schema to opencode.json for IDE autocomplete
+  - Adds $schema to Ring config for IDE autocomplete
   - Validates configuration against Ring schema
-  - Creates opencode.json if it doesn't exist
+  - Creates config if it doesn't exist (.opencode/ring.jsonc or ~/.config/opencode/ring/config.jsonc)
 `,
   )
   .action(async (options) => {

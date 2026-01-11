@@ -368,6 +368,8 @@ Enables parallel agent execution with concurrency control.
 
 **Location:** `plugin/config/`
 
+Ring reads config from `~/.config/opencode/ring/config.jsonc` (user scope) and project files at `.opencode/ring.jsonc` or `.ring/config.jsonc`.
+
 ### 4-Layer Priority System
 
 ```
