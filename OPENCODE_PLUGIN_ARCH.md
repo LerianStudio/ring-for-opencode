@@ -972,9 +972,65 @@ Run all safety checks first.
 
 Usage: `/deploy/production`
 
+#### Command Frontmatter Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `description` | string | No | Human-readable command description |
+| `model` | string | No | Model override for this command |
+| `agent` | string | No | Agent to use when running this command |
+| `subtask` | boolean | No | Run as a subtask (default: `false`) |
+| `template` | string | No* | Command template (in .md files, the body becomes the template) |
+
+**Note:** In markdown files, the document body after frontmatter automatically becomes the `template`. The `template` field is required when defining commands in JSON configuration.
+
+#### Template Placeholders
+
 **Argument Placeholders:**
 - `$1`, `$2`, `$3`... - Positional arguments
 - `$ARGUMENTS` - All arguments as single string
+
+**File Content Injection:**
+- `@filepath` - Include contents of a file in the template
+
+Example:
+```markdown
+---
+description: Review a specific file
+---
+Review the code in @src/main.ts and provide feedback on:
+- Code quality
+- Potential bugs
+- Performance issues
+```
+
+**Shell Command Injection:**
+- `` !`command` `` - Execute shell command and inject its output
+
+Example:
+```markdown
+---
+description: Analyze recent changes
+---
+Analyze these recent changes and summarize the impact:
+
+!`git diff HEAD~5`
+
+Focus on breaking changes and API modifications.
+```
+
+**Combined Example:**
+```markdown
+---
+description: Review changes in context
+---
+Here is the current state of @src/api/handler.ts
+
+And here are the recent modifications:
+!`git log --oneline -10 -- src/api/handler.ts`
+
+Review these changes for consistency and correctness.
+```
 
 ### Agents (AI Personas)
 
@@ -991,13 +1047,17 @@ description: Code review specialist
 mode: primary                          # primary | subagent | all
 model: anthropic/claude-sonnet-4       # Optional: model override
 temperature: 0.3                       # Optional: lower = more focused
+top_p: 0.9                             # Optional: nucleus sampling (0.0-1.0)
 color: "#E74C3C"                       # Optional: UI color
 hidden: false                          # Optional: hide from @ menu
+disable: false                         # Optional: disable this agent entirely
 steps: 30                              # Optional: max iterations
 permission:                            # Optional: tool permissions
   read: allow
   edit: deny
   bash: ask
+options:                               # Optional: provider-specific options
+  reasoningEffort: "high"              # Example: OpenAI o1 reasoning effort
 ---
 
 You are an expert code reviewer focused on:
@@ -1009,6 +1069,54 @@ You are an expert code reviewer focused on:
 
 Be thorough but constructive. Explain the "why" behind suggestions.
 ```
+
+#### Agent Frontmatter Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `description` | string | No | Human-readable description of the agent |
+| `mode` | string | No | `primary`, `subagent`, or `all` (default: `all`) |
+| `model` | string | No | Model identifier (e.g., `anthropic/claude-sonnet-4`) |
+| `temperature` | number | No | Sampling temperature (0.0-2.0) |
+| `top_p` | number | No | Nucleus sampling parameter (0.0-1.0), alternative to temperature |
+| `color` | string | No | UI color in hex format (e.g., `#E74C3C`) |
+| `hidden` | boolean | No | Hide from `@` menu (default: `false`) |
+| `disable` | boolean | No | Disable/remove this agent entirely (default: `false`) |
+| `steps` | number | No | Maximum iterations/tool calls |
+| `prompt` | string | No | System prompt text (in .md files, the body becomes the prompt) |
+| `permission` | object | No | Tool permission overrides (see below) |
+| `options` | object | No | Provider-specific options (unknown fields are collected here) |
+
+**Note:** In markdown files, the document body after frontmatter automatically becomes the `prompt`. The `prompt` field can also be set explicitly in JSON configuration.
+
+#### Permission Types
+
+The `permission` field supports the following tool permission types:
+
+| Permission | Description |
+|------------|-------------|
+| `read` | File read operations |
+| `edit` | File edit operations |
+| `bash` | Shell command execution |
+| `glob` | File pattern matching |
+| `grep` | Content search |
+| `list` | Directory listing |
+| `task` | Subagent spawning |
+| `todowrite` | Todo list writing |
+| `todoread` | Todo list reading |
+| `question` | User question prompts |
+| `webfetch` | Web content fetching |
+| `websearch` | Web searching |
+| `codesearch` | Code search operations |
+| `lsp` | Language server operations |
+| `doom_loop` | Infinite loop detection |
+| `external_directory` | Access outside project directory |
+| `skill` | Skill invocation |
+
+Each permission can be set to:
+- `"allow"` - Auto-approve without prompting
+- `"deny"` - Auto-reject without prompting
+- `"ask"` - Prompt user for approval (default)
 
 **Agent Modes:**
 - `primary` - Can be selected by user via `@agent-name`
@@ -1040,19 +1148,42 @@ Usage: `@security/audit`
 {
   "agent": {
     "reviewer": {
+      "description": "Code review specialist",
+      "mode": "primary",
       "model": "anthropic/claude-sonnet-4",
-      "temperature": 0.2
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "color": "#E74C3C",
+      "hidden": false,
+      "disable": false,
+      "steps": 50,
+      "prompt": "You are an expert code reviewer...",
+      "permission": {
+        "read": "allow",
+        "edit": "deny",
+        "bash": "ask"
+      },
+      "options": {
+        "reasoningEffort": "high"
+      }
     },
     "build": {
       "steps": 100,
       "permission": {
-        "bash": "allow"
+        "bash": "allow",
+        "edit": "allow",
+        "external_directory": "deny"
       }
+    },
+    "disabled-agent": {
+      "disable": true
     }
   },
   "default_agent": "build"
 }
 ```
+
+**Note on `options`:** Any unknown frontmatter fields in markdown agent files are automatically collected into the `options` object. This allows passing provider-specific parameters like `reasoningEffort` for OpenAI o1 models, custom headers, or other vendor-specific settings.
 
 ### Skills (Reusable Prompts)
 
@@ -1073,6 +1204,12 @@ Skills are reusable instruction sets that can be invoked during conversations.
 ---
 name: tdd
 description: Test-Driven Development workflow
+license: MIT                           # Optional: license for the skill
+compatibility: opencode                # Optional: compatibility indicator
+metadata:                              # Optional: custom key-value pairs
+  author: "Your Name"
+  version: "1.0.0"
+  category: "development"
 ---
 
 # TDD Workflow
@@ -1094,6 +1231,18 @@ When implementing features, follow this process:
 
 Always run tests between each step.
 ```
+
+#### Skill Frontmatter Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes* | Skill identifier (validated by loader) |
+| `description` | string | Yes* | Human-readable description (validated by loader) |
+| `license` | string | No | License identifier (e.g., `MIT`, `Apache-2.0`). Not validated at runtime. |
+| `compatibility` | string | No | Compatibility indicator (e.g., `opencode`). Reserved for future use. |
+| `metadata` | object | No | Custom key-value pairs for organizational purposes |
+
+**Note:** Only `name` and `description` are validated by the skill loader. Other fields are accepted but ignored at runtime. They are useful for documentation and organizational purposes.
 
 **Global Skills:**
 

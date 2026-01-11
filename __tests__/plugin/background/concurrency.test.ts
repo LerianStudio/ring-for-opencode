@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import { ConcurrencyManager } from "./concurrency.js"
+import { ConcurrencyManager } from "../../../plugin/background/concurrency.js"
 
 describe("background/ConcurrencyManager", () => {
   test("acquire rejects after timeout when no slots are available", async () => {

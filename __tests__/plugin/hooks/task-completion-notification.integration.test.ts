@@ -3,10 +3,10 @@ import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
 
-import { createNotificationHook } from "./factories/notification.js"
-import { createTaskCompletionHook } from "./factories/task-completion.js"
-import { hookRegistry } from "./registry.js"
-import type { HookContext, HookOutput } from "./types.js"
+import { createNotificationHook } from "../../../plugin/hooks/factories/notification.js"
+import { createTaskCompletionHook } from "../../../plugin/hooks/factories/task-completion.js"
+import { hookRegistry } from "../../../plugin/hooks/registry.js"
+import type { HookContext, HookOutput } from "../../../plugin/hooks/types.js"
 
 let dispatchCalls = 0
 

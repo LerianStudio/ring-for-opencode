@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { RingOpenCodeConfigSchema } from "./schema"
+import { RingOpenCodeConfigSchema } from "../../../src/config/schema"
 
 describe("RingOpenCodeConfigSchema - backwards compatible aliases", () => {
   test("accepts canonical keys (agent/permission)", () => {

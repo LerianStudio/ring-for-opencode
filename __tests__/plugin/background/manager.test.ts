@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 
-import { BackgroundManager } from "./manager.js"
-import type { BackgroundClient, BackgroundTask } from "./types.js"
+import { BackgroundManager } from "../../../plugin/background/manager.js"
+import type { BackgroundClient, BackgroundTask } from "../../../plugin/background/types.js"
 
 describe("BackgroundManager - pollTasks completion detection", () => {
   test("does not complete a task when todoResult.data is undefined", async () => {

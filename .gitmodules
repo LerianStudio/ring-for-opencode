@@ -4,3 +4,6 @@
 [submodule ".references/oh-my-opencode"]
 	path = .references/oh-my-opencode
 	url = https://github.com/code-yeongyu/oh-my-opencode.git
+[submodule ".references/orchestra"]
+	path = .references/orchestra
+	url = https://github.com/0xSero/orchestra.git

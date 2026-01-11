@@ -3,12 +3,12 @@ import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
 
-import { deepMerge } from "../config/loader.js"
-import { createContextInjectionHook } from "../hooks/factories/context-injection.js"
-import { buildNotifySendArgs, buildOsaScriptArgs } from "../hooks/factories/notification.js"
-import { loadRingAgents } from "../loaders/agent-loader.js"
-import { loadRingCommands } from "../loaders/command-loader.js"
-import { loadRingSkills } from "../loaders/skill-loader.js"
+import { deepMerge } from "../../plugin/config/loader.js"
+import { createContextInjectionHook } from "../../plugin/hooks/factories/context-injection.js"
+import { buildNotifySendArgs, buildOsaScriptArgs } from "../../plugin/hooks/factories/notification.js"
+import { loadRingAgents } from "../../plugin/loaders/agent-loader.js"
+import { loadRingCommands } from "../../plugin/loaders/command-loader.js"
+import { loadRingSkills } from "../../plugin/loaders/skill-loader.js"
 
 function mkdtemp(prefix: string): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix))
