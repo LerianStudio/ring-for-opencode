@@ -70,7 +70,7 @@ export async function checkSkillDirectory(): Promise<CheckResult> {
 }
 
 export async function checkStateDirectory(): Promise<CheckResult> {
-  const stateDir = join(process.cwd(), ".ring", "state")
+  const stateDir = join(process.cwd(), ".opencode", "state")
   const exists = existsSync(stateDir)
 
   if (!exists) {
@@ -78,7 +78,7 @@ export async function checkStateDirectory(): Promise<CheckResult> {
       name: CHECK_NAMES[CHECK_IDS.STATE_DIRECTORY],
       status: "skip",
       message: "State directory will be created on first run",
-      details: ["Expected: ./.ring/state/"],
+      details: ["Expected: ./.opencode/state/"],
     }
   }
 
@@ -119,7 +119,7 @@ export function getPluginCheckDefinitions(): CheckDefinition[] {
     {
       id: CHECK_IDS.STATE_DIRECTORY,
       name: CHECK_NAMES[CHECK_IDS.STATE_DIRECTORY],
-      category: "plugins",
+      category: "configuration",
       check: checkStateDirectory,
     },
   ]

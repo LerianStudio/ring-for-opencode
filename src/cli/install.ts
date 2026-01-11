@@ -119,7 +119,7 @@ async function runNonTuiInstall(args: InstallArgs): Promise<number> {
 
   printHeader(isUpdate)
 
-  const totalSteps = 3
+  const totalSteps = args.skipValidation ? 2 : 3
   let step = 1
 
   printStep(step++, totalSteps, "Checking OpenCode installation...")

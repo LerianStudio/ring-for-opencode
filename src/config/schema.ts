@@ -96,20 +96,17 @@ const SkillDefinitionSchema = z.object({
 
 const SkillEntrySchema = z.union([z.boolean(), SkillDefinitionSchema])
 
-// Skills configuration
+// Skills configuration - special keys separated from skill entries
+// This allows: { "my-skill": true, "sources": ["/path"], "enable": ["x"], "disable": ["y"] }
 const SkillsConfigSchema = z.union([
   z.array(z.string()),
   z
-    .record(z.string(), SkillEntrySchema)
-    .and(
-      z
-        .object({
-          sources: z.array(SkillSourceSchema).optional(),
-          enable: z.array(z.string()).optional(),
-          disable: z.array(z.string()).optional(),
-        })
-        .partial()
-    ),
+    .object({
+      sources: z.array(SkillSourceSchema).optional(),
+      enable: z.array(z.string()).optional(),
+      disable: z.array(z.string()).optional(),
+    })
+    .catchall(SkillEntrySchema),
 ])
 
 // State directory configuration

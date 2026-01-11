@@ -15,7 +15,7 @@ export function parseJsonc<T = unknown>(content: string): T {
   const result = parse(content, errors, {
     allowTrailingComma: true,
     disallowComments: false,
-  }) as T
+  })
 
   if (errors.length > 0) {
     const errorMessages = errors
@@ -24,7 +24,12 @@ export function parseJsonc<T = unknown>(content: string): T {
     throw new SyntaxError(`JSONC parse error: ${errorMessages}`)
   }
 
-  return result
+  // Handle empty or whitespace-only input
+  if (result === undefined) {
+    throw new SyntaxError("JSONC parse error: empty or invalid input")
+  }
+
+  return result as T
 }
 
 /**
