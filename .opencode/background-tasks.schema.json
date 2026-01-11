@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ring Background Tasks",
+  "description": "Schema for Ring background task state persistence",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "sessionId", "parentSessionId", "description", "agent", "status", "createdAt"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique task identifier",
+        "pattern": "^bg_[a-f0-9]{8}$"
+      },
+      "sessionId": {
+        "type": "string",
+        "description": "OpenCode session ID for this task"
+      },
+      "parentSessionId": {
+        "type": "string",
+        "description": "Parent session that launched this task"
+      },
+      "description": {
+        "type": "string",
+        "description": "Human-readable task description"
+      },
+      "prompt": {
+        "type": "string",
+        "description": "The prompt sent to the agent"
+      },
+      "agent": {
+        "type": "string",
+        "description": "Agent name executing the task"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["pending", "running", "completed", "error", "cancelled", "timeout"],
+        "description": "Current task status"
+      },
+      "taskType": {
+        "type": "string",
+        "enum": ["exploration", "review", "validation", "generation", "analysis", "custom"],
+        "description": "Task type for categorization"
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Task creation timestamp"
+      },
+      "startedAt": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Task start timestamp"
+      },
+      "completedAt": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Task completion timestamp"
+      },
+      "result": {
+        "type": "string",
+        "description": "Task result if completed successfully"
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message if task failed"
+      },
+      "progress": {
+        "type": "object",
+        "description": "Task progress information",
+        "properties": {
+          "toolCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of tool calls made"
+          },
+          "lastTool": {
+            "type": "string",
+            "description": "Last tool that was called"
+          },
+          "lastUpdate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last progress update timestamp"
+          },
+          "lastMessage": {
+            "type": "string",
+            "description": "Last message from the task"
+          },
+          "lastMessageAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of last message"
+          }
+        }
+      },
+      "model": {
+        "type": "object",
+        "description": "Model configuration",
+        "properties": {
+          "providerId": {
+            "type": "string"
+          },
+          "modelId": {
+            "type": "string"
+          }
+        }
+      },
+      "concurrencyKey": {
+        "type": "string",
+        "description": "Concurrency tracking key"
+      }
+    }
+  }
+}
