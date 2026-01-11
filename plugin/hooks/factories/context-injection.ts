@@ -7,12 +7,7 @@
 
 import * as fs from "node:fs"
 import * as path from "node:path"
-import {
-  findMostRecentFile,
-  isPathWithinRoot,
-  readFileSafe,
-  sanitizeForPrompt,
-} from "../../utils/state.js"
+import { isPathWithinRoot, readFileSafe, sanitizeForPrompt } from "../../utils/state.js"
 import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 
 /**
@@ -90,31 +85,59 @@ Dispatch via dev-cycle or pre-dev workflows.
  */
 function findActiveLedgerPath(directory: string): string | null {
   const ledgersDir = path.join(directory, ".ring", "ledgers")
-  const ledgerPath = findMostRecentFile(ledgersDir, /\.md$/)
 
-  if (!ledgerPath) {
-    return null
-  }
+  // Choose the most recent *valid* ledger, rather than failing the whole
+  // summary injection when the newest entry is an invalid symlink.
+  let candidates: Array<{ filePath: string; mtime: number }> = []
 
-  // Validate path is within project root (prevent path traversal)
-  if (!isPathWithinRoot(ledgerPath, directory)) {
-    return null
-  }
-
-  // Check for symlinks and validate target
   try {
-    const stats = fs.lstatSync(ledgerPath)
-    if (stats.isSymbolicLink()) {
-      const realPath = fs.realpathSync(ledgerPath)
-      if (!isPathWithinRoot(realPath, directory)) {
-        return null
+    if (!fs.existsSync(ledgersDir)) {
+      return null
+    }
+
+    const entries = fs.readdirSync(ledgersDir)
+
+    for (const entry of entries) {
+      if (!/\.md$/.test(entry)) continue
+
+      const filePath = path.join(ledgersDir, entry)
+
+      try {
+        const stats = fs.lstatSync(filePath)
+        candidates.push({ filePath, mtime: stats.mtimeMs })
+      } catch {
+        // Ignore unreadable entries
       }
     }
   } catch {
     return null
   }
 
-  return ledgerPath
+  candidates.sort((a, b) => b.mtime - a.mtime)
+
+  for (const { filePath } of candidates) {
+    // Validate path is within project root (prevent path traversal)
+    if (!isPathWithinRoot(filePath, directory)) {
+      continue
+    }
+
+    // Check for symlinks and validate target
+    try {
+      const stats = fs.lstatSync(filePath)
+      if (stats.isSymbolicLink()) {
+        const realPath = fs.realpathSync(filePath)
+        if (!isPathWithinRoot(realPath, directory)) {
+          continue
+        }
+      }
+    } catch {
+      continue
+    }
+
+    return filePath
+  }
+
+  return null
 }
 
 /**

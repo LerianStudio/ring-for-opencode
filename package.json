@@ -24,7 +24,7 @@
     "build:schema": "bun run script/build-schema.ts",
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run clean && bun run build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p plugin/tsconfig.json --noEmit",
     "test": "bun test",
     "test:plugin": "bun test plugin/",
     "lint": "biome check .",

@@ -170,7 +170,11 @@ function tryLoadConfigFile(filePath: string, withExtension = true): ConfigLayer 
         layer.mtime = stats.mtimeMs
 
         const content = fs.readFileSync(tryPath, "utf-8")
-        layer.config = parseJsoncContent<Partial<RingConfig>>(content)
+        const parsed = parseJsoncContent<unknown>(content)
+
+        // Non-object config files are ignored to avoid poisoning the merge.
+        layer.config = isMergeableObject(parsed) ? (parsed as Partial<RingConfig>) : null
+
         break
       }
     } catch {

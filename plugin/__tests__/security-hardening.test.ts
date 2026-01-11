@@ -129,7 +129,10 @@ describe("security hardening", () => {
       )
 
       expect(res.success).toBe(true)
-      expect(output.context ?? []).toEqual([])
+
+      const joined = (output.context ?? []).join("\n")
+      expect(joined).toContain("Do the thing")
+      expect(joined).not.toContain("MALICIOUS")
 
       fs.rmSync(outsideDir, { recursive: true, force: true })
     } finally {

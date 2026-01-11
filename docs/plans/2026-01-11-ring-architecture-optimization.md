@@ -62,11 +62,211 @@ Proceeding with standard planning approach.
 
 **Estimated Reduction:** ~350 lines per reviewer agent (5 agents x 350 = 1,750 lines total)
 
+### Excluded from Refactoring
+
+| Agent | Lines | Reason |
+|-------|-------|--------|
+| `prompt-quality-reviewer.md` | ~118 | Already small, doesn't share the same pattern structure as the 5 main reviewer agents |
+
 ---
 
-## Phase 1: Extract Missing Shared Patterns
+## Phase 0: Apply Naming Convention
 
-### Task 1.1: Create Pass/Fail Criteria Shared Pattern
+All Ring components should be prefixed with `ring-default:`, `ring-dev-team:`, or `ring-pm-team:` depending on their category. The actual FILES can keep simple names, but the `name:` field in YAML frontmatter should have the prefix.
+
+### Task 0.1: Update Agent Frontmatter Names (ring-default:)
+
+**Files:**
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/code-reviewer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/business-logic-reviewer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/security-reviewer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/test-reviewer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/nil-safety-reviewer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/codebase-explorer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/write-plan.md`
+
+**Prerequisites:**
+- None
+
+**Step 1: Update each agent's frontmatter `name:` field**
+
+For each agent file, add or update the `name:` field in YAML frontmatter:
+
+| File | Current | New `name:` field |
+|------|---------|-------------------|
+| `code-reviewer.md` | (none or simple) | `ring-default:code-reviewer` |
+| `business-logic-reviewer.md` | (none or simple) | `ring-default:business-logic-reviewer` |
+| `security-reviewer.md` | (none or simple) | `ring-default:security-reviewer` |
+| `test-reviewer.md` | (none or simple) | `ring-default:test-reviewer` |
+| `nil-safety-reviewer.md` | (none or simple) | `ring-default:nil-safety-reviewer` |
+| `codebase-explorer.md` | (none or simple) | `ring-default:codebase-explorer` |
+| `write-plan.md` | (none or simple) | `ring-default:write-plan` |
+
+**Step 2: Verify frontmatter updated**
+
+Run: `grep -l "^name: ring-default:" /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/*.md | wc -l`
+
+**Expected output:** 7
+
+**Step 3: Commit**
+
+```bash
+cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add assets/agent/*.md && git commit -m "$(cat <<'EOF'
+refactor(agents): apply ring-default: naming convention to frontmatter
+
+Update agent name: fields to follow ring-default: prefix pattern
+for consistent component identification.
+EOF
+)"
+```
+
+---
+
+### Task 0.2: Update Agent Frontmatter Names (ring-dev-team:)
+
+**Files:**
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/backend-engineer-golang.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/backend-engineer-typescript.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/frontend-engineer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/frontend-designer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/frontend-bff-engineer-typescript.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/devops-engineer.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/sre.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/qa-analyst.md`
+- Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/prompt-quality-reviewer.md`
+
+**Prerequisites:**
+- None
+
+**Step 1: Update each agent's frontmatter `name:` field**
+
+| File | New `name:` field |
+|------|-------------------|
+| `backend-engineer-golang.md` | `ring-dev-team:backend-engineer-golang` |
+| `backend-engineer-typescript.md` | `ring-dev-team:backend-engineer-typescript` |
+| `frontend-engineer.md` | `ring-dev-team:frontend-engineer` |
+| `frontend-designer.md` | `ring-dev-team:frontend-designer` |
+| `frontend-bff-engineer-typescript.md` | `ring-dev-team:frontend-bff-engineer-typescript` |
+| `devops-engineer.md` | `ring-dev-team:devops-engineer` |
+| `sre.md` | `ring-dev-team:sre` |
+| `qa-analyst.md` | `ring-dev-team:qa-analyst` |
+| `prompt-quality-reviewer.md` | `ring-dev-team:prompt-quality-reviewer` |
+
+**Step 2: Verify frontmatter updated**
+
+Run: `grep -l "^name: ring-dev-team:" /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/*.md | wc -l`
+
+**Expected output:** 9
+
+**Step 3: Commit**
+
+```bash
+cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add assets/agent/*.md && git commit -m "$(cat <<'EOF'
+refactor(agents): apply ring-dev-team: naming convention to frontmatter
+
+Update dev team agent name: fields to follow ring-dev-team: prefix pattern.
+EOF
+)"
+```
+
+---
+
+### Task 0.3: Update Command Frontmatter Names
+
+**Files:**
+- Modify: All files in `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/command/*.md`
+
+**Prerequisites:**
+- None
+
+**Step 1: Update each command's frontmatter `name:` field**
+
+Commands should follow: `ring-default:command-name` or `ring-dev-team:command-name` based on their category.
+
+**General commands (ring-default:):**
+- `commit.md` -> `ring-default:commit`
+- `codereview.md` -> `ring-default:codereview`
+- `brainstorm.md` -> `ring-default:brainstorm`
+- `lint.md` -> `ring-default:lint`
+- `worktree.md` -> `ring-default:worktree`
+- `execute-plan.md` -> `ring-default:execute-plan`
+- `write-plan.md` -> `ring-default:write-plan`
+- `explore-codebase.md` -> `ring-default:explore-codebase`
+- `interview-me.md` -> `ring-default:interview-me`
+- `query-artifacts.md` -> `ring-default:query-artifacts`
+- `create-handoff.md` -> `ring-default:create-handoff`
+- `resume-handoff.md` -> `ring-default:resume-handoff`
+- `compound-learnings.md` -> `ring-default:compound-learnings`
+- `release-guide.md` -> `ring-default:release-guide`
+
+**Dev team commands (ring-dev-team:):**
+- `dev-cycle.md` -> `ring-dev-team:dev-cycle`
+- `dev-refactor.md` -> `ring-dev-team:dev-refactor`
+
+**Step 2: Verify frontmatter updated**
+
+Run: `grep -c "^name: ring-" /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/command/*.md | grep -v ":0" | wc -l`
+
+**Expected output:** 16 (all commands)
+
+**Step 3: Commit**
+
+```bash
+cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add assets/command/*.md && git commit -m "$(cat <<'EOF'
+refactor(commands): apply ring: naming convention to frontmatter
+
+Update command name: fields to follow ring-default: or ring-dev-team:
+prefix pattern based on category.
+EOF
+)"
+```
+
+---
+
+### Task 0.4: Update Skill Frontmatter Names
+
+**Files:**
+- Modify: All `SKILL.md` files in `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/skill/*/SKILL.md`
+
+**Prerequisites:**
+- None
+
+**Step 1: Update each skill's frontmatter `name:` field**
+
+Skills should follow: `ring-default:skill-name`, `ring-dev-team:skill-name`, or `ring-pm-team:skill-name`.
+
+**ring-default: skills:**
+- Most general-purpose skills (test-driven-development, systematic-debugging, etc.)
+
+**ring-dev-team: skills:**
+- dev-cycle, dev-implementation, dev-testing, dev-validation, etc.
+
+**ring-pm-team: skills:**
+- pre-dev-*, prd-creation, trd-creation, etc.
+
+**Step 2: Verify frontmatter updated**
+
+Run: `grep -r "^name: ring-" /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/skill/*/SKILL.md | wc -l`
+
+**Expected output:** 29 (all skills)
+
+**Step 3: Commit**
+
+```bash
+cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add assets/skill/*/SKILL.md && git commit -m "$(cat <<'EOF'
+refactor(skills): apply ring: naming convention to frontmatter
+
+Update skill name: fields to follow ring-default:, ring-dev-team:,
+or ring-pm-team: prefix pattern based on category.
+EOF
+)"
+```
+
+---
+
+## Phase 2: Extract Missing Shared Patterns
+
+### Task 2.1: Create Pass/Fail Criteria Shared Pattern
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/skill/shared-patterns/reviewer-pass-fail-criteria.md`
@@ -137,7 +337,7 @@ EOF
 
 ---
 
-### Task 1.2: Create Time Budget Shared Pattern
+### Task 2.2: Create Time Budget Shared Pattern
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/skill/shared-patterns/reviewer-time-budget.md`
@@ -215,7 +415,7 @@ EOF
 
 ---
 
-### Task 1.3: Create Reviewer Base Template
+### Task 2.3: Create Reviewer Base Template
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/skill/shared-patterns/reviewer-base-template.md`
@@ -336,9 +536,9 @@ EOF
 
 ---
 
-## Phase 2: Refactor Reviewer Agents
+## Phase 3: Refactor Reviewer Agents
 
-### Task 2.1: Refactor code-reviewer.md
+### Task 3.1: Refactor code-reviewer.md
 
 **Files:**
 - Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/code-reviewer.md`
@@ -794,7 +994,7 @@ EOF
 
 ---
 
-### Task 2.2: Refactor business-logic-reviewer.md
+### Task 3.2: Refactor business-logic-reviewer.md
 
 **Files:**
 - Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/business-logic-reviewer.md`
@@ -837,7 +1037,7 @@ EOF
 
 ---
 
-### Task 2.3: Refactor security-reviewer.md
+### Task 3.3: Refactor security-reviewer.md
 
 **Files:**
 - Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/security-reviewer.md`

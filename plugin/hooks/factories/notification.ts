@@ -5,11 +5,27 @@
  * Supports macOS, Linux, and Windows notification systems.
  */
 
-import { execFile } from "node:child_process"
-import { promisify } from "node:util"
 import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 
-const execFileAsync = promisify(execFile)
+async function execFileAsync(cmd: string, args: string[]): Promise<void> {
+  const { execFile } = await import("node:child_process")
+
+  await new Promise<void>((resolve, reject) => {
+    execFile(cmd, args, (err) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve()
+    })
+  })
+}
+
+export type NotificationDispatch = (
+  title: string,
+  message: string,
+  sound: boolean,
+) => Promise<boolean>
 
 /**
  * Configuration for notification hook.
@@ -27,10 +43,18 @@ export interface NotificationConfig {
     taskComplete?: boolean
     error?: boolean
   }
+
+  /**
+   * Optional notification transport override.
+   * Primarily used for testing.
+   */
+  dispatch?: NotificationDispatch
 }
 
+type ResolvedNotificationConfig = Required<Omit<NotificationConfig, "dispatch">>
+
 /** Default configuration */
-const DEFAULT_CONFIG: Required<NotificationConfig> = {
+const DEFAULT_CONFIG: ResolvedNotificationConfig = {
   enabled: true,
   sound: true,
   title: "Ring OpenCode",
@@ -217,12 +241,16 @@ function getNotificationMessage(eventType: string, properties?: Record<string, u
 export const createNotificationHook: HookFactory<NotificationConfig> = (
   config?: NotificationConfig,
 ): Hook => {
+  const { dispatch, ...restConfig } = config ?? {}
+
   // Deep merge to preserve nested config properties
-  const cfg = {
+  const cfg: ResolvedNotificationConfig = {
     ...DEFAULT_CONFIG,
-    ...config,
-    notifyOn: { ...DEFAULT_CONFIG.notifyOn, ...config?.notifyOn },
+    ...restConfig,
+    notifyOn: { ...DEFAULT_CONFIG.notifyOn, ...restConfig.notifyOn },
   }
+
+  const notify: NotificationDispatch = dispatch ?? sendNotification
 
   return {
     name: "notification",
@@ -271,7 +299,7 @@ export const createNotificationHook: HookFactory<NotificationConfig> = (
         }
 
         const message = getNotificationMessage(eventType, properties)
-        const sent = await sendNotification(cfg.title, message, cfg.sound)
+        const sent = await notify(cfg.title, message, cfg.sound)
 
         return {
           success: true,

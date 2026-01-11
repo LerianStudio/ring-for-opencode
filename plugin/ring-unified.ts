@@ -98,7 +98,7 @@ function buildHookContext(
  * that extend the base Hooks interface for Ring-specific functionality.
  */
 export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
-  const { directory, client, $ } = ctx
+  const { directory, client } = ctx
   const projectRoot = directory
 
   // Load Ring configuration
@@ -125,20 +125,10 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
     ringConfig: config,
   })
 
-  // Create lifecycle router
+  // Create lifecycle router (state side-effects only; notifications go through hooks)
   const lifecycleRouter = createLifecycleRouter({
     projectRoot,
     ringConfig: config,
-    notifySessionIdle: async () => {
-      if (config.notifications.enabled && config.notifications.onIdle) {
-        await sendNotification("Ring", "Session completed!", $)
-      }
-    },
-    notifySessionError: async () => {
-      if (config.notifications.enabled && config.notifications.onError) {
-        await sendNotification("Ring", "Session encountered an error", $)
-      }
-    },
   })
 
   const sessionId = getSessionId()
@@ -186,6 +176,16 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
       if (event.type === "session.idle") {
         const hookCtx = buildHookContext(eventSessionId, directory, "session.idle", normalizedEvent)
         await hookRegistry.executeLifecycle("session.idle", hookCtx, output)
+      }
+
+      if (event.type === "session.error") {
+        const hookCtx = buildHookContext(
+          eventSessionId,
+          directory,
+          "session.error",
+          normalizedEvent,
+        )
+        await hookRegistry.executeLifecycle("session.error", hookCtx, output)
       }
 
       if (event.type === "todo.updated") {

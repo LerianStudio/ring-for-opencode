@@ -223,7 +223,8 @@ export function findMostRecentFile(directory: string, pattern: RegExp): string |
       }
 
       const filePath = path.join(directory, file)
-      const stats = fs.statSync(filePath)
+      // Use lstat so symlink mtimes are respected (security: allows rejecting symlink targets)
+      const stats = fs.lstatSync(filePath)
 
       if (!mostRecent || stats.mtimeMs > mostRecent.mtime) {
         mostRecent = { path: filePath, mtime: stats.mtimeMs }
