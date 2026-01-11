@@ -1,7 +1,7 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { existsSync, readFileSync, readdirSync, statSync, lstatSync } from "fs"
 import { join } from "path"
-import { cleanupOldState, deleteState, getSessionId, escapeAngleBrackets, sanitizeForPrompt, isPathWithinRoot } from "./utils/state"
+import { cleanupOldState, deleteState, getSessionId, escapeAngleBrackets, sanitizeForPrompt, isPathWithinRoot, migrateStateFiles } from "./utils/state"
 import { EVENTS } from "./utils/events"
 
 /**
@@ -239,6 +239,9 @@ Run: \`skill: "using-ring"\` to see available workflows.`
     // Handle session lifecycle events
     event: async ({ event }) => {
       if (event.type === EVENTS.SESSION_CREATED) {
+        // Migrate legacy state files from .ring/state/ to .opencode/state/
+        // Safe to call multiple times - skips already migrated files
+        migrateStateFiles(projectRoot)
         // Reset context usage state for new session
         deleteState(projectRoot, "context-usage", sessionId)
         // Clean up old state files (> 7 days)
