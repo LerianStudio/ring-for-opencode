@@ -28,11 +28,33 @@ This directory contains TypeScript plugins that port Ring's hook system to OpenC
 
 ## State Management
 
-State is persisted in `.opencode/state/` (with backward compat for `.ring/state/`):
+State is persisted in `.opencode/state/`:
 - `{key}-{sessionId}.json` format
 - Automatic cleanup of files >7 days old
 - Atomic writes via temp file + rename with crypto random suffix
 - Restrictive permissions (0o600) for sensitive data
+
+### Migration from .ring/state/
+
+Legacy state files in `.ring/state/` are automatically migrated to `.opencode/state/` on session start:
+- Migration is safe and idempotent (runs every session, skips already-migrated files)
+- Existing files in `.opencode/state/` are never overwritten
+- Only `.json` files are migrated
+
+To manually trigger migration or cleanup:
+```typescript
+import { migrateStateFiles, cleanupLegacyState } from "./utils/state"
+
+// Migrate files (safe to run multiple times)
+const result = migrateStateFiles(projectRoot)
+console.log(`Migrated: ${result.migrated}, Skipped: ${result.skipped}`)
+
+// Optional: Remove legacy directory after confirming migration
+const cleanup = cleanupLegacyState(projectRoot)
+if (cleanup.removed) {
+  console.log("Legacy .ring/state/ removed")
+}
+```
 
 ## Session ID Handling
 
