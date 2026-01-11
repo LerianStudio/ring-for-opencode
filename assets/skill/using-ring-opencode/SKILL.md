@@ -23,7 +23,7 @@ This skill library was originally designed for Claude Code and has been adapted 
 | `Skill tool` | Skill invocation | Read and execute skill files via your platform's skill system |
 | `Task(subagent_type=...)` | Dispatch subagent / @agent-name | Launch specialized agents for focused work |
 | `AskUserQuestion` tool | Prompt for input / ask the user | Request clarification from user when needed |
-| N/A (new) | `ring_doubt` tool | Structured choice when you have doubts |
+| N/A | AskUserQuestion / prompt | Request clarification when you have doubts |
 | `.ring/` directory | `.opencode/` directory | Platform-specific configuration location |
 | `$PROJECT_ROOT` | Current working directory | May need adaptation for your environment |
 
@@ -92,12 +92,6 @@ RESULT: [Agent: ___] or [Direct: why]
 **Skipping = violation. Document decision in TodoWrite.**
 
 # Getting Started with Skills
-
-## Doubt Resolution (Use `ring_doubt`)
-
-When you have genuine uncertainty and need the human to decide:
-- Use the `ring_doubt` tool to present options and proceed based on their reply.
-- See `shared-patterns/doubt-resolver.md`.
 
 ## MANDATORY FIRST RESPONSE PROTOCOL
 

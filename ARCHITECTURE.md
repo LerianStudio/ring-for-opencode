@@ -142,7 +142,7 @@ RingUnifiedPlugin(ctx: PluginInput) {
 
 | Hook | Type | Purpose |
 |------|------|---------|
-| `tool` | Object | Registers `ring_doubt` tool |
+| `tool` | Object | Registers custom Ring tools |
 | `config` | Function | Injects agents/skills/commands into OpenCode |
 | `event` | Function | Routes lifecycle events to hook registry |
 | `experimental.chat.system.transform` | Function | Injects context into system prompts |

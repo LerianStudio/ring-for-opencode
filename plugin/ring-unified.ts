@@ -6,7 +6,7 @@
  *
  * Features:
  * - Config handler: Injects agents, skills, commands
- * - Tool registration: ring_doubt tool
+ * - Tool registration: Custom Ring tools
  * - Event routing: Lifecycle events to hooks
  * - System transform: Context injection
  * - Compaction: Context preservation

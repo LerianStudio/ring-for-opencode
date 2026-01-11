@@ -20,7 +20,7 @@ import type { RingConfig } from "./schema.js"
 
 // Determine plugin root directory (where assets/ is located)
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const pluginRoot = join(__dirname, "..")
+const pluginRoot = join(__dirname, "..", "..")
 
 /**
  * OpenCode config structure (subset used by Ring).

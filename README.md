@@ -133,7 +133,7 @@ plugin/              # Unified plugin system
 ├── config/          # Configuration management
 ├── lifecycle/       # Session lifecycle handlers
 ├── background/      # Background task manager
-├── tools/           # Custom tools (ring_doubt)
+├── tools/           # Custom Ring tools
 └── utils/           # Shared utilities
 ```
 
