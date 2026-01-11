@@ -6,35 +6,20 @@ import * as path from "node:path"
 import { hookRegistry } from "./registry.js"
 import type { HookContext, HookOutput } from "./types.js"
 import { createTaskCompletionHook } from "./factories/task-completion.js"
+import { createNotificationHook } from "./factories/notification.js"
 
-// Avoid OS notifications in tests
-let execCalls: Array<{ cmd: string; args: string[] }> = []
-mock.module("node:child_process", () => {
-  return {
-    execFile: (cmd: string, args: string[] | undefined, ...rest: Array<unknown>): void => {
-      let cb: ((err: Error | null) => void) | undefined
-      for (let i = rest.length - 1; i >= 0; i--) {
-        const candidate = rest[i]
-        if (typeof candidate === "function") {
-          cb = candidate as (err: Error | null) => void
-          break
-        }
-      }
+let dispatchCalls = 0
 
-      execCalls.push({ cmd, args: args ?? [] })
-      cb?.(null)
-    },
-  }
-})
+const testDispatch = async (): Promise<boolean> => {
+  dispatchCalls++
+  return true
+}
 
 describe("task-completion -> notification (end-to-end)", () => {
   test("emits a single notification when todos transition to all complete", async () => {
-    execCalls = []
+    dispatchCalls = 0
 
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ring-task-completion-"))
-
-    // Dynamic import so the child_process mock applies
-    const { createNotificationHook } = await import("./factories/notification.js")
 
     hookRegistry.clear()
     hookRegistry.register(createTaskCompletionHook({ persistState: true, showToast: true }))
@@ -43,6 +28,7 @@ describe("task-completion -> notification (end-to-end)", () => {
         enabled: true,
         // ensure taskComplete notifications are enabled
         notifyOn: { taskComplete: true },
+        dispatch: testDispatch,
       }),
     )
 
@@ -69,7 +55,7 @@ describe("task-completion -> notification (end-to-end)", () => {
       output,
     )
 
-    expect(execCalls.length).toBe(0)
+    expect(dispatchCalls).toBe(0)
 
     // 2) all complete -> exactly one notification
     await hookRegistry.executeLifecycle(
@@ -87,6 +73,6 @@ describe("task-completion -> notification (end-to-end)", () => {
       output,
     )
 
-    expect(execCalls.length).toBe(1)
+    expect(dispatchCalls).toBe(1)
   })
 })

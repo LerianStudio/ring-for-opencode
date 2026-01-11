@@ -88,7 +88,7 @@ function findActiveLedgerPath(directory: string): string | null {
 
   // Choose the most recent *valid* ledger, rather than failing the whole
   // summary injection when the newest entry is an invalid symlink.
-  let candidates: Array<{ filePath: string; mtime: number }> = []
+  const candidates: Array<{ filePath: string; mtime: number }> = []
 
   try {
     if (!fs.existsSync(ledgersDir)) {

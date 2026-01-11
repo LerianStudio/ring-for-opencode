@@ -1080,7 +1080,7 @@ EOF
 
 ---
 
-### Task 2.4: Refactor test-reviewer.md
+### Task 3.4: Refactor test-reviewer.md
 
 **Files:**
 - Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/test-reviewer.md`
@@ -1118,7 +1118,7 @@ EOF
 
 ---
 
-### Task 2.5: Refactor nil-safety-reviewer.md
+### Task 3.5: Refactor nil-safety-reviewer.md
 
 **Files:**
 - Modify: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/nil-safety-reviewer.md`
@@ -1156,22 +1156,26 @@ EOF
 
 ---
 
-## Phase 3: Fix Path Inconsistencies
+## Phase 4: Fix Path Inconsistencies
 
-### Task 3.1: Standardize shared pattern paths
+### Task 4.1: Standardize shared pattern paths
 
 **Files:**
 - Modify: All files in `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/`
 - Modify: All files in `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/skill/*/SKILL.md`
 
+**Known affected files:**
+- `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/agent/codebase-explorer.md` (has `../skills/` path issue)
+- Other agents/skills with similar issues
+
 **Prerequisites:**
-- Phase 2 completed
+- Phase 3 completed
 
 **Step 1: Search for inconsistent paths**
 
 Run: `grep -r "shared-patterns" /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/ | grep -E "\.\./skills/" | head -20`
 
-**Expected output:** Files with `../skills/shared-patterns/` (incorrect)
+**Expected output:** Files with `../skills/shared-patterns/` (incorrect), including `codebase-explorer.md`
 
 **Step 2: Fix path references**
 
@@ -1179,7 +1183,7 @@ The correct path from agents is `../skill/shared-patterns/` (singular "skill").
 
 Run: `find /Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets -name "*.md" -exec grep -l "../skills/shared-patterns" {} \;`
 
-For each file found, replace `../skills/shared-patterns/` with `../skill/shared-patterns/`.
+For each file found (including `codebase-explorer.md`), replace `../skills/shared-patterns/` with `../skill/shared-patterns/`.
 
 **Step 3: Verify no broken references**
 
@@ -1200,9 +1204,9 @@ EOF
 
 ---
 
-## Phase 4: Add Missing Commands
+## Phase 5: Add Missing Commands
 
-### Task 4.1: Create /tdd command
+### Task 5.1: Create /tdd command
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/command/tdd.md`
@@ -1269,7 +1273,7 @@ EOF
 
 ---
 
-### Task 4.2: Create /debug command
+### Task 5.2: Create /debug command
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/command/debug.md`
@@ -1331,7 +1335,7 @@ EOF
 
 ---
 
-### Task 4.3: Create /trace command
+### Task 5.3: Create /trace command
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/command/trace.md`
@@ -1393,7 +1397,7 @@ EOF
 
 ---
 
-### Task 4.4: Create /verify command
+### Task 5.4: Create /verify command
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/command/verify.md`
@@ -1453,7 +1457,7 @@ EOF
 
 ---
 
-### Task 4.5: Create /defense command
+### Task 5.5: Create /defense command
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/assets/command/defense.md`
@@ -1514,9 +1518,9 @@ EOF
 
 ---
 
-## Phase 5: Document Architecture Rules
+## Phase 6: Document Architecture Rules
 
-### Task 5.1: Create Architecture Rules Document
+### Task 6.1: Create Architecture Rules Document
 
 **Files:**
 - Create: `/Users/fredamaral/repos/fredcamaral/ring-for-opencode/docs/ARCHITECTURE_RULES.md`
@@ -1720,9 +1724,9 @@ EOF
 
 ---
 
-## Phase 6: Code Review Checkpoint
+## Phase 7: Code Review Checkpoint
 
-### Task 6.1: Run Code Review
+### Task 7.1: Run Code Review
 
 **Prerequisites:**
 - All previous phases completed
@@ -1746,7 +1750,7 @@ REQUIRED SUB-SKILL: Use requesting-code-review to run all reviewers in parallel.
 
 ## Summary of Changes
 
-### Files Created (8)
+### Files Created (9)
 
 | File | Purpose |
 |------|---------|
