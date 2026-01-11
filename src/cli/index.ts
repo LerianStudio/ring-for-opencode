@@ -1,0 +1,82 @@
+#!/usr/bin/env bun
+import { Command } from "commander"
+import { install } from "./install"
+import { doctor } from "./doctor"
+import { version as versionCmd } from "./version"
+import type { InstallArgs } from "./types"
+import type { DoctorOptions } from "./doctor"
+
+const packageJson = await import("../../package.json")
+const VERSION = packageJson.version ?? "0.0.0"
+
+const program = new Command()
+
+program
+  .name("ring")
+  .description("Ring - CLI tools for OpenCode configuration and health checks")
+  .version(VERSION, "-v, --version", "Show version number")
+
+program
+  .command("install")
+  .description("Install and configure Ring with schema validation")
+  .option("--no-tui", "Run in non-interactive mode")
+  .option("--skip-validation", "Skip config validation after install")
+  .addHelpText("after", `
+Examples:
+  $ ring install
+  $ ring install --no-tui
+  $ ring install --no-tui --skip-validation
+
+This command:
+  - Adds $schema to opencode.json for IDE autocomplete
+  - Validates configuration against Ring schema
+  - Creates opencode.json if it doesn't exist
+`)
+  .action(async (options) => {
+    const args: InstallArgs = {
+      tui: options.tui !== false,
+      skipValidation: options.skipValidation ?? false,
+    }
+    const exitCode = await install(args)
+    process.exit(exitCode)
+  })
+
+program
+  .command("doctor")
+  .description("Check Ring installation health and diagnose issues")
+  .option("--verbose", "Show detailed diagnostic information")
+  .option("--json", "Output results in JSON format")
+  .option("--category <category>", "Run only specific category (installation, configuration, plugins, dependencies)")
+  .addHelpText("after", `
+Examples:
+  $ ring doctor
+  $ ring doctor --verbose
+  $ ring doctor --json
+  $ ring doctor --category configuration
+
+Categories:
+  installation     Check OpenCode installation
+  configuration    Validate configuration files
+  plugins          Check plugin and skill directories
+  dependencies     Check runtime dependencies (bun, git)
+`)
+  .action(async (options) => {
+    const doctorOptions: DoctorOptions = {
+      verbose: options.verbose ?? false,
+      json: options.json ?? false,
+      category: options.category,
+    }
+    const exitCode = await doctor(doctorOptions)
+    process.exit(exitCode)
+  })
+
+program
+  .command("version")
+  .description("Show detailed version information")
+  .option("--json", "Output in JSON format")
+  .action(async (options) => {
+    const exitCode = await versionCmd({ json: options.json ?? false })
+    process.exit(exitCode)
+  })
+
+program.parse()
