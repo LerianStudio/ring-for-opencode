@@ -172,7 +172,8 @@ function loadAgentsFromDir(
           config.tools = toolsConfig
         }
 
-        result[agentName] = config
+        // Use ring namespace for agents
+        result[`ring:${agentName}`] = config
       } catch (error) {
         if (process.env.RING_DEBUG === "true") {
           console.debug(`[ring] Failed to parse ${agentPath}:`, error)

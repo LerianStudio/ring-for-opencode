@@ -67,16 +67,24 @@ export const SkillNameSchema = z.enum([
  * Command names that can be disabled.
  */
 export const CommandNameSchema = z.enum([
-  "commit",
-  "codereview",
   "brainstorm",
-  "execute-plan",
-  "worktree",
-  "lint",
+  "codereview",
+  "commit",
+  "compound-learnings",
   "create-handoff",
-  "resume-handoff",
+  "dev-cancel",
+  "dev-cycle",
+  "dev-refactor",
+  "dev-report",
+  "dev-status",
+  "execute-plan",
   "explore-codebase",
   "interview-me",
+  "lint",
+  "query-artifacts",
+  "release-guide",
+  "resume-handoff",
+  "worktree",
   "write-plan",
 ])
 

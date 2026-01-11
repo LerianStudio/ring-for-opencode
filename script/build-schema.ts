@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /// <reference types="bun-types" />
 import * as z from "zod"
-import { RingOpenCodeConfigSchema } from "../src/config/schema"
+import { RingConfigSchema } from "../plugin/config/schema"
 
 const SCHEMA_OUTPUT_PATH = "assets/ring-config.schema.json"
 
 async function main() {
   console.log("Generating JSON Schema...")
 
-  const jsonSchema = z.toJSONSchema(RingOpenCodeConfigSchema, {
+  const jsonSchema = z.toJSONSchema(RingConfigSchema, {
     io: "input",
     target: "draft-7",
   })

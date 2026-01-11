@@ -126,7 +126,8 @@ function loadCommandsFromDir(
           config.subtask = data.subtask
         }
 
-        result[commandName] = config
+        // Use ring namespace for commands
+        result[`ring:${commandName}`] = config
       } catch (error) {
         if (process.env.RING_DEBUG === "true") {
           console.debug(`[ring] Failed to parse ${commandPath}:`, error)

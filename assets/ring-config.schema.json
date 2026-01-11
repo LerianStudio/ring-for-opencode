@@ -8,434 +8,8 @@
     "$schema": {
       "type": "string"
     },
-    "version": {
-      "type": "string"
-    },
-    "name": {
-      "type": "string"
-    },
-    "description": {
-      "type": "string"
-    },
-    "permission": {
-      "type": "object",
-      "properties": {
-        "skill": {
-          "anyOf": [
-            {
-              "type": "string",
-              "enum": [
-                "ask",
-                "allow",
-                "deny"
-              ]
-            },
-            {
-              "type": "object",
-              "propertyNames": {
-                "type": "string"
-              },
-              "additionalProperties": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              }
-            }
-          ]
-        },
-        "edit": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        },
-        "bash": {
-          "anyOf": [
-            {
-              "type": "string",
-              "enum": [
-                "ask",
-                "allow",
-                "deny"
-              ]
-            },
-            {
-              "type": "object",
-              "propertyNames": {
-                "type": "string"
-              },
-              "additionalProperties": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              }
-            }
-          ]
-        },
-        "webfetch": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        },
-        "doom_loop": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        },
-        "external_directory": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        }
-      }
-    },
-    "agent": {
-      "type": "object",
-      "propertyNames": {
-        "type": "string"
-      },
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "mode": {
-            "type": "string",
-            "enum": [
-              "primary",
-              "subagent",
-              "all"
-            ]
-          },
-          "model": {
-            "type": "string"
-          },
-          "temperature": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 2
-          },
-          "top_p": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          },
-          "prompt": {
-            "type": "string"
-          },
-          "prompt_append": {
-            "type": "string"
-          },
-          "tools": {
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {
-              "type": "boolean"
-            }
-          },
-          "disable": {
-            "type": "boolean"
-          },
-          "description": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string",
-            "pattern": "^#[0-9A-Fa-f]{6}$"
-          },
-          "permission": {
-            "type": "object",
-            "properties": {
-              "edit": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              },
-              "bash": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "enum": [
-                      "ask",
-                      "allow",
-                      "deny"
-                    ]
-                  },
-                  {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {
-                      "type": "string",
-                      "enum": [
-                        "ask",
-                        "allow",
-                        "deny"
-                      ]
-                    }
-                  }
-                ]
-              },
-              "webfetch": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              },
-              "doom_loop": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              },
-              "external_directory": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "permissions": {
-      "type": "object",
-      "properties": {
-        "skill": {
-          "anyOf": [
-            {
-              "type": "string",
-              "enum": [
-                "ask",
-                "allow",
-                "deny"
-              ]
-            },
-            {
-              "type": "object",
-              "propertyNames": {
-                "type": "string"
-              },
-              "additionalProperties": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              }
-            }
-          ]
-        },
-        "edit": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        },
-        "bash": {
-          "anyOf": [
-            {
-              "type": "string",
-              "enum": [
-                "ask",
-                "allow",
-                "deny"
-              ]
-            },
-            {
-              "type": "object",
-              "propertyNames": {
-                "type": "string"
-              },
-              "additionalProperties": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              }
-            }
-          ]
-        },
-        "webfetch": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        },
-        "doom_loop": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        },
-        "external_directory": {
-          "type": "string",
-          "enum": [
-            "ask",
-            "allow",
-            "deny"
-          ]
-        }
-      }
-    },
-    "agents": {
-      "type": "object",
-      "propertyNames": {
-        "type": "string"
-      },
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "mode": {
-            "type": "string",
-            "enum": [
-              "primary",
-              "subagent",
-              "all"
-            ]
-          },
-          "model": {
-            "type": "string"
-          },
-          "temperature": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 2
-          },
-          "top_p": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          },
-          "prompt": {
-            "type": "string"
-          },
-          "prompt_append": {
-            "type": "string"
-          },
-          "tools": {
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {
-              "type": "boolean"
-            }
-          },
-          "disable": {
-            "type": "boolean"
-          },
-          "description": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string",
-            "pattern": "^#[0-9A-Fa-f]{6}$"
-          },
-          "permission": {
-            "type": "object",
-            "properties": {
-              "edit": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              },
-              "bash": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "enum": [
-                      "ask",
-                      "allow",
-                      "deny"
-                    ]
-                  },
-                  {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {
-                      "type": "string",
-                      "enum": [
-                        "ask",
-                        "allow",
-                        "deny"
-                      ]
-                    }
-                  }
-                ]
-              },
-              "webfetch": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              },
-              "doom_loop": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              },
-              "external_directory": {
-                "type": "string",
-                "enum": [
-                  "ask",
-                  "allow",
-                  "deny"
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
     "disabled_hooks": {
+      "default": [],
       "type": "array",
       "items": {
         "type": "string",
@@ -443,153 +17,185 @@
           "session-start",
           "context-injection",
           "notification",
-          "task-completion-check",
+          "task-completion",
           "session-outcome",
           "outcome-inference",
-          "doubt-resolver"
+          "doubt-resolver",
+          "background-notification",
+          "compaction-context",
+          "rules-injector",
+          "agent-reminder"
         ]
       }
     },
-    "skills": {
-      "anyOf": [
-        {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        {
-          "type": "object",
-          "properties": {
-            "sources": {
-              "type": "array",
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "path": {
-                        "type": "string"
-                      },
-                      "recursive": {
-                        "type": "boolean"
-                      },
-                      "glob": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "path"
-                    ]
-                  }
-                ]
-              }
-            },
-            "enable": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "disable": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "description": {
-                    "type": "string"
-                  },
-                  "template": {
-                    "type": "string"
-                  },
-                  "from": {
-                    "type": "string"
-                  },
-                  "model": {
-                    "type": "string"
-                  },
-                  "agent": {
-                    "type": "string"
-                  },
-                  "subtask": {
-                    "type": "boolean"
-                  },
-                  "argument-hint": {
-                    "type": "string"
-                  },
-                  "license": {
-                    "type": "string"
-                  },
-                  "compatibility": {
-                    "type": "string"
-                  },
-                  "metadata": {
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "allowed-tools": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "disable": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      ]
+    "disabled_agents": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "code-reviewer",
+          "security-reviewer",
+          "business-logic-reviewer",
+          "test-reviewer",
+          "nil-safety-reviewer",
+          "codebase-explorer",
+          "write-plan",
+          "backend-engineer-golang",
+          "backend-engineer-typescript",
+          "frontend-engineer",
+          "frontend-designer",
+          "devops-engineer",
+          "sre",
+          "qa-analyst"
+        ]
+      }
     },
-    "state": {
+    "disabled_skills": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "using-ring",
+          "test-driven-development",
+          "systematic-debugging",
+          "requesting-code-review",
+          "writing-plans",
+          "executing-plans",
+          "dispatching-parallel-agents",
+          "verification-before-completion",
+          "commit",
+          "brainstorm",
+          "codereview",
+          "lint",
+          "worktree"
+        ]
+      }
+    },
+    "disabled_commands": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "brainstorm",
+          "codereview",
+          "commit",
+          "compound-learnings",
+          "create-handoff",
+          "dev-cancel",
+          "dev-cycle",
+          "dev-refactor",
+          "dev-report",
+          "dev-status",
+          "execute-plan",
+          "explore-codebase",
+          "interview-me",
+          "lint",
+          "query-artifacts",
+          "release-guide",
+          "resume-handoff",
+          "worktree",
+          "write-plan"
+        ]
+      }
+    },
+    "background_tasks": {
+      "default": {
+        "defaultConcurrency": 3,
+        "taskTimeoutMs": 1800000
+      },
       "type": "object",
       "properties": {
-        "directory": {
-          "type": "string"
+        "defaultConcurrency": {
+          "default": 3,
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10
         },
-        "session_tracking": {
-          "type": "boolean"
+        "agentConcurrency": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10
+          }
         },
-        "context_warnings": {
-          "type": "boolean"
+        "taskTimeoutMs": {
+          "default": 1800000,
+          "type": "number",
+          "minimum": 60000,
+          "maximum": 3600000
         }
       }
     },
-    "notification": {
+    "notifications": {
+      "default": {
+        "enabled": true,
+        "onIdle": true,
+        "onError": true,
+        "onBackgroundComplete": true
+      },
       "type": "object",
       "properties": {
         "enabled": {
+          "default": true,
           "type": "boolean"
         },
-        "sound": {
+        "onIdle": {
+          "default": true,
           "type": "boolean"
         },
-        "on_completion": {
+        "onError": {
+          "default": true,
           "type": "boolean"
         },
-        "on_error": {
+        "onBackgroundComplete": {
+          "default": true,
           "type": "boolean"
         }
       }
+    },
+    "experimental": {
+      "default": {
+        "preemptiveCompaction": false,
+        "compactionThreshold": 0.8,
+        "aggressiveTruncation": false
+      },
+      "type": "object",
+      "properties": {
+        "preemptiveCompaction": {
+          "default": false,
+          "type": "boolean"
+        },
+        "compactionThreshold": {
+          "default": 0.8,
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 0.95
+        },
+        "aggressiveTruncation": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {}
+      }
     }
-  },
-  "additionalProperties": {}
+  }
 }

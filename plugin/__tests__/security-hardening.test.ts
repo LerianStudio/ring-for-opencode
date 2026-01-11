@@ -55,7 +55,7 @@ describe("security hardening", () => {
 
       const commands = loadRingCommands(pluginRoot, projectRoot)
       expect(Object.getPrototypeOf(commands)).toBeNull()
-      expect(Object.keys(commands)).toEqual(["ok"])
+      expect(Object.keys(commands)).toEqual(["ring:ok"])
 
       // agents
       writeFile(
@@ -66,7 +66,7 @@ describe("security hardening", () => {
 
       const agents = loadRingAgents(pluginRoot, projectRoot)
       expect(Object.getPrototypeOf(agents)).toBeNull()
-      expect(Object.keys(agents)).toEqual(["good"])
+      expect(Object.keys(agents)).toEqual(["ring:good"])
 
       // skills
       writeFile(path.join(pluginRoot, "assets", "skill", "skill-1", "SKILL.md"), "# skill")
@@ -77,7 +77,7 @@ describe("security hardening", () => {
 
       const skills = loadRingSkills(pluginRoot, projectRoot)
       expect(Object.getPrototypeOf(skills)).toBeNull()
-      expect(Object.keys(skills)).toEqual(["ring-default:skill-1"])
+      expect(Object.keys(skills)).toEqual(["ring:skill-1"])
 
       // ensure no global pollution from attempting to set __proto__ keys
       expect(({} as Record<string, unknown>).ok).toBeUndefined()

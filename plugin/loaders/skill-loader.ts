@@ -131,8 +131,8 @@ function loadSkillsFromDir(
           config.subtask = data.subtask
         }
 
-        // Use ring-default namespace for skills
-        result[`ring-default:${skillName}`] = config
+        // Use ring namespace for skills
+        result[`ring:${skillName}`] = config
       } catch (error) {
         if (process.env.RING_DEBUG === "true") {
           console.debug(`[ring] Failed to parse skill ${skillFile}:`, error)
