@@ -11,6 +11,7 @@ import {
   unlinkSync,
   readdirSync,
   statSync,
+  lstatSync,
   renameSync,
   rmSync,
 } from "fs"
@@ -75,7 +76,7 @@ export function sanitizeSessionId(sessionId: string): string {
 export function getStateDir(projectRoot: string): string {
   const stateDir = join(projectRoot, STATE_DIR)
   if (!existsSync(stateDir)) {
-    mkdirSync(stateDir, { recursive: true })
+    mkdirSync(stateDir, { recursive: true, mode: 0o700 })
   }
   return stateDir
 }
@@ -321,30 +322,48 @@ export function migrateStateFiles(projectRoot: string): MigrationResult {
       const sourcePath = join(legacyDir, file)
       const targetPath = join(targetDir, file)
 
-      // Skip if file already exists in target
-      if (existsSync(targetPath)) {
+      // Skip if file already exists in target (check with lstat to detect symlinks)
+      try {
+        const targetStats = lstatSync(targetPath)
+        // File or symlink exists - skip
+        if (targetStats.isSymbolicLink()) {
+          result.errors.push(`Symlink detected at target, skipped: ${file}`)
+        }
         result.skipped++
         continue
+      } catch (e: unknown) {
+        // ENOENT means file doesn't exist - good, we can proceed
+        if ((e as NodeJS.ErrnoException).code !== 'ENOENT') {
+          result.errors.push(`Failed to check target: ${file}: ${e instanceof Error ? e.message : String(e)}`)
+          continue
+        }
       }
 
-      // Verify source is a file (not directory)
+      // Verify source is a file (not directory or symlink) using lstat
       try {
-        const stats = statSync(sourcePath)
-        if (!stats.isFile()) {
+        const sourceStats = lstatSync(sourcePath)
+        if (sourceStats.isSymbolicLink()) {
+          result.errors.push(`Symlink in source skipped: ${file}`)
+          continue
+        }
+        if (!sourceStats.isFile()) {
           continue
         }
       } catch {
-        result.errors.push(`Failed to stat: ${file}`)
+        result.errors.push(`Failed to stat source: ${file}`)
         continue
       }
 
-      // Copy file
+      // Copy file with atomic write pattern
       try {
         const content = readFileSync(sourcePath, "utf-8")
-        writeFileSync(targetPath, content, { encoding: "utf-8", mode: 0o600 })
+        // Use atomic write: temp file + rename to avoid TOCTOU
+        const tempPath = `${targetPath}.${randomBytes(6).toString("hex")}.tmp`
+        writeFileSync(tempPath, content, { encoding: "utf-8", mode: 0o600 })
+        renameSync(tempPath, targetPath)
         result.migrated++
       } catch (err) {
-        result.errors.push(`Failed to migrate: ${file}`)
+        result.errors.push(`Failed to migrate ${file}: ${err instanceof Error ? err.message : String(err)}`)
       }
     }
 
@@ -386,11 +405,29 @@ export function cleanupLegacyState(projectRoot: string): { removed: boolean; rea
     return { removed: false, reason: "Migration has not been completed" }
   }
 
+  // Verify all current files have been migrated (prevents data loss from files added after migration)
+  try {
+    const legacyFiles = readdirSync(legacyDir).filter(f => f.endsWith(".json"))
+    const unmigratedFiles = legacyFiles.filter(f => {
+      const targetPath = join(newDir, f)
+      return !existsSync(targetPath)
+    })
+
+    if (unmigratedFiles.length > 0) {
+      return {
+        removed: false,
+        reason: `Found ${unmigratedFiles.length} unmigrated file(s): ${unmigratedFiles.slice(0, 3).join(", ")}${unmigratedFiles.length > 3 ? "..." : ""}. Run migration first.`
+      }
+    }
+  } catch (err) {
+    return { removed: false, reason: `Failed to verify files: ${err instanceof Error ? err.message : String(err)}` }
+  }
+
   try {
     // Remove legacy state directory
     rmSync(legacyDir, { recursive: true, force: true })
     return { removed: true }
   } catch (err) {
-    return { removed: false, reason: `Failed to remove: ${err}` }
+    return { removed: false, reason: `Failed to remove: ${err instanceof Error ? err.message : String(err)}` }
   }
 }
