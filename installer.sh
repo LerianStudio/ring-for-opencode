@@ -3,17 +3,24 @@ set -euo pipefail
 
 # Ring → OpenCode installer
 #
-# Installs Ring's OpenCode plugins/skills/commands/agents into ~/.config/opencode
+# Installs Ring's unified plugin architecture into ~/.config/opencode
 # WITHOUT deleting any existing user content.
+#
+# Architecture:
+# - Unified plugin system (RingUnifiedPlugin) with hook-based architecture
+# - Config injection for agents/skills/commands via ring-config.json
+# - Background task management with schema validation
 #
 # Behavior:
 # - Copies (overwrites) only the Ring-managed files that share exact paths
 # - NEVER deletes unknown files in the target directory
 # - Backs up any overwritten files into ~/.config/opencode/.ring-backups/<timestamp>/
 # - Merges required dependencies into ~/.config/opencode/package.json (preserving existing fields)
+# - Copies JSON schema files for IDE autocomplete support
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_ROOT="$SCRIPT_DIR/.opencode"
+SOURCE_OPENCODE="$SCRIPT_DIR/.opencode"
+SOURCE_PLUGIN="$SCRIPT_DIR/plugin"
 TARGET_ROOT="${OPENCODE_CONFIG_DIR:-"$HOME/.config/opencode"}"
 
 # Node version check - require 18-24, warn if 25+
@@ -42,10 +49,16 @@ check_node_version() {
 
 check_node_version
 
-if [[ ! -d "$SOURCE_ROOT" ]]; then
-  echo "ERROR: Source directory not found: $SOURCE_ROOT" >&2
-  echo "Expected this script to live at: opencode/installer.sh" >&2
-  echo "And source at: opencode/.opencode/" >&2
+if [[ ! -d "$SOURCE_OPENCODE" ]]; then
+  echo "ERROR: Source directory not found: $SOURCE_OPENCODE" >&2
+  echo "Expected this script to live at: ring-for-opencode/installer.sh" >&2
+  echo "And source at: ring-for-opencode/.opencode/" >&2
+  exit 1
+fi
+
+if [[ ! -d "$SOURCE_PLUGIN" ]]; then
+  echo "ERROR: Plugin directory not found: $SOURCE_PLUGIN" >&2
+  echo "Expected plugin at: ring-for-opencode/plugin/" >&2
   exit 1
 fi
 
@@ -57,7 +70,8 @@ mkdir -p "$BACKUP_DIR"
 
 backup_if_exists() {
   local rel="$1"
-  local src="$SOURCE_ROOT/$rel"
+  local source_base="${2:-$SOURCE_OPENCODE}"
+  local src="$source_base/$rel"
   local dst="$TARGET_ROOT/$rel"
 
   # Only consider files we manage (exist in source)
@@ -71,6 +85,7 @@ backup_if_exists() {
 
 copy_tree_no_delete() {
   local rel_dir="$1"
+  local source_base="${2:-$SOURCE_OPENCODE}"
 
   # Ensure destination exists
   mkdir -p "$TARGET_ROOT/$rel_dir"
@@ -78,29 +93,57 @@ copy_tree_no_delete() {
   # rsync WITHOUT --delete: preserves user content
   # -a: archive (permissions, times)
   # --checksum: safer overwrites when timestamps differ
-  rsync -a --checksum "$SOURCE_ROOT/$rel_dir/" "$TARGET_ROOT/$rel_dir/"
+  rsync -a --checksum "$source_base/$rel_dir/" "$TARGET_ROOT/$rel_dir/"
+}
+
+copy_file() {
+  local rel="$1"
+  local source_base="${2:-$SOURCE_OPENCODE}"
+  local src="$source_base/$rel"
+  local dst="$TARGET_ROOT/$rel"
+
+  if [[ -e "$src" ]]; then
+    mkdir -p "$(dirname "$dst")"
+    cp -a "$src" "$dst"
+    echo "Copied: $rel"
+  fi
 }
 
 # Backup any files we might overwrite
-backup_if_exists "plugin/index.ts"
-backup_if_exists "plugin/README.md"
-backup_if_exists "plugin/test-plugins.ts"
+# Plugin files (from root plugin/)
+backup_if_exists "plugin/index.ts" "$SOURCE_PLUGIN/.."
+backup_if_exists "plugin/ring-plugin.ts" "$SOURCE_PLUGIN/.."
+backup_if_exists "plugin/ring-unified.ts" "$SOURCE_PLUGIN/.."
 backup_if_exists "package.json"
 
 # Back up all Ring plugin .ts files (best-effort)
-if [[ -d "$SOURCE_ROOT/plugin" ]]; then
+if [[ -d "$SOURCE_PLUGIN" ]]; then
   while IFS= read -r -d '' f; do
-    rel="${f#"$SOURCE_ROOT/"}"
-    backup_if_exists "$rel"
-  done < <(find "$SOURCE_ROOT/plugin" -type f -name "*.ts" -print0)
+    rel="${f#"$SCRIPT_DIR/"}"
+    backup_if_exists "$rel" "$SCRIPT_DIR"
+  done < <(find "$SOURCE_PLUGIN" -type f -name "*.ts" -print0)
 fi
 
-# Copy trees (no deletes)
-for d in plugin skill command agent; do
-  if [[ -d "$SOURCE_ROOT/$d" ]]; then
-    copy_tree_no_delete "$d"
+# Back up schema files
+backup_if_exists "ring-config.schema.json"
+backup_if_exists "background-tasks.schema.json"
+
+# Copy plugin directory from root level
+echo "Copying plugin directory..."
+copy_tree_no_delete "plugin" "$SCRIPT_DIR"
+
+# Copy skill/command/agent from .opencode
+echo "Copying skill/command/agent directories..."
+for d in skill command agent; do
+  if [[ -d "$SOURCE_OPENCODE/$d" ]]; then
+    copy_tree_no_delete "$d" "$SOURCE_OPENCODE"
   fi
 done
+
+# Copy schema files for IDE autocomplete
+echo "Copying schema files..."
+copy_file "ring-config.schema.json" "$SOURCE_OPENCODE"
+copy_file "background-tasks.schema.json" "$SOURCE_OPENCODE"
 
 # Ensure global state dir exists in user config (no overwrite)
 # Note: Project-level state is in <project>/.opencode/state/ and created dynamically
@@ -110,12 +153,18 @@ mkdir -p "$TARGET_ROOT/state"
 REQUIRED_DEPS_JSON='{
   "dependencies": {
     "@opencode-ai/plugin": "1.1.3",
-    "better-sqlite3": "12.6.0"
+    "better-sqlite3": "12.6.0",
+    "zod": "^4.1.8",
+    "jsonc-parser": "^3.3.1",
+    "@clack/prompts": "^0.11.0",
+    "picocolors": "^1.1.1",
+    "commander": "^14.0.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "7.6.13",
     "@types/node": "22.19.5",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "@biomejs/biome": "^1.9.4"
   }
 }'
 
@@ -174,15 +223,26 @@ if command -v bun >/dev/null 2>&1; then
     exit 1
   fi
 
-  # Run tests if present
-  if [[ -f "$TARGET_ROOT/plugin/test-plugins.ts" ]]; then
-    echo "Running plugin tests..."
-    if ! (cd "$TARGET_ROOT" && bun plugin/test-plugins.ts); then
-      echo "WARN: Plugin tests failed. Installation may be incomplete." >&2
-    fi
-  fi
 else
-  echo "WARN: bun not found; skipping dependency install and tests." >&2
+  echo "WARN: bun not found; skipping dependency install." >&2
 fi
 
-echo "Install complete. Backup (if any) at: $BACKUP_DIR"
+echo ""
+echo "=========================================="
+echo "  Ring for OpenCode - Install Complete"
+echo "=========================================="
+echo ""
+echo "Installed components:"
+echo "  - RingUnifiedPlugin (unified plugin with hook-based architecture)"
+echo "  - Skills, commands, and agents from .opencode/"
+echo "  - JSON schemas for IDE autocomplete"
+echo ""
+echo "Backup location (if any): $BACKUP_DIR"
+echo ""
+echo "To verify installation:"
+echo "  1. Start OpenCode in your project directory"
+echo "  2. Check that Ring skills appear in the command palette"
+echo "  3. Create a ring-config.json for custom configuration"
+echo ""
+echo "For more info, see: https://github.com/LerianStudio/ring"
+echo ""
