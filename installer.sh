@@ -102,7 +102,8 @@ for d in plugin skill command agent; do
   fi
 done
 
-# Ensure state dir exists (no overwrite)
+# Ensure global state dir exists in user config (no overwrite)
+# Note: Project-level state is in <project>/.opencode/state/ and created dynamically
 mkdir -p "$TARGET_ROOT/state"
 
 # Merge package.json deps (preserves existing user package.json fields)
