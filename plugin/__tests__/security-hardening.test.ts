@@ -4,11 +4,11 @@ import * as os from "node:os"
 import * as path from "node:path"
 
 import { deepMerge } from "../config/loader.js"
+import { createContextInjectionHook } from "../hooks/factories/context-injection.js"
+import { buildNotifySendArgs, buildOsaScriptArgs } from "../hooks/factories/notification.js"
 import { loadRingAgents } from "../loaders/agent-loader.js"
 import { loadRingCommands } from "../loaders/command-loader.js"
 import { loadRingSkills } from "../loaders/skill-loader.js"
-import { createContextInjectionHook } from "../hooks/factories/context-injection.js"
-import { buildNotifySendArgs, buildOsaScriptArgs } from "../hooks/factories/notification.js"
 
 function mkdtemp(prefix: string): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix))
@@ -21,7 +21,7 @@ function writeFile(filePath: string, content: string): void {
 
 describe("security hardening", () => {
   test("deepMerge blocks prototype pollution (__proto__/constructor/prototype)", () => {
-    const protoBefore = ({} as Record<string, unknown>)["polluted"]
+    const protoBefore = ({} as Record<string, unknown>).polluted
 
     // JSON.parse ensures __proto__ is treated as a plain enumerable key.
     const source = JSON.parse(
@@ -31,14 +31,14 @@ describe("security hardening", () => {
     try {
       const merged = deepMerge({ safe: { a: 1 } }, source as unknown as Partial<{ safe: unknown }>)
 
-      expect(({} as Record<string, unknown>)["polluted"]).toBeUndefined()
-      expect(({} as Record<string, unknown>)["pollutedNested"]).toBeUndefined()
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+      expect(({} as Record<string, unknown>).pollutedNested).toBeUndefined()
       expect(protoBefore).toBeUndefined()
       expect(merged).toMatchObject({ safe: { a: 1, b: 2 } })
     } finally {
       // In case of regression, clean global prototype to avoid cascading failures.
-      delete (Object.prototype as unknown as Record<string, unknown>)["polluted"]
-      delete (Object.prototype as unknown as Record<string, unknown>)["pollutedNested"]
+      delete (Object.prototype as unknown as Record<string, unknown>).polluted
+      delete (Object.prototype as unknown as Record<string, unknown>).pollutedNested
     }
   })
 
@@ -80,7 +80,7 @@ describe("security hardening", () => {
       expect(Object.keys(skills)).toEqual(["ring-default:skill-1"])
 
       // ensure no global pollution from attempting to set __proto__ keys
-      expect(({} as Record<string, unknown>)["ok"]).toBeUndefined()
+      expect(({} as Record<string, unknown>).ok).toBeUndefined()
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true })
     }

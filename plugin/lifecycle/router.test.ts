@@ -4,8 +4,8 @@ import * as os from "node:os"
 import * as path from "node:path"
 
 import { DEFAULT_RING_CONFIG } from "../config/index.js"
-import { createLifecycleRouter } from "./router.js"
 import { readState, writeState } from "../utils/state.js"
+import { createLifecycleRouter } from "./router.js"
 
 describe("createLifecycleRouter - session.created", () => {
   test("resets state using event sessionID (not env/default session)", async () => {
