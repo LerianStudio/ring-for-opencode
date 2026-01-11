@@ -139,7 +139,7 @@ export type PluginInput = {
 | `tool.execute.before` | Pre-tool execution | `{tool, sessionID, callID}` | `{args}` |
 | `tool.execute.after` | Post-tool execution | `{tool, sessionID, callID}` | `{title, output, metadata}` |
 | `experimental.chat.messages.transform` | Transform message history | `{}` | `{messages: [{info, parts}]}` |
-| `experimental.chat.system.transform` | Modify system prompts | `{}` | `{system: string[]}` |
+| `experimental.chat.system.transform` | Modify system prompts | `{sessionID: string}` | `{system: string[]}` ← MUTABLE |
 | `experimental.session.compacting` | Customize compaction | `{sessionID}` | `{context: string[], prompt?: string}` |
 | `experimental.text.complete` | Post-process generated text | `{sessionID, messageID, partID}` | `{text}` |
 
@@ -256,7 +256,7 @@ USER INPUT
 │ [3] experimental.chat.system.transform hook           │
 │     File: session/llm.ts:76                           │
 │     Purpose: Modify system prompt array               │
-│     Input: {}                                         │
+│     Input: {sessionID: string}                        │
 │     Output: {system: string[]} ← MUTABLE              │
 └───────────────────────────────────────────────────────┘
     │
@@ -1086,6 +1086,8 @@ Be thorough but constructive. Explain the "why" behind suggestions.
 | `prompt` | string | No | System prompt text (in .md files, the body becomes the prompt) |
 | `permission` | object | No | Tool permission overrides (see below) |
 | `options` | object | No | Provider-specific options (unknown fields are collected here) |
+| `native` | boolean | No | Internal flag marking built-in system agents (not for user use) |
+| `maxSteps` | number | No | **@deprecated** - Use `steps` instead. Legacy field for max iterations. |
 
 **Note:** In markdown files, the document body after frontmatter automatically becomes the `prompt`. The `prompt` field can also be set explicitly in JSON configuration.
 
