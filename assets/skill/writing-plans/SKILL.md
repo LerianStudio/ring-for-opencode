@@ -56,7 +56,7 @@ If `is_empty_index: true` -> Proceed without precedent (normal for new projects)
 
 **Step 2: Dispatch Write-Plan Agent**
 
-Dispatch via `Task(subagent_type: "write-plan", model: "opus")` with:
+Dispatch via `Task(subagent_type: "write-plan")` with:
 - Instructions to create bite-sized tasks (2-5 min each)
 - Include exact file paths, complete code, verification steps
 - **Include Historical Precedent section** in plan with query results

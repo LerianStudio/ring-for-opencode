@@ -126,7 +126,7 @@ After final review passes:
 
 **Always:**
 - Launch all 5 reviewers in single message with 5 Task calls
-- Specify `model: "opus"` for each reviewer
+- Reviewers use the current session model
 - Wait for all reviewers before aggregating findings
 - Fix Critical/High/Medium immediately
 - Add TODO for Low, FIXME for Cosmetic

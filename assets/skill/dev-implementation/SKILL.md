@@ -61,7 +61,6 @@ This skill executes the implementation phase of the development cycle:
 ```yaml
 Task:
   subagent_type: "[selected_agent]"
-  model: "opus"
   description: "TDD-RED: Write failing test for [unit_id]"
   prompt: |
     TDD-RED PHASE: Write a FAILING Test
@@ -93,7 +92,6 @@ Task:
 ```yaml
 Task:
   subagent_type: "[selected_agent]"
-  model: "opus"
   description: "TDD-GREEN: Implement code to pass test"
   prompt: |
     TDD-GREEN PHASE: Make the Test PASS

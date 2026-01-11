@@ -53,7 +53,6 @@ This skill creates containerization and local development infrastructure:
 ```yaml
 Task:
   subagent_type: "devops-engineer"
-  model: "opus"
   description: "Create DevOps setup for [unit_id]"
   prompt: |
     Create containerization and local dev setup for this service.

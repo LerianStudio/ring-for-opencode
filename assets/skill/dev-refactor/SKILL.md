@@ -52,7 +52,6 @@ Extract project-specific conventions for agent context.
 ```yaml
 Task:
   subagent_type: "codebase-explorer"
-  model: "opus"
   description: "Generate codebase architecture report"
   prompt: |
     Generate comprehensive codebase report:

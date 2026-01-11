@@ -1,5 +1,6 @@
 ---
 description: Analyze existing codebase against standards and generate refactoring tasks for dev-cycle
+agent: build
 ---
 
 Analyze existing codebase against Ring/Lerian standards and execute refactoring through dev-cycle.

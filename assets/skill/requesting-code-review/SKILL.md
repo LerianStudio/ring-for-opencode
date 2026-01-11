@@ -158,7 +158,6 @@ review_state = {
 # Task 1: Code Reviewer
 Task:
   subagent_type: "code-reviewer"
-  model: "opus"
   description: "Code review for [unit_id]"
   prompt: |
     ## Code Review Request
@@ -197,7 +196,6 @@ Task:
 # Task 2: Business Logic Reviewer
 Task:
   subagent_type: "business-logic-reviewer"
-  model: "opus"
   description: "Business logic review for [unit_id]"
   prompt: |
     ## Business Logic Review Request
@@ -235,7 +233,6 @@ Task:
 # Task 3: Security Reviewer
 Task:
   subagent_type: "security-reviewer"
-  model: "opus"
   description: "Security review for [unit_id]"
   prompt: |
     ## Security Review Request
@@ -275,7 +272,6 @@ Task:
 # Task 4: Test Reviewer
 Task:
   subagent_type: "test-reviewer"
-  model: "opus"
   description: "Test quality review for [unit_id]"
   prompt: |
     ## Test Quality Review Request
@@ -316,7 +312,6 @@ Task:
 # Task 5: Nil-Safety Reviewer
 Task:
   subagent_type: "nil-safety-reviewer"
-  model: "opus"
   description: "Nil/null safety review for [unit_id]"
   prompt: |
     ## Nil-Safety Review Request
@@ -395,7 +390,6 @@ IF blocking_count > 0:
 ```yaml
 Task:
   subagent_type: "[implementation_agent from Gate 0]"
-  model: "opus"
   description: "Fix review issues for [unit_id]"
   prompt: |
     FIX REQUIRED - Code Review Issues Found

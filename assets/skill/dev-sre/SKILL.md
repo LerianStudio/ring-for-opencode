@@ -61,7 +61,6 @@ This skill VALIDATES that observability was correctly implemented by developers:
 ```yaml
 Task:
   subagent_type: "sre"
-  model: "opus"
   description: "Validate observability for [unit_id]"
   prompt: |
     VALIDATE Observability Implementation

@@ -1,5 +1,6 @@
 ---
 description: Cancel the current development cycle
+agent: build
 ---
 
 Cancel the current development cycle.

@@ -1,6 +1,6 @@
 ---
 description: Interactive design refinement using Socratic method
-agent: plan
+agent: build
 subtask: false
 ---
 

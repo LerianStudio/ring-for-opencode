@@ -1,6 +1,6 @@
 ---
 description: Autonomous two-phase codebase exploration with adaptive agents
-agent: plan
+agent: build
 subtask: true
 ---
 

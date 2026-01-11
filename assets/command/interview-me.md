@@ -1,6 +1,6 @@
 ---
 description: Proactive requirements gathering through structured user interview
-agent: plan
+agent: build
 subtask: false
 ---
 

@@ -52,7 +52,6 @@ Ensure every acceptance criterion has at least one **unit test** proving it work
 ```yaml
 Task:
   subagent_type: "qa-analyst"
-  model: "opus"
   description: "Write unit tests for [unit_id]"
   prompt: |
     WRITE UNIT TESTS for All Acceptance Criteria

@@ -1,6 +1,6 @@
 ---
 description: Create detailed implementation plan with bite-sized tasks
-agent: plan
+agent: build
 subtask: true
 ---
 
