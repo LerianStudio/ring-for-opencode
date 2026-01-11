@@ -134,10 +134,9 @@ export function addSchemaToConfig(): ConfigMergeResult {
       return { success: true, configPath }
     }
 
-    // Add/update $schema
-    const updatedConfig = { $schema: SCHEMA_URL, ...config }
-    delete (updatedConfig as Record<string, unknown>)["$schema"]
-    const finalConfig = { $schema: SCHEMA_URL, ...updatedConfig }
+    // Add/update $schema - destructure to avoid duplicate key
+    const { $schema: _existingSchema, ...restConfig } = config as { $schema?: string }
+    const finalConfig = { $schema: SCHEMA_URL, ...restConfig }
 
     writeFileSync(configPath, JSON.stringify(finalConfig, null, 2) + "\n")
     return { success: true, configPath }
