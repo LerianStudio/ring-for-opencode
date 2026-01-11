@@ -537,3 +537,100 @@ describe("Integration: writeState + readState roundtrip", () => {
     expect(result2?.value).toBe("session2")
   })
 })
+
+// ============================================================================
+// State Migration Tests
+// ============================================================================
+
+import { migrateStateFiles, getMigrationStatus } from "../utils/state"
+
+describe("migrateStateFiles", () => {
+  let tempDir: string
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "ring-migration-test-"))
+  })
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  test("migrates files from .ring/state to .opencode/state", () => {
+    // Create legacy state file
+    const legacyDir = join(tempDir, ".ring", "state")
+    mkdirSync(legacyDir, { recursive: true })
+    writeFileSync(join(legacyDir, "test-key-session123.json"), JSON.stringify({ value: "legacy" }))
+
+    // Run migration
+    const result = migrateStateFiles(tempDir)
+
+    // Verify file was copied
+    const newPath = join(tempDir, ".opencode", "state", "test-key-session123.json")
+    expect(existsSync(newPath)).toBe(true)
+    expect(JSON.parse(readFileSync(newPath, "utf-8"))).toEqual({ value: "legacy" })
+    expect(result.migrated).toBe(1)
+    expect(result.skipped).toBe(0)
+  })
+
+  test("skips migration if file already exists in .opencode/state", () => {
+    // Create file in both locations
+    const legacyDir = join(tempDir, ".ring", "state")
+    const newDir = join(tempDir, ".opencode", "state")
+    mkdirSync(legacyDir, { recursive: true })
+    mkdirSync(newDir, { recursive: true })
+    writeFileSync(join(legacyDir, "existing-session.json"), JSON.stringify({ old: true }))
+    writeFileSync(join(newDir, "existing-session.json"), JSON.stringify({ new: true }))
+
+    // Run migration
+    const result = migrateStateFiles(tempDir)
+
+    // Verify new file was NOT overwritten
+    const content = JSON.parse(readFileSync(join(newDir, "existing-session.json"), "utf-8"))
+    expect(content).toEqual({ new: true })
+    expect(result.migrated).toBe(0)
+    expect(result.skipped).toBe(1)
+  })
+
+  test("handles missing .ring/state directory gracefully", () => {
+    // No .ring/state directory exists
+    const result = migrateStateFiles(tempDir)
+
+    expect(result.migrated).toBe(0)
+    expect(result.skipped).toBe(0)
+    expect(result.error).toBeUndefined()
+  })
+
+  test("only migrates .json files", () => {
+    const legacyDir = join(tempDir, ".ring", "state")
+    mkdirSync(legacyDir, { recursive: true })
+    writeFileSync(join(legacyDir, "valid-session.json"), JSON.stringify({ valid: true }))
+    writeFileSync(join(legacyDir, "invalid.txt"), "not json")
+    writeFileSync(join(legacyDir, ".hidden"), "hidden file")
+
+    const result = migrateStateFiles(tempDir)
+
+    expect(result.migrated).toBe(1)
+    expect(existsSync(join(tempDir, ".opencode", "state", "valid-session.json"))).toBe(true)
+    expect(existsSync(join(tempDir, ".opencode", "state", "invalid.txt"))).toBe(false)
+  })
+
+  test("tracks migration status to prevent re-migration", () => {
+    const legacyDir = join(tempDir, ".ring", "state")
+    mkdirSync(legacyDir, { recursive: true })
+    writeFileSync(join(legacyDir, "key-session.json"), JSON.stringify({ data: 1 }))
+
+    // First migration
+    migrateStateFiles(tempDir)
+
+    // Check status
+    const status = getMigrationStatus(tempDir)
+    expect(status.migrated).toBe(true)
+
+    // Add new legacy file
+    writeFileSync(join(legacyDir, "key2-session.json"), JSON.stringify({ data: 2 }))
+
+    // Second migration should still work for new files
+    const result2 = migrateStateFiles(tempDir)
+    expect(result2.migrated).toBe(1)
+  })
+})

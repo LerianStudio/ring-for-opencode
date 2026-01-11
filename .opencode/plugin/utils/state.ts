@@ -12,6 +12,7 @@ import {
   readdirSync,
   statSync,
   renameSync,
+  rmSync,
 } from "fs"
 import { join, dirname, resolve, relative, isAbsolute } from "path"
 import { randomBytes } from "crypto"
@@ -235,4 +236,161 @@ export function escapeAngleBrackets(content: string): string {
  */
 export function escapeXmlTags(content: string): string {
   return escapeAngleBrackets(content)
+}
+
+/**
+ * Migration result interface.
+ */
+export interface MigrationResult {
+  migrated: number
+  skipped: number
+  errors: string[]
+  error?: string
+}
+
+/**
+ * Migration status interface.
+ */
+export interface MigrationStatus {
+  migrated: boolean
+  timestamp?: number
+  filesMigrated?: number
+}
+
+/**
+ * Get migration status for a project.
+ */
+export function getMigrationStatus(projectRoot: string): MigrationStatus {
+  const statusPath = join(projectRoot, STATE_DIR, ".migration-status.json")
+  try {
+    if (existsSync(statusPath)) {
+      const content = readFileSync(statusPath, "utf-8")
+      return JSON.parse(content) as MigrationStatus
+    }
+  } catch {
+    // Ignore read errors
+  }
+  return { migrated: false }
+}
+
+/**
+ * Save migration status.
+ */
+function saveMigrationStatus(projectRoot: string, status: MigrationStatus): void {
+  const stateDir = getStateDir(projectRoot)
+  const statusPath = join(stateDir, ".migration-status.json")
+  try {
+    writeFileSync(statusPath, JSON.stringify(status, null, 2), { encoding: "utf-8", mode: 0o600 })
+  } catch {
+    // Ignore write errors - migration status is optional
+  }
+}
+
+/**
+ * Migrate state files from legacy .ring/state/ to .opencode/state/.
+ * - Only copies .json files
+ * - Does not overwrite existing files in .opencode/state/
+ * - Safe to run multiple times (idempotent)
+ */
+export function migrateStateFiles(projectRoot: string): MigrationResult {
+  const result: MigrationResult = {
+    migrated: 0,
+    skipped: 0,
+    errors: [],
+  }
+
+  const legacyDir = join(projectRoot, ".ring", "state")
+
+  // Check if legacy directory exists
+  if (!existsSync(legacyDir)) {
+    return result
+  }
+
+  // Ensure target directory exists
+  const targetDir = getStateDir(projectRoot)
+
+  try {
+    const files = readdirSync(legacyDir)
+
+    for (const file of files) {
+      // Only migrate .json files
+      if (!file.endsWith(".json")) {
+        continue
+      }
+
+      const sourcePath = join(legacyDir, file)
+      const targetPath = join(targetDir, file)
+
+      // Skip if file already exists in target
+      if (existsSync(targetPath)) {
+        result.skipped++
+        continue
+      }
+
+      // Verify source is a file (not directory)
+      try {
+        const stats = statSync(sourcePath)
+        if (!stats.isFile()) {
+          continue
+        }
+      } catch {
+        result.errors.push(`Failed to stat: ${file}`)
+        continue
+      }
+
+      // Copy file
+      try {
+        const content = readFileSync(sourcePath, "utf-8")
+        writeFileSync(targetPath, content, { encoding: "utf-8", mode: 0o600 })
+        result.migrated++
+      } catch (err) {
+        result.errors.push(`Failed to migrate: ${file}`)
+      }
+    }
+
+    // Update migration status
+    const status = getMigrationStatus(projectRoot)
+    saveMigrationStatus(projectRoot, {
+      migrated: true,
+      timestamp: Date.now(),
+      filesMigrated: (status.filesMigrated || 0) + result.migrated,
+    })
+
+  } catch (err) {
+    result.error = `Failed to read legacy directory: ${err}`
+  }
+
+  return result
+}
+
+/**
+ * Remove legacy .ring/state/ directory after confirming migration.
+ * Only removes if .opencode/state/ exists and has files.
+ */
+export function cleanupLegacyState(projectRoot: string): { removed: boolean; reason?: string } {
+  const legacyDir = join(projectRoot, ".ring", "state")
+  const newDir = join(projectRoot, STATE_DIR)
+
+  // Safety checks
+  if (!existsSync(legacyDir)) {
+    return { removed: false, reason: "Legacy directory does not exist" }
+  }
+
+  if (!existsSync(newDir)) {
+    return { removed: false, reason: "New state directory does not exist - run migration first" }
+  }
+
+  // Check migration status
+  const status = getMigrationStatus(projectRoot)
+  if (!status.migrated) {
+    return { removed: false, reason: "Migration has not been completed" }
+  }
+
+  try {
+    // Remove legacy state directory
+    rmSync(legacyDir, { recursive: true, force: true })
+    return { removed: true }
+  } catch (err) {
+    return { removed: false, reason: `Failed to remove: ${err}` }
+  }
 }
