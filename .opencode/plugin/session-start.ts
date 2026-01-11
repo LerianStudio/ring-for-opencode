@@ -1,7 +1,7 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { existsSync, readFileSync, readdirSync, statSync, lstatSync } from "fs"
 import { join } from "path"
-import { cleanupOldState, deleteState, getSessionId, escapeAngleBrackets, sanitizeForPrompt, isPathWithinRoot, migrateStateFiles } from "./utils/state"
+import { cleanupOldState, deleteState, getSessionId, escapeAngleBrackets, sanitizeForPrompt, isPathWithinRoot, migrateStateFiles, getMigrationStatus } from "./utils/state"
 import { EVENTS } from "./utils/events"
 
 /**
@@ -240,8 +240,14 @@ Run: \`skill: "using-ring"\` to see available workflows.`
     event: async ({ event }) => {
       if (event.type === EVENTS.SESSION_CREATED) {
         // Migrate legacy state files from .ring/state/ to .opencode/state/
-        // Safe to call multiple times - skips already migrated files
-        migrateStateFiles(projectRoot)
+        // Only run if not already migrated to avoid unnecessary I/O
+        const migrationStatus = getMigrationStatus(projectRoot)
+        if (!migrationStatus.migrated) {
+          const migrationResult = migrateStateFiles(projectRoot)
+          if (process.env.DEBUG && (migrationResult.error || migrationResult.errors.length > 0)) {
+            console.debug('[ring] State migration result:', JSON.stringify(migrationResult))
+          }
+        }
         // Reset context usage state for new session
         deleteState(projectRoot, "context-usage", sessionId)
         // Clean up old state files (> 7 days)
