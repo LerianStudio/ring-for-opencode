@@ -274,6 +274,8 @@ export function getMigrationStatus(projectRoot: string): MigrationStatus {
   return { migrated: false }
 }
 
+// TODO(review): saveMigrationStatus does not use atomic write pattern unlike writeState.
+// Consider extracting atomic write logic into shared helper. (code-reviewer, 2025-01-11, severity: Low)
 /**
  * Save migration status.
  */
@@ -311,9 +313,13 @@ export function migrateStateFiles(projectRoot: string): MigrationResult {
   const targetDir = getStateDir(projectRoot)
 
   try {
+    // TODO(review): No limit on file count - large directories could cause high memory/CPU usage.
+    // Consider adding MAX_MIGRATION_FILES limit. (security-reviewer, 2025-01-11, severity: Low)
     const files = readdirSync(legacyDir)
 
     for (const file of files) {
+      // TODO(review): File names from readdirSync are not validated against expected patterns.
+      // Consider adding validation like /^[a-zA-Z0-9_-]+-[a-zA-Z0-9_-]+\.json$/ (security-reviewer, 2025-01-11, severity: Low)
       // Only migrate .json files
       if (!file.endsWith(".json")) {
         continue

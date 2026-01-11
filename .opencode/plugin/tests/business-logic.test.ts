@@ -219,6 +219,8 @@ describe("inferOutcomeFromTodos", () => {
 // State Management Tests (readState, writeState)
 // ============================================================================
 
+// TODO(review): Consolidate multiple import statements from "../utils/state" into single import.
+// (code-reviewer, 2025-01-11, severity: Low)
 // Import state functions directly for testing
 import {
   readState,
@@ -633,6 +635,12 @@ describe("migrateStateFiles", () => {
     const result2 = migrateStateFiles(tempDir)
     expect(result2.migrated).toBe(1)
   })
+
+  // TODO(review): Add test verifying subdirectories in legacy state directory are skipped.
+  // (code-reviewer, 2025-01-11, severity: Low)
+
+  // TODO(review): Add test for file copy failure scenario (e.g., unreadable source file).
+  // (code-reviewer, 2025-01-11, severity: Low)
 })
 
 // ============================================================================
@@ -697,4 +705,7 @@ describe("cleanupLegacyState", () => {
     expect(result.removed).toBe(false)
     expect(result.reason).toContain("run migration first")
   })
+
+  // TODO(review): Add test for cleanup refusing when files added after migration.
+  // (business-logic-reviewer, 2025-01-11, severity: Low)
 })
