@@ -9,10 +9,16 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { fileURLToPath } from "node:url"
 
+import { type AgentConfig, loadRingAgents } from "../../loaders/agent-loader.js"
+import { loadRingCommands } from "../../loaders/command-loader.js"
+import { loadRingSkills, type SkillConfig } from "../../loaders/skill-loader.js"
 import type { Hook, HookContext, HookFactory, HookOutput, HookResult } from "../types.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+/** Plugin root directory (contains assets/) */
+const PLUGIN_ROOT = path.resolve(__dirname, "../../..")
 
 /**
  * Load a prompt file from the assets/prompts directory.
@@ -24,6 +30,78 @@ function loadPrompt(filename: string): string {
   } catch {
     return ""
   }
+}
+
+/**
+ * Generate skills reference from loaded skills.
+ * Format: "Available Ring skills: /skill1, /skill2, ... Use 'Skill' tool with skill name to invoke."
+ */
+function generateSkillsReference(skills: Record<string, SkillConfig>): string {
+  const skillNames = Object.keys(skills)
+    .map((key) => key.replace("ring:", ""))
+    .sort()
+    .map((name) => `/${name}`)
+    .join(", ")
+
+  if (!skillNames) return ""
+  return `Available Ring skills: ${skillNames}\nUse "Skill" tool with skill name to invoke.`
+}
+
+/**
+ * Generate commands reference from loaded commands.
+ * Format: "Ring commands: /cmd1, /cmd2, ... Use skills via Skill tool."
+ */
+function generateCommandsReference(commands: Record<string, unknown>): string {
+  const cmdNames = Object.keys(commands)
+    .map((key) => key.replace("ring:", ""))
+    .sort()
+
+  if (cmdNames.length === 0) return ""
+  return `Ring commands: Use skills via Skill tool. Check /help for full list.\nKey patterns: TDD (test-first), systematic debugging, defense-in-depth validation.`
+}
+
+/**
+ * Generate agents reference from loaded agents.
+ * Format categorizes agents by role prefix for compact representation.
+ */
+function generateAgentsReference(agents: Record<string, AgentConfig>): string {
+  const agentNames = Object.keys(agents)
+    .map((key) => key.replace("ring:", ""))
+    .sort()
+
+  if (agentNames.length === 0) return ""
+
+  // Categorize agents by common prefixes
+  const devAgents: string[] = []
+  const reviewers: string[] = []
+  const pmAgents: string[] = []
+  const otherAgents: string[] = []
+
+  for (const name of agentNames) {
+    if (name.includes("reviewer")) {
+      reviewers.push(name.replace("-reviewer", ""))
+    } else if (name.startsWith("pre-dev")) {
+      pmAgents.push(name)
+    } else if (
+      name.includes("engineer") ||
+      name === "devops" ||
+      name === "sre" ||
+      name === "qa-analyst" ||
+      name === "frontend-designer"
+    ) {
+      devAgents.push(name)
+    } else {
+      otherAgents.push(name)
+    }
+  }
+
+  const parts: string[] = []
+  if (devAgents.length > 0) parts.push(`Dev agents: ${devAgents.join(", ")}`)
+  if (reviewers.length > 0) parts.push(`Reviewers: ${reviewers.join(", ")}`)
+  if (pmAgents.length > 0) parts.push(`PM agents: ${pmAgents.join(", ")}`)
+  if (otherAgents.length > 0) parts.push(`Other: ${otherAgents.join(", ")}`)
+
+  return `${parts.join("\n")}\nDispatch via dev-cycle or pre-dev workflows.`
 }
 
 /**
@@ -48,11 +126,8 @@ const DEFAULT_CONFIG: Required<ContextInjectionConfig> = {
   injectAgentsRef: true,
 }
 
-// Load prompt content from external files
-const COMPACT_CRITICAL_RULES_CONTENT = loadPrompt("compact-rules.txt")
-const SKILLS_REFERENCE_CONTENT = loadPrompt("skills-reference.txt")
-const COMMANDS_REFERENCE_CONTENT = loadPrompt("commands-reference.txt")
-const AGENTS_REFERENCE_CONTENT = loadPrompt("agents-reference.txt")
+// Load static prompt content (compact-rules.txt is still static)
+const COMPACT_CRITICAL_RULES_CONTENT = loadPrompt("context-injection/compact-rules.txt")
 
 /**
  * Compact critical rules for compaction context.
@@ -61,33 +136,6 @@ const COMPACT_CRITICAL_RULES = COMPACT_CRITICAL_RULES_CONTENT
   ? `<ring-compact-rules>
 ${COMPACT_CRITICAL_RULES_CONTENT}
 </ring-compact-rules>`
-  : ""
-
-/**
- * Skills reference for compaction context.
- */
-const SKILLS_REFERENCE = SKILLS_REFERENCE_CONTENT
-  ? `<ring-skills-ref>
-${SKILLS_REFERENCE_CONTENT}
-</ring-skills-ref>`
-  : ""
-
-/**
- * Commands reference for compaction context.
- */
-const COMMANDS_REFERENCE = COMMANDS_REFERENCE_CONTENT
-  ? `<ring-commands-ref>
-${COMMANDS_REFERENCE_CONTENT}
-</ring-commands-ref>`
-  : ""
-
-/**
- * Agents reference for compaction context.
- */
-const AGENTS_REFERENCE = AGENTS_REFERENCE_CONTENT
-  ? `<ring-agents-ref>
-${AGENTS_REFERENCE_CONTENT}
-</ring-agents-ref>`
   : ""
 
 /**
@@ -104,8 +152,9 @@ export const createContextInjectionHook: HookFactory<ContextInjectionConfig> = (
     priority: 20,
     enabled: true,
 
-    async execute(_ctx: HookContext, output: HookOutput): Promise<HookResult> {
+    async execute(ctx: HookContext, output: HookOutput): Promise<HookResult> {
       const contextInjections: string[] = []
+      const projectRoot = ctx.directory
 
       try {
         // Inject compact critical rules
@@ -113,19 +162,31 @@ export const createContextInjectionHook: HookFactory<ContextInjectionConfig> = (
           contextInjections.push(COMPACT_CRITICAL_RULES)
         }
 
-        // Inject skills reference
-        if (cfg.injectSkillsRef && SKILLS_REFERENCE) {
-          contextInjections.push(SKILLS_REFERENCE)
+        // Generate and inject skills reference dynamically
+        if (cfg.injectSkillsRef) {
+          const skills = loadRingSkills(PLUGIN_ROOT, projectRoot)
+          const skillsContent = generateSkillsReference(skills)
+          if (skillsContent) {
+            contextInjections.push(`<ring-skills-ref>\n${skillsContent}\n</ring-skills-ref>`)
+          }
         }
 
-        // Inject commands reference
-        if (cfg.injectCommandsRef && COMMANDS_REFERENCE) {
-          contextInjections.push(COMMANDS_REFERENCE)
+        // Generate and inject commands reference dynamically
+        if (cfg.injectCommandsRef) {
+          const { commands } = loadRingCommands(PLUGIN_ROOT, projectRoot)
+          const commandsContent = generateCommandsReference(commands)
+          if (commandsContent) {
+            contextInjections.push(`<ring-commands-ref>\n${commandsContent}\n</ring-commands-ref>`)
+          }
         }
 
-        // Inject agents reference
-        if (cfg.injectAgentsRef && AGENTS_REFERENCE) {
-          contextInjections.push(AGENTS_REFERENCE)
+        // Generate and inject agents reference dynamically
+        if (cfg.injectAgentsRef) {
+          const agents = loadRingAgents(PLUGIN_ROOT, projectRoot)
+          const agentsContent = generateAgentsReference(agents)
+          if (agentsContent) {
+            contextInjections.push(`<ring-agents-ref>\n${agentsContent}\n</ring-agents-ref>`)
+          }
         }
 
         // Add to output context

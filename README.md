@@ -21,9 +21,9 @@ cp -r assets/ /your/project/.opencode/
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Agents | 16 | `assets/agent/` |
-| Skills | 30 | `assets/skill/` |
-| Commands | 16 | `assets/command/` |
+| Agents | 15 | `assets/agent/` |
+| Skills | 23 | `assets/skill/` |
+| Commands | 15 | `assets/command/` |
 | Plugin | 1 (unified) | `plugin/` |
 
 ## Architecture
@@ -33,7 +33,6 @@ Ring uses a unified plugin architecture with four core components:
 - **Unified Plugin**: Single entry point (`RingUnifiedPlugin`) that injects all components into OpenCode
 - **Hook System**: Event-driven middleware for session lifecycle (session start, context injection, task completion)
 - **Config Injection**: Automatically loads agents, skills, and commands from `.opencode/` directories
-- **Background Tasks**: Parallel agent execution manager for concurrent subagent operations
 
 ## Core Skills
 
@@ -42,11 +41,9 @@ Ring uses a unified plugin architecture with four core components:
 | `test-driven-development` | RED-GREEN-REFACTOR methodology |
 | `requesting-code-review` | Parallel 5-reviewer system |
 | `executing-plans` | Batch task execution with checkpoints |
-| `systematic-debugging` | 4-phase debugging methodology |
 | `brainstorming` | Socratic design refinement |
 | `exploring-codebase` | Deep codebase analysis |
 | `writing-plans` | Implementation planning with context |
-| `dispatching-parallel-agents` | Concurrent agent execution |
 | `handoff-tracking` | Session state preservation |
 | `linting-codebase` | Parallel lint fixing |
 
@@ -76,7 +73,6 @@ Ring uses a unified plugin architecture with four core components:
 | `@devops-engineer` | Infrastructure and CI/CD |
 | `@qa-analyst` | Testing and quality assurance |
 | `@sre` | Site reliability engineering |
-| `@prompt-quality-reviewer` | Prompt engineering analysis |
 
 ## Commands
 
@@ -89,7 +85,6 @@ Ring uses a unified plugin architecture with four core components:
 | `/write-plan` | Create implementation plans |
 | `/lint` | Run lint checks with auto-fix |
 | `/explore-codebase` | Deep codebase analysis |
-| `/interview-me` | Requirements gathering |
 | `/create-handoff` | Session state handoff |
 | `/resume-handoff` | Resume from handoff |
 | `/dev-cycle` | Full development cycle |
@@ -106,16 +101,7 @@ Example `.opencode/ring.jsonc`:
 ```jsonc
 {
   "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
-  "disabled_agents": ["prompt-quality-reviewer"],
-  "background_tasks": {
-    "defaultConcurrency": 3
-  },
-  "notifications": {
-    "enabled": true,
-    "onIdle": true,
-    "onError": true,
-    "onBackgroundComplete": true
-  }
+  "disabled_agents": []
 }
 ```
 
@@ -129,9 +115,9 @@ Features:
 
 ```
 assets/              # Source assets (installed to user's .opencode/)
-├── agent/           # 16 specialized agents
-├── command/         # 16 slash commands
-├── skill/           # 30 skills with workflows
+├── agent/           # 15 specialized agents
+├── command/         # 15 slash commands
+├── skill/           # 23 skills with workflows
 └── *.schema.json    # JSON schemas for validation
 
 plugin/              # Unified plugin system
@@ -140,7 +126,6 @@ plugin/              # Unified plugin system
 ├── hooks/           # Hook system (session, context, tasks)
 ├── config/          # Configuration management
 ├── lifecycle/       # Session lifecycle handlers
-├── background/      # Background task manager
 ├── tools/           # Custom Ring tools
 └── utils/           # Shared utilities
 ```

@@ -1,3 +1,0 @@
-Dev agents: backend-go, backend-ts, frontend-ts, devops, sre, qa, designer
-PM agents: pre-dev-full (large features), pre-dev-feature (small features)
-Dispatch via dev-cycle or pre-dev workflows.

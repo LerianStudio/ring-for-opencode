@@ -9,7 +9,7 @@ compatibility: opencode
 metadata:
   trigger: "Session ending, user runs create-handoff, context pressure, completing milestone"
   skip_when: "Quick Q&A with no implementation, no meaningful work, exploratory session"
-  sequence_before: "executing-plans, subagent-driven-development"
+  sequence_before: "executing-plans"
   sequence_after: "artifact-query"
   source: ring-default
 ---

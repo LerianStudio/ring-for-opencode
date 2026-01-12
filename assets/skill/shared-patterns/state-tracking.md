@@ -19,11 +19,11 @@ BLOCKED: [any blockers]
 
 Example:
 ```
-SKILL: systematic-debugging
-PHASE: 2 - Pattern Analysis
-COMPLETED: ✓ Error reproduced ✓ Recent changes reviewed
-NEXT: → Compare with working examples
-EVIDENCE: Test fails with "KeyError: 'user_id'"
+SKILL: test-driven-development
+PHASE: 2 - GREEN (Implementation)
+COMPLETED: ✓ Test written ✓ Test failure verified
+NEXT: → Write minimal implementation
+EVIDENCE: Test fails with "NameError: function not defined"
 BLOCKED: None
 ```
 

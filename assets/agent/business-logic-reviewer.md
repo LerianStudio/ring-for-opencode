@@ -72,11 +72,9 @@ ERROR: Model Capabilities Insufficient
 
 ---
 
-## Orchestrator Boundary
+## Reviewer Boundary
 
 **HARD GATE:** This reviewer REPORTS issues. It does NOT fix them.
-
-See [shared-patterns/reviewer-orchestrator-boundary.md](../skills/shared-patterns/reviewer-orchestrator-boundary.md) for the complete orchestrator principle.
 
 | Your Responsibility | Your Prohibition |
 |---------------------|------------------|

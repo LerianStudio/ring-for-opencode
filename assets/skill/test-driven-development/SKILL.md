@@ -15,7 +15,7 @@ metadata:
 
 ## Related Skills
 
-**Complementary:** testing-anti-patterns, verification-before-completion
+**Complementary:** testing-anti-patterns
 
 ## Compliance Rules
 
@@ -34,18 +34,14 @@ metadata:
 ## Skill Composition
 
 **Works well with:**
-- systematic-debugging: When test reveals unexpected behavior or bug
-- verification-before-completion: Before marking test suite or feature complete
 - requesting-code-review: After completing RED-GREEN-REFACTOR cycle for feature
 
 **Typical workflow:**
 1. Write failing test (RED)
-2. If test reveals unexpected behavior -> switch to systematic-debugging
-3. Fix root cause
-4. Return to TDD: minimal implementation (GREEN)
-5. Refactor (REFACTOR)
-6. Run verification-before-completion
-7. Request code review
+2. If test reveals unexpected behavior -> debug and fix root cause
+3. Return to TDD: minimal implementation (GREEN)
+4. Refactor (REFACTOR)
+5. Request code review
 
 ---
 

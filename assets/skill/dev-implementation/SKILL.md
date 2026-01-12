@@ -53,7 +53,7 @@ This skill executes the implementation phase of the development cycle:
 |----------|--------------|-------|
 | Go | API, Worker, Batch, CLI | `backend-engineer-golang` |
 | TypeScript | API, Worker | `backend-engineer-typescript` |
-| TypeScript | Frontend, BFF | `frontend-bff-engineer-typescript` |
+| TypeScript | Frontend | `frontend-engineer` |
 | React/CSS | Design, Styling | `frontend-designer` |
 
 ## Gate 0.1: TDD-RED (Write Failing Test)

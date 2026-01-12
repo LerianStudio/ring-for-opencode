@@ -1,0 +1,10 @@
+## Critical Rules
+
+Before and during implementation:
+- [ ] Verify all changes compile and work
+- [ ] Fix failing tests before proceeding
+- [ ] No secrets or credentials in code
+- [ ] Ask if requirements are unclear
+- [ ] Match existing conventions and patterns
+- [ ] Preserve working code (don't break what works)
+- [ ] Use TodoWrite for multi-step tasks

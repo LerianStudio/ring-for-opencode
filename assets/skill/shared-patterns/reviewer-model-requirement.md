@@ -57,4 +57,4 @@ If invoked with insufficient model capability, the agent MUST:
 2. Output the error message above
 3. Return immediately
 
-The orchestrator MUST reinvoke with an appropriate high-capability model.
+The caller MUST reinvoke with an appropriate high-capability model.

@@ -1,2 +1,0 @@
-Ring commands: Use skills via Skill tool. Check /help for full list.
-Key patterns: TDD (test-first), systematic debugging, defense-in-depth validation.

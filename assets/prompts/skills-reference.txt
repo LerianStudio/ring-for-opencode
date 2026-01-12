@@ -1,2 +1,0 @@
-Available Ring skills: /commit, /review-pr, /explore-codebase, /write-plan, /execute-plan, /brainstorm, /interview-me, /create-handoff, /resume-handoff, /lint, /codereview, /dev-cycle
-Use "Skill" tool with skill name to invoke.

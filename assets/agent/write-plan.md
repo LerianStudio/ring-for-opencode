@@ -543,25 +543,24 @@ Before saving the plan, verify:
 
 After saving the plan to `docs/plans/<filename>.md`, return to the main conversation and report:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Execution options:**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**1. Parallel Session** - Open new session with executing-plans, batch execution with checkpoints
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**2. Save for later** - Review plan and execute manually
 
 **Which approach?"**
 
 Then wait for human to choose.
 
-**If Subagent-Driven chosen:**
-- Inform: **REQUIRED SUB-SKILL:** Use subagent-driven-development
-- Stay in current session
-- Fresh subagent per task + code review between tasks
-
 **If Parallel Session chosen:**
 - Guide them to open new session in the worktree
 - Inform: **REQUIRED SUB-SKILL:** New session uses executing-plans
-- Provide exact command: `cd <worktree-path> && claude`
+- Provide exact command: `cd <worktree-path> && opencode`
+
+**If Save for later chosen:**
+- Confirm plan location
+- Provide guidance on manual execution
 
 ## Critical Reminders
 

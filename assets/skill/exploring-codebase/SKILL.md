@@ -16,7 +16,6 @@ metadata:
 
 ## Related Skills
 
-**Similar:** dispatching-parallel-agents, systematic-debugging
 **Sequence after:** brainstorming
 **Sequence before:** writing-plans, executing-plans
 
@@ -187,8 +186,6 @@ Based on Phase 1 discoveries, launch **N targeted explorers** (where N = number 
 | **brainstorming** | Use exploring-codebase in Phase 1 (Understanding) to gather context |
 | **writing-plans** | Use exploring-codebase before creating implementation plans |
 | **executing-plans** | Use exploring-codebase if plan execution reveals gaps |
-| **systematic-debugging** | Use exploring-codebase to understand system before debugging |
-| **dispatching-parallel-agents** | This skill is built on that pattern (twice!) |
 
 ## Key Principles
 

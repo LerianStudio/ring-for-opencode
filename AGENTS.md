@@ -16,14 +16,12 @@ Skills are loaded on-demand via the native `skill` tool. See `assets/skill/` for
 - `test-driven-development` - RED-GREEN-REFACTOR methodology
 - `brainstorming` - Socratic design refinement
 - `requesting-code-review` - Parallel 5-reviewer code review
-- `systematic-debugging` - 4-phase debugging methodology
 - `executing-plans` - Batch task execution with checkpoints
 
 ### Development Workflow
 1. Use `brainstorming` to refine ideas into designs
 2. Use `test-driven-development` for implementation
 3. Use `requesting-code-review` before merging
-4. Use `systematic-debugging` when issues arise
 
 ## Available Agents
 

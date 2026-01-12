@@ -48,10 +48,10 @@ const DEFAULT_CONFIG: Required<SessionStartConfig> = {
 }
 
 // Load prompt content from external files
-const CRITICAL_RULES_CONTENT = loadPrompt("critical-rules.txt")
-const AGENT_REMINDER_CONTENT = loadPrompt("agent-reminder.txt")
-const DUPLICATION_GUARD_CONTENT = loadPrompt("duplication-guard.txt")
-const DOUBT_QUESTIONS_CONTENT = loadPrompt("doubt-questions.txt")
+const CRITICAL_RULES_CONTENT = loadPrompt("session-start/critical-rules.txt")
+const AGENT_REMINDER_CONTENT = loadPrompt("session-start/agent-reminder.txt")
+const DUPLICATION_GUARD_CONTENT = loadPrompt("session-start/duplication-guard.txt")
+const DOUBT_QUESTIONS_CONTENT = loadPrompt("session-start/doubt-questions.txt")
 
 /**
  * Critical rules that must be followed in every session.

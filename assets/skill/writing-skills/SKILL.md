@@ -70,7 +70,7 @@ The entire skill creation process follows RED-GREEN-REFACTOR.
 ## Skill Types
 
 ### Technique
-Concrete method with steps to follow (condition-based-waiting, root-cause-tracing)
+Concrete method with steps to follow (condition-based-waiting)
 
 ### Pattern
 Way of thinking about problems (flatten-with-flags, test-invariants)

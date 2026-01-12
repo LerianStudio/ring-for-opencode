@@ -15,7 +15,6 @@
  * the submodules:
  * - "./hooks/index.js"
  * - "./config/index.js"
- * - "./background/index.js"
  * - "./utils/state.js"
  * - "./loaders/index.js"
  * - "./tools/index.js"

@@ -25,7 +25,6 @@ You are a Senior Test Reviewer conducting **Test Quality** review.
 
 | Pattern | What It Covers |
 |---------|---------------|
-| [reviewer-orchestrator-boundary.md](../skill/shared-patterns/reviewer-orchestrator-boundary.md) | You REPORT, you don't FIX |
 | [reviewer-severity-calibration.md](../skill/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
 | [reviewer-output-schema-core.md](../skill/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
 | [reviewer-blocker-criteria.md](../skill/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |

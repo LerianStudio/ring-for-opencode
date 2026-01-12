@@ -10,16 +10,7 @@ import { z } from "zod"
 /**
  * Hook names that can be disabled.
  */
-export const HookNameSchema = z.enum([
-  "session-start",
-  "context-injection",
-  "session-outcome",
-  "outcome-inference",
-  "doubt-resolver",
-  "compaction-context",
-  "rules-injector",
-  "agent-reminder",
-])
+export const HookNameSchema = z.enum(["session-start", "context-injection"])
 
 /**
  * Agent names that can be disabled.
@@ -32,11 +23,6 @@ export const AgentNameSchema = z.enum([
   "nil-safety-reviewer",
   "codebase-explorer",
   "write-plan",
-  "coder",
-  "docs",
-  "explorer",
-  "architect",
-  "vision",
   "backend-engineer-golang",
   "backend-engineer-typescript",
   "frontend-engineer",
@@ -50,19 +36,28 @@ export const AgentNameSchema = z.enum([
  * Skill names that can be disabled.
  */
 export const SkillNameSchema = z.enum([
-  "using-ring",
+  "using-ring-opencode",
   "test-driven-development",
-  "systematic-debugging",
   "requesting-code-review",
   "writing-plans",
   "executing-plans",
-  "dispatching-parallel-agents",
-  "verification-before-completion",
-  "commit",
-  "brainstorm",
-  "codereview",
-  "lint",
-  "worktree",
+  "brainstorming",
+  "linting-codebase",
+  "using-git-worktrees",
+  "exploring-codebase",
+  "handoff-tracking",
+  "interviewing-user",
+  "receiving-code-review",
+  "using-dev-team",
+  "writing-skills",
+  "dev-cycle",
+  "dev-devops",
+  "dev-feedback-loop",
+  "dev-implementation",
+  "dev-refactor",
+  "dev-sre",
+  "dev-testing",
+  "dev-validation",
 ])
 
 /**
@@ -72,7 +67,6 @@ export const CommandNameSchema = z.enum([
   "brainstorm",
   "codereview",
   "commit",
-  "compound-learnings",
   "create-handoff",
   "dev-cancel",
   "dev-cycle",
@@ -81,10 +75,7 @@ export const CommandNameSchema = z.enum([
   "dev-status",
   "execute-plan",
   "explore-codebase",
-  "interview-me",
   "lint",
-  "query-artifacts",
-  "release-guide",
   "resume-handoff",
   "worktree",
   "write-plan",

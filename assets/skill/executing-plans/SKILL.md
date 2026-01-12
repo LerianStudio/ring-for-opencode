@@ -14,10 +14,6 @@ metadata:
 
 # Executing Plans
 
-## Related Skills
-
-**Similar:** subagent-driven-development
-
 ---
 
 ## Overview
@@ -75,7 +71,7 @@ User saying "don't wait", "don't ask questions", or "just execute" does NOT skip
 ### Step 3: Execute Batch
 **Default: First 3 tasks**
 
-**Agent Selection:** Backend Go -> `backend-engineer-golang` | Backend TS -> `backend-engineer-typescript` | Frontend -> `frontend-bff-engineer-typescript` | Infra -> `devops-engineer` | Testing -> `qa-analyst` | Reliability -> `sre`
+**Agent Selection:** Backend Go -> `backend-engineer-golang` | Backend TS -> `backend-engineer-typescript` | Frontend -> `frontend-engineer` | Infra -> `devops-engineer` | Testing -> `qa-analyst` | Reliability -> `sre`
 
 For each task: Mark in_progress -> Dispatch to agent -> Follow plan steps exactly -> Run verifications -> Mark completed
 
@@ -96,7 +92,7 @@ For each task: Mark in_progress -> Dispatch to agent -> Follow plan steps exactl
 
 ### Step 6: Complete Development
 
-Use finishing-a-development-branch to verify tests, present options, execute choice.
+Verify all tests pass and present completion options to the user.
 
 ## When to Stop
 

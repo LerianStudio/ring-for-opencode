@@ -9,7 +9,6 @@ This document provides a comprehensive technical overview of Ring's architecture
 - [Plugin Entry Point](#plugin-entry-point)
 - [Hook System](#hook-system)
 - [Component Loaders](#component-loaders)
-- [Background Task Manager](#background-task-manager)
 - [Configuration System](#configuration-system)
 - [Component Formats](#component-formats)
 - [Data Flow](#data-flow)
@@ -23,7 +22,6 @@ Ring is a **unified plugin** for OpenCode that extends the AI assistant with spe
 
 1. **Declarative Components** - Agents, skills, and commands are defined in markdown files with YAML frontmatter
 2. **Event-Driven Hooks** - Lifecycle events trigger middleware chains with priority-based execution
-3. **Parallel Execution** - Background task manager enables concurrent agent operations
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -34,12 +32,11 @@ Ring is a **unified plugin** for OpenCode that extends the AI assistant with spe
 ┌─────────────────────────────────────────────────────────────────┐
 │              RingUnifiedPlugin (Single Entry Point)              │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │   Loaders    │  │    Hooks     │  │  Background Manager  │  │
-│  │  (agents,    │  │  (lifecycle  │  │  (parallel agents,   │  │
-│  │   skills,    │  │   events)    │  │   concurrency)       │  │
-│  │   commands)  │  │              │  │                      │  │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+│  ┌──────────────────────────┐  ┌──────────────────────────┐    │
+│  │         Loaders          │  │          Hooks           │    │
+│  │  (agents, skills,        │  │  (lifecycle events)      │    │
+│  │   commands)              │  │                          │    │
+│  └──────────────────────────┘  └──────────────────────────┘    │
 ├─────────────────────────────────────────────────────────────────┤
 │                    Component Layer (.opencode/)                  │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────┐  │
@@ -117,23 +114,18 @@ RingUnifiedPlugin(ctx: PluginInput) {
   // Phase 2: Initialize hook registry
   initializeHooks(config)
 
-  // Phase 3: Create background task manager
-  const backgroundManager = new BackgroundManager(ctx.client, ...)
-
-  // Phase 4: Create config handler (loads components)
+  // Phase 3: Create config handler (loads components)
   const configHandler = createConfigHandler(projectRoot, config)
 
-  // Phase 5: Create lifecycle router
+  // Phase 4: Create lifecycle router
   const lifecycleRouter = createLifecycleRouter(projectRoot, config)
 
-  // Phase 6: Return hooks object
+  // Phase 5: Return hooks object
   return {
     tool: ringTools,
     config: configHandler,
     event: eventHandler,
-    experimental: { ... },
-    getBackgroundManager: () => backgroundManager,
-    dispose: () => backgroundManager.cleanup()
+    experimental: { ... }
   }
 }
 ```
@@ -147,8 +139,6 @@ RingUnifiedPlugin(ctx: PluginInput) {
 | `event` | Function | Routes lifecycle events to hook registry |
 | `experimental.chat.system.transform` | Function | Injects context into system prompts |
 | `experimental.session.compacting` | Function | Preserves context during compaction |
-| `getBackgroundManager()` | Function | Returns background task manager |
-| `dispose()` | Function | Cleanup on shutdown |
 
 ---
 
@@ -287,7 +277,6 @@ metadata:
 ```yaml
 ---
 description: "Command description"
-agent: orchestrator-agent-name
 subtask: false
 ---
 ```
@@ -309,58 +298,6 @@ config.command = {
   ...(config.command ?? {}),
 }
 ```
-
----
-
-## Background Task Manager
-
-**Location:** `plugin/background/`
-
-### Purpose
-
-Enables parallel agent execution with concurrency control.
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   BackgroundManager                          │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │ ConcurrencyMgr  │  │   Task Queue    │                  │
-│  │ (per-agent      │  │   (polling,     │                  │
-│  │  limits)        │  │    timeouts)    │                  │
-│  └─────────────────┘  └─────────────────┘                  │
-├─────────────────────────────────────────────────────────────┤
-│  launch() → acquire slot → create session → poll status    │
-│                                                              │
-│  Events: progress updates, completion notifications         │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Concurrency Control
-
-```typescript
-// Default concurrency: 3 parallel tasks
-// Per-agent overrides in config:
-{
-  "background_tasks": {
-    "defaultConcurrency": 3,
-    "agentConcurrency": {
-      "codebase-explorer": 1,  // Sequential
-      "write-plan": 1          // Sequential
-    }
-  }
-}
-```
-
-### Task Lifecycle
-
-1. **Launch** - `backgroundManager.launch(input)`
-2. **Acquire** - Get concurrency slot for agent
-3. **Create** - Start OpenCode session
-4. **Poll** - Check status every 10 seconds
-5. **Complete** - Release slot, queue notification
 
 ---
 
@@ -393,17 +330,10 @@ interface RingConfig {
   disabled_skills: string[]
   disabled_commands: string[]
 
-  background_tasks: {
-    defaultConcurrency: number
-    taskTimeoutMs: number
-    agentConcurrency: Record<string, number>
-  }
-
   notifications: {
     enabled: boolean
     onIdle: boolean
     onError: boolean
-    onBackgroundComplete: boolean
   }
 
   hooks: {
@@ -491,7 +421,6 @@ metadata:
 ```markdown
 ---
 description: What the command does
-agent: orchestrator-agent
 subtask: false
 ---
 
@@ -552,7 +481,6 @@ OpenCode fires session.created event
          ▼
 RingUnifiedPlugin.event() called
          │
-         ├─→ backgroundManager.handleEvent()
          ├─→ lifecycleRouter() → cleanup old state
          └─→ hookRegistry.executeLifecycle("session.created")
                   │
@@ -594,9 +522,6 @@ Command dispatches 5 reviewers in parallel
          ├─→ @security-reviewer
          ├─→ @test-reviewer
          └─→ @nil-safety-reviewer
-         │
-         ▼
-BackgroundManager manages concurrency
          │
          ▼
 Results aggregated into unified report
@@ -673,7 +598,6 @@ metadata:
 ```markdown
 ---
 description: What the command does
-agent: orchestrator-agent
 subtask: false
 ---
 
@@ -757,7 +681,6 @@ if (!isDisabled("my-hook")) {
 | Agent loader | `plugin/loaders/agent-loader.ts` |
 | Skill loader | `plugin/loaders/skill-loader.ts` |
 | Command loader | `plugin/loaders/command-loader.ts` |
-| Background manager | `plugin/background/manager.ts` |
 | Config loader | `plugin/config/loader.ts` |
 | Config handler | `plugin/config/config-handler.ts` |
 | Config schema | `assets/ring-config.schema.json` |
@@ -785,7 +708,6 @@ ring doctor
 |-------|-------|
 | Components not loading | `plugin/loaders/*.ts` - frontmatter parsing |
 | Hooks not firing | `plugin/hooks/registry.ts:174` - executeLifecycle |
-| Background tasks stuck | `plugin/background/manager.ts` - polling logic |
 | Config not applied | `plugin/config/loader.ts` - 4-layer merge |
 
 ---
@@ -812,10 +734,3 @@ ring doctor
 2. **Maintainability** - Update once, applies everywhere
 3. **Quality gates** - Enforce standards systematically
 4. **Documentation** - Patterns explain the "why"
-
-### Why Background Task Manager?
-
-1. **Parallel execution** - 5 reviewers run simultaneously
-2. **Concurrency control** - Prevent resource exhaustion
-3. **Progress tracking** - Monitor long-running tasks
-4. **Notifications** - Alert on completion/failure

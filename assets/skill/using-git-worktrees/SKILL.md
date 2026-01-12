@@ -111,5 +111,4 @@ Announce -> Check `.worktrees/` exists -> Verify .gitignore -> `git worktree add
 - Any skill needing isolated workspace
 
 **Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
-- **executing-plans** or **subagent-driven-development** - Work happens in this worktree
+- **executing-plans** - Work happens in this worktree

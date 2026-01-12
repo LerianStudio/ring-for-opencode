@@ -151,7 +151,7 @@ Use this matrix to quickly determine the appropriate exploration depth:
 | "What's the architecture of X?" | Thorough | 30-45 min | "What's the architecture of the payment system?" |
 | "What patterns does X use?" | Thorough | 30-45 min | "What patterns does this monorepo use?" |
 
-**Multi-Area Exploration:** For questions spanning multiple domains (e.g., "How do auth, payments, and notifications integrate?"), use `dispatching-parallel-agents` skill to launch parallel exploration agents, one per domain.
+**Multi-Area Exploration:** For questions spanning multiple domains (e.g., "How do auth, payments, and notifications integrate?"), launch parallel exploration agents, one per domain.
 
 ## Blocker Criteria - STOP and Report
 

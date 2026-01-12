@@ -140,8 +140,6 @@ After all agents complete, run `<lint_command> 2>&1`.
 
 | Skill | When to use |
 |-------|-------------|
-| `dispatching-parallel-agents` | Pattern basis for this skill |
-| `systematic-debugging` | If lint errors indicate deeper issues |
 | `requesting-code-review` | After lint passes, before merge |
 
 ## Example Session

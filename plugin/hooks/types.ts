@@ -93,15 +93,7 @@ export type HookFactory<TConfig = Record<string, unknown>> = (config?: TConfig) 
 /**
  * Built-in hook names supported by Ring.
  */
-export type HookName =
-  | "session-start"
-  | "context-injection"
-  | "session-outcome"
-  | "outcome-inference"
-  | "doubt-resolver"
-  | "compaction-context"
-  | "rules-injector"
-  | "agent-reminder"
+export type HookName = "session-start" | "context-injection"
 
 /**
  * Hook registry entry with metadata.

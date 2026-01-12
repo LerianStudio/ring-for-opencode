@@ -1,1 +1,0 @@
-CRITICAL: verify changes | fix failing tests | no secrets | ask if unclear | match conventions | preserve working code | use TodoWrite

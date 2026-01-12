@@ -1,8 +1,7 @@
 ---
 name: using-ring-opencode
 description: |
-  Mandatory orchestrator protocol - establishes ORCHESTRATOR principle (dispatch agents,
-  don't operate directly) and skill discovery workflow for every conversation.
+  Skill discovery workflow and agent dispatch patterns for every conversation.
 license: MIT
 compatibility: opencode
 metadata:
@@ -268,7 +267,7 @@ WRONG: Three separate messages (sequential, 3x slower)
 
 ## Announcing Skill Usage
 
-- **Always announce meta-skills:** brainstorming, writing-plans, systematic-debugging (methodology change)
+- **Always announce meta-skills:** brainstorming, writing-plans (methodology change)
 - **Skip when obvious:** User says "write tests first" -> no need to announce TDD
 
 ## Required Patterns

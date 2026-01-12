@@ -51,7 +51,6 @@ Action: Cannot proceed. Orchestrator must reinvoke with model="opus"
 | Pattern | What It Covers |
 |---------|---------------|
 | [reviewer-model-requirement.md](../skill/shared-patterns/reviewer-model-requirement.md) | Opus 4.5+ requirement, self-verification |
-| [reviewer-orchestrator-boundary.md](../skill/shared-patterns/reviewer-orchestrator-boundary.md) | You REPORT, you don't FIX |
 | [reviewer-severity-calibration.md](../skill/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
 | [reviewer-output-schema-core.md](../skill/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
 | [reviewer-blocker-criteria.md](../skill/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |
@@ -61,11 +60,9 @@ Action: Cannot proceed. Orchestrator must reinvoke with model="opus"
 
 ---
 
-## Orchestrator Boundary
+## Reviewer Boundary
 
 **HARD GATE:** This reviewer REPORTS vulnerabilities. It does NOT fix them.
-
-See [shared-patterns/reviewer-orchestrator-boundary.md](../skill/shared-patterns/reviewer-orchestrator-boundary.md) for the complete orchestrator principle.
 
 | Your Responsibility | Your Prohibition |
 |---------------------|------------------|
