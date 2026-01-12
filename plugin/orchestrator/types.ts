@@ -162,6 +162,34 @@ export interface WorkflowRunResult {
 }
 
 // =============================================================================
+// Task Dispatch Types
+// =============================================================================
+
+export interface WorkerSpawnOptions {
+  basePort: number
+  timeout: number
+  directory: string
+  parentSessionId?: string
+  forceNew?: boolean
+}
+
+export interface TaskDispatchInput {
+  worker: WorkerInstance
+  workerId: string
+  task: string
+  attachments?: WorkflowRunInput["attachments"]
+  timeoutMs: number
+  sessionId?: string
+  requestedBy?: string
+}
+
+export interface TaskDispatchResult {
+  responseText?: string
+  warning?: string
+  error?: string
+}
+
+// =============================================================================
 // Context Types
 // =============================================================================
 
@@ -172,6 +200,8 @@ export interface OrchestratorContext {
   profiles: Record<string, WorkerProfile>
   spawnDefaults: { basePort: number; timeout: number }
   defaultListFormat: "markdown" | "json"
+  dispatchTask?: (input: TaskDispatchInput) => Promise<TaskDispatchResult>
+  spawnWorker?: (profile: WorkerProfile, options: WorkerSpawnOptions) => Promise<WorkerInstance>
 }
 
 // =============================================================================

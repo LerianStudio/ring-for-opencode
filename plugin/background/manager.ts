@@ -76,6 +76,7 @@ export class BackgroundManager {
     // Create OpenCode session
     const sessionResult = await this.client.session.create({
       body: {
+        parentID: input.parentSessionId,
         title: `[Ring] ${input.description}`,
       },
     })
@@ -355,6 +356,9 @@ export class BackgroundManager {
   private async completeTask(task: BackgroundTask): Promise<void> {
     task.status = "completed"
     task.completedAt = new Date()
+    if (!task.result && task.progress?.lastMessage) {
+      task.result = task.progress.lastMessage
+    }
     this.releaseTask(task)
     this.markForNotification(task)
     await this.notifyParent(task)

@@ -32,7 +32,7 @@ import type { HookContext, HookOutput } from "./hooks/types.js"
 // Lifecycle
 import { createLifecycleRouter } from "./lifecycle/index.js"
 // Tools
-import { ringTools } from "./tools/index.js"
+import { createRingTools } from "./tools/index.js"
 
 // Utils
 import { getSessionId } from "./utils/state.js"
@@ -132,6 +132,7 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
   })
 
   const sessionId = getSessionId()
+  const ringTools = createRingTools(directory, { backgroundManager })
 
   return {
     // Register Ring tools

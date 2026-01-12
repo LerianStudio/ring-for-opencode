@@ -21,8 +21,8 @@ import {
 import { homedir } from "node:os"
 import { join, normalize } from "node:path"
 import { z } from "zod"
-import type { OrchestratorContext, WorkerProfile, WorkflowRunLimits } from "./types.js"
 import { builtInProfiles } from "./profiles.js"
+import type { OrchestratorContext, WorkerProfile, WorkflowRunLimits } from "./types.js"
 import { BLOCKED_HOSTS } from "./types.js"
 
 // =============================================================================
@@ -153,7 +153,7 @@ const DEFAULT_CONFIG: OrchestratorConfigFile = {
 function getUserConfigDir(): string {
   const home = homedir()
   const xdgConfig = process.env.XDG_CONFIG_HOME
-  if (xdgConfig && xdgConfig.startsWith("/")) {
+  if (xdgConfig?.startsWith("/")) {
     return join(xdgConfig, "opencode", "ring")
   }
   return join(home, ".config", "opencode", "ring")

@@ -124,6 +124,9 @@ export class JobRegistry {
     if (existing.status !== "running") return existing
 
     const timeoutMs = options?.timeoutMs ?? 600_000
+    if (timeoutMs <= 0) {
+      throw new Error(`Timed out waiting for job "${id}" after ${timeoutMs}ms`)
+    }
     return await new Promise<Job>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.offWaiter(id, onDone)

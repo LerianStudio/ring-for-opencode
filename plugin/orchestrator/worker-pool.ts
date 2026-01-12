@@ -12,9 +12,8 @@
  * Ported from Orchestra's WorkerPool pattern.
  */
 
+import { validateServerUrl } from "./config.js"
 import type {
-  DeviceRegistryEntry,
-  DeviceRegistryFile,
   WorkerInstance,
   WorkerPoolCallback,
   WorkerPoolEvent,
@@ -22,7 +21,6 @@ import type {
   WorkerStatus,
 } from "./types.js"
 import { MAX_WORKERS, MAX_WORKERS_PER_SESSION, SPAWN_RATE_LIMIT_MS } from "./types.js"
-import { validateServerUrl } from "./config.js"
 
 const VALID_TRANSITIONS: Record<WorkerStatus, WorkerStatus[]> = {
   starting: ["ready", "error", "stopped"],
@@ -54,6 +52,14 @@ export class WorkerPool {
 
   setInstanceId(id: string): void {
     this.instanceId = id
+  }
+
+  getInstanceId(): string {
+    return this.instanceId
+  }
+
+  resetRateLimit(): void {
+    this.lastSpawnTime = 0
   }
 
   async getOrSpawn(
