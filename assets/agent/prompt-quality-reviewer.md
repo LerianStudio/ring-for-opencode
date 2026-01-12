@@ -2,6 +2,7 @@
 name: prompt-quality-reviewer
 description: Expert Agent Quality Analyst specialized in evaluating AI agent executions, identifying prompt deficiencies, and generating improvement suggestions.
 mode: subagent
+color: "#EC7063"
 ---
 
 # Prompt Quality Reviewer

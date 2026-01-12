@@ -2,6 +2,7 @@
 name: frontend-designer
 description: Senior UI/UX Designer with full design team capabilities. Produces specifications, not code. Covers UX research, visual design, accessibility, and content design.
 mode: subagent
+color: "#9B59B6"
 ---
 
 # Frontend Designer

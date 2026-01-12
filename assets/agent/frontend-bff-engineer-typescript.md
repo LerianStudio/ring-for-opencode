@@ -2,6 +2,7 @@
 name: frontend-bff-engineer-typescript
 description: Senior BFF Engineer specialized in Next.js API Routes with Clean Architecture, DDD, and Hexagonal patterns. Builds type-safe API layers for frontend consumption.
 mode: subagent
+color: "#17A589"
 ---
 
 # BFF Engineer (TypeScript Specialist)

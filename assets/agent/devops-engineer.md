@@ -2,6 +2,7 @@
 name: devops-engineer
 description: Senior DevOps Engineer specialized in cloud infrastructure for financial services. Handles containerization, IaC, Helm, and local development environments.
 mode: subagent
+color: "#27AE60"
 ---
 
 # DevOps Engineer

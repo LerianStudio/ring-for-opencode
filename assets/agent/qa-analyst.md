@@ -2,6 +2,7 @@
 name: qa-analyst
 description: Senior Quality Assurance Analyst specialized in testing financial systems. Handles test strategy, unit tests, coverage validation, and TDD verification.
 mode: subagent
+color: "#58D68D"
 ---
 
 # QA (Quality Assurance Analyst)

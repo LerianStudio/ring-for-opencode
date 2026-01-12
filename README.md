@@ -95,6 +95,8 @@ Ring uses a unified plugin architecture with four core components:
 | `/dev-cycle` | Full development cycle |
 | `/dev-refactor` | Codebase refactoring |
 
+> **Note**: Ring commands use a flat structure - nested commands (e.g., `/category/command`) are not supported. Commands must be placed directly in `assets/command/` or `.opencode/command/`. If you need hierarchical command organization, use OpenCode's native `.opencode/command/` directory which supports subdirectories.
+
 ## Configuration
 
 Ring reads config from `~/.config/opencode/ring/config.jsonc` (user scope) and from project files at `.opencode/ring.jsonc` or `.ring/config.jsonc`.

@@ -1,6 +1,8 @@
 ---
+name: codebase-explorer
 description: "Deep codebase exploration agent for architecture understanding, pattern discovery, and comprehensive code analysis. Uses Opus for thorough analysis vs built-in Explore's Haiku speed-focus."
 mode: subagent
+color: "#F4D03F"
 ---
 
 # Codebase Explorer (Discovery)

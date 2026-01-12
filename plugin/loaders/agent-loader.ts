@@ -19,6 +19,7 @@ export interface AgentConfig {
   mode?: "primary" | "subagent"
   prompt?: string
   model?: string
+  temperature?: number
   tools?: Record<string, boolean>
   permission?: Record<string, string>
   color?: string
@@ -31,6 +32,7 @@ interface AgentFrontmatter {
   description?: string
   mode?: string
   model?: string
+  temperature?: number
   tools?: string
   color?: string
 }
@@ -82,6 +84,10 @@ function parseFrontmatter(content: string): { data: AgentFrontmatter; body: stri
     if (key === "description") data.description = value
     if (key === "mode") data.mode = value
     if (key === "model") data.model = value
+    if (key === "temperature") {
+      const parsed = parseFloat(value)
+      if (!isNaN(parsed)) data.temperature = parsed
+    }
     if (key === "tools") data.tools = value
     if (key === "color") data.color = value
   }
@@ -111,6 +117,47 @@ function parseToolsConfig(toolsStr?: string): Record<string, boolean> | undefine
     }
   }
   return result
+}
+
+/**
+ * Get default temperature based on agent name pattern.
+ * Role-based defaults ensure consistent behavior across agent types.
+ */
+function getDefaultTemperature(agentName: string): number {
+  const name = agentName.toLowerCase()
+
+  // Reviewers: precise, consistent analysis (0.1)
+  if (name.includes("reviewer")) {
+    return 0.1
+  }
+
+  // Ops roles: precise, consistent operations (0.1)
+  if (name === "devops-engineer" || name === "sre" || name === "qa-analyst") {
+    return 0.1
+  }
+
+  // Planners/explorers: balanced creativity with structure (0.2)
+  if (name === "write-plan" || name === "codebase-explorer") {
+    return 0.2
+  }
+
+  // Engineers: balanced creativity with precision (0.2)
+  if (
+    name === "backend-engineer-golang" ||
+    name === "backend-engineer-typescript" ||
+    name === "frontend-engineer" ||
+    name === "frontend-bff-engineer-typescript"
+  ) {
+    return 0.2
+  }
+
+  // Creative roles: higher creativity (0.4)
+  if (name === "frontend-designer") {
+    return 0.4
+  }
+
+  // Default fallback
+  return 0.2
 }
 
 /**
@@ -166,6 +213,9 @@ function loadAgentsFromDir(
         if (data.color) {
           config.color = data.color
         }
+
+        // Apply temperature: explicit frontmatter value or role-based default
+        config.temperature = data.temperature ?? getDefaultTemperature(agentName)
 
         const toolsConfig = parseToolsConfig(data.tools)
         if (toolsConfig) {

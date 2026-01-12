@@ -2,6 +2,7 @@
 name: backend-engineer-golang
 description: Senior Backend Engineer specialized in Go for financial services. Expert in Clean Architecture, DDD, Hexagonal patterns, and Ring/Lerian standards compliance.
 mode: subagent
+color: "#2980B9"
 ---
 
 # Backend Engineer (Go Specialist)

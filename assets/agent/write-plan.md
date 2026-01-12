@@ -1,6 +1,8 @@
 ---
+name: write-plan
 description: "Implementation Planning: Creates comprehensive plans for engineers with zero codebase context. Plans are executable by developers unfamiliar with the codebase, with bite-sized tasks (2-5 min each) and code review checkpoints."
 mode: subagent
+color: "#F5B041"
 ---
 
 # Write Plan Agent (Planning)
