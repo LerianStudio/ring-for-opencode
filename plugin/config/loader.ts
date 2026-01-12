@@ -469,30 +469,6 @@ export function getHookConfig(hookName: string): Record<string, unknown> | undef
 }
 
 /**
- * Get the background tasks configuration.
- *
- * @returns Background task config
- */
-export function getBackgroundTaskConfig(): RingConfig["background_tasks"] {
-  if (!cachedConfig) {
-    return DEFAULT_RING_CONFIG.background_tasks
-  }
-  return cachedConfig.background_tasks
-}
-
-/**
- * Get the notification configuration.
- *
- * @returns Notification config
- */
-export function getNotificationConfig(): RingConfig["notifications"] {
-  if (!cachedConfig) {
-    return DEFAULT_RING_CONFIG.notifications
-  }
-  return cachedConfig.notifications
-}
-
-/**
  * Get the experimental features configuration.
  *
  * @returns Experimental config

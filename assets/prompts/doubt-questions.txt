@@ -1,0 +1,9 @@
+## When In Doubt
+
+Ask yourself:
+1. Is this requirement clear enough to implement?
+2. Are there edge cases I should clarify?
+3. Does this conflict with existing behavior?
+4. Should I confirm the approach before proceeding?
+
+If ANY answer is "no" or "maybe" - ASK THE USER before proceeding.

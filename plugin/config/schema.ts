@@ -6,7 +6,6 @@
  */
 
 import { z } from "zod"
-import { OrchestratorConfigFileSchema } from "../orchestrator/config.js"
 
 /**
  * Hook names that can be disabled.
@@ -14,12 +13,9 @@ import { OrchestratorConfigFileSchema } from "../orchestrator/config.js"
 export const HookNameSchema = z.enum([
   "session-start",
   "context-injection",
-  "notification",
-  "task-completion",
   "session-outcome",
   "outcome-inference",
   "doubt-resolver",
-  "background-notification",
   "compaction-context",
   "rules-injector",
   "agent-reminder",
@@ -95,32 +91,6 @@ export const CommandNameSchema = z.enum([
 ])
 
 /**
- * Background task configuration.
- */
-export const BackgroundTaskConfigSchema = z.object({
-  /** Default concurrency for background tasks */
-  defaultConcurrency: z.number().min(1).max(10).default(3),
-  /** Per-agent concurrency limits */
-  agentConcurrency: z.record(z.string(), z.number().min(1).max(10)).optional(),
-  /** Task timeout in milliseconds */
-  taskTimeoutMs: z.number().min(60000).max(3600000).default(1800000),
-})
-
-/**
- * Notification configuration.
- */
-export const NotificationConfigSchema = z.object({
-  /** Enable desktop notifications */
-  enabled: z.boolean().default(true),
-  /** Notify on session idle */
-  onIdle: z.boolean().default(true),
-  /** Notify on session error */
-  onError: z.boolean().default(true),
-  /** Notify on background task completion */
-  onBackgroundComplete: z.boolean().default(true),
-})
-
-/**
  * Experimental features configuration.
  */
 export const ExperimentalConfigSchema = z.object({
@@ -151,29 +121,12 @@ export const RingConfigSchema = z.object({
   /** Disabled commands (won't be registered) */
   disabled_commands: z.array(CommandNameSchema).default([]),
 
-  /** Background task configuration */
-  background_tasks: BackgroundTaskConfigSchema.optional().default({
-    defaultConcurrency: 3,
-    taskTimeoutMs: 1800000,
-  }),
-
-  /** Notification configuration */
-  notifications: NotificationConfigSchema.optional().default({
-    enabled: true,
-    onIdle: true,
-    onError: true,
-    onBackgroundComplete: true,
-  }),
-
   /** Experimental features */
   experimental: ExperimentalConfigSchema.optional().default({
     preemptiveCompaction: false,
     compactionThreshold: 0.8,
     aggressiveTruncation: false,
   }),
-
-  /** Orchestrator configuration */
-  orchestrator: OrchestratorConfigFileSchema.optional(),
 
   /** Custom hook configurations */
   hooks: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),
@@ -186,8 +139,6 @@ export type HookName = z.infer<typeof HookNameSchema>
 export type AgentName = z.infer<typeof AgentNameSchema>
 export type SkillName = z.infer<typeof SkillNameSchema>
 export type CommandName = z.infer<typeof CommandNameSchema>
-export type BackgroundTaskConfig = z.infer<typeof BackgroundTaskConfigSchema>
-export type NotificationConfig = z.infer<typeof NotificationConfigSchema>
 export type ExperimentalConfig = z.infer<typeof ExperimentalConfigSchema>
 export type RingConfig = z.infer<typeof RingConfigSchema>
 

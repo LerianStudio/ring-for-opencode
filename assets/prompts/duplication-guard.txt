@@ -1,0 +1,7 @@
+## Avoid Duplication
+
+Before implementing:
+1. Check if similar functionality already exists
+2. Reuse existing utilities and helpers
+3. Don't reinvent patterns that are already established
+4. Reference existing code for style consistency

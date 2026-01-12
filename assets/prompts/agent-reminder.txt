@@ -1,0 +1,8 @@
+## Quality Checklist
+
+Before completing any task:
+- [ ] Code compiles without errors
+- [ ] Tests pass (if applicable)
+- [ ] No console.log/print debugging left behind
+- [ ] Error handling is in place
+- [ ] Changes are minimal and focused

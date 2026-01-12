@@ -96,12 +96,9 @@ export type HookFactory<TConfig = Record<string, unknown>> = (config?: TConfig) 
 export type HookName =
   | "session-start"
   | "context-injection"
-  | "notification"
-  | "task-completion"
   | "session-outcome"
   | "outcome-inference"
   | "doubt-resolver"
-  | "background-notification"
   | "compaction-context"
   | "rules-injector"
   | "agent-reminder"

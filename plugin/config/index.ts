@@ -32,13 +32,11 @@ export {
   checkConfigChanged,
   clearConfigCache,
   deepMerge,
-  getBackgroundTaskConfig,
   getCachedConfig,
   getConfigLayers,
   getExperimentalConfig,
   // Config getters
   getHookConfig,
-  getNotificationConfig,
   isAgentDisabledInConfig,
   isCommandDisabledInConfig,
   // Disabled checks
@@ -56,8 +54,6 @@ export {
 export {
   type AgentName,
   AgentNameSchema,
-  type BackgroundTaskConfig,
-  BackgroundTaskConfigSchema,
   type CommandName,
   CommandNameSchema,
   // Default values
@@ -68,8 +64,6 @@ export {
   type HookName,
   // Zod schemas
   HookNameSchema,
-  type NotificationConfig,
-  NotificationConfigSchema,
   type RingConfig,
   RingConfigSchema,
   type SkillName,

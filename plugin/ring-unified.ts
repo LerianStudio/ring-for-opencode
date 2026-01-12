@@ -14,18 +14,10 @@
 
 import type { Plugin, PluginInput } from "@opencode-ai/plugin"
 import type { Config as OpenCodeSdkConfig } from "@opencode-ai/sdk"
-// Background
-import { BackgroundManager } from "./background/index.js"
-import type { BackgroundClient } from "./background/types.js"
 import type { RingConfig } from "./config/index.js"
 // Config
 import { createConfigHandler, loadConfig } from "./config/index.js"
-import {
-  createContextInjectionHook,
-  createNotificationHook,
-  createSessionStartHook,
-  createTaskCompletionHook,
-} from "./hooks/factories/index.js"
+import { createContextInjectionHook, createSessionStartHook } from "./hooks/factories/index.js"
 // Hooks
 import { hookRegistry } from "./hooks/index.js"
 import type { HookContext, HookOutput } from "./hooks/types.js"
@@ -53,22 +45,6 @@ function initializeHooks(config: RingConfig): void {
   if (!isDisabled("context-injection")) {
     hookRegistry.register(createContextInjectionHook(config.hooks?.["context-injection"]))
   }
-
-  if (!isDisabled("notification")) {
-    hookRegistry.register(
-      createNotificationHook({
-        enabled: config.notifications.enabled,
-        notifyOn: {
-          sessionIdle: config.notifications.onIdle,
-          error: config.notifications.onError,
-        },
-      }),
-    )
-  }
-
-  if (!isDisabled("task-completion")) {
-    hookRegistry.register(createTaskCompletionHook(config.hooks?.["task-completion"]))
-  }
 }
 
 /**
@@ -94,11 +70,11 @@ function buildHookContext(
  * Matches oh-my-opencode's Plugin signature:
  * Plugin = (input: PluginInput) => Promise<Hooks>
  *
- * Note: Return type is inferred to allow custom properties (getBackgroundManager, dispose)
+ * Note: Return type is inferred to allow custom properties
  * that extend the base Hooks interface for Ring-specific functionality.
  */
 export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
-  const { directory, client } = ctx
+  const { directory } = ctx
   const projectRoot = directory
 
   // Load Ring configuration
@@ -112,27 +88,20 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
   // Initialize hooks
   initializeHooks(config)
 
-  // Initialize background manager
-  const backgroundManager = new BackgroundManager(
-    client as unknown as BackgroundClient,
-    directory,
-    config.background_tasks,
-  )
-
   // Create config handler for OpenCode config injection
   const configHandler = createConfigHandler({
     projectRoot,
     ringConfig: config,
   })
 
-  // Create lifecycle router (state side-effects only; notifications go through hooks)
+  // Create lifecycle router (state side-effects only)
   const lifecycleRouter = createLifecycleRouter({
     projectRoot,
     ringConfig: config,
   })
 
   const sessionId = getSessionId()
-  const ringTools = createRingTools(directory, { backgroundManager })
+  const ringTools = createRingTools(directory)
 
   return {
     // Register Ring tools
@@ -145,9 +114,6 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
 
     // Event handler - lifecycle routing + hook execution
     event: async ({ event }) => {
-      // Route to background manager for task tracking
-      backgroundManager.handleEvent(event)
-
       // Route to lifecycle router
       await lifecycleRouter({ event })
 
@@ -188,11 +154,6 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
         )
         await hookRegistry.executeLifecycle("session.error", hookCtx, output)
       }
-
-      if (event.type === "todo.updated") {
-        const hookCtx = buildHookContext(eventSessionId, directory, "todo.updated", normalizedEvent)
-        await hookRegistry.executeLifecycle("todo.updated", hookCtx, output)
-      }
     },
 
     // System prompt transformation
@@ -217,14 +178,6 @@ export const RingUnifiedPlugin: Plugin = async (ctx: PluginInput) => {
       const hookCtx = buildHookContext(input.sessionID, directory, "session.compacting")
       const hookOutput: HookOutput = { context: output.context }
       await hookRegistry.executeLifecycle("session.compacting", hookCtx, hookOutput)
-    },
-
-    // Expose background manager
-    getBackgroundManager: () => backgroundManager,
-
-    // Cleanup
-    dispose: () => {
-      backgroundManager.cleanup()
     },
   }
 }
