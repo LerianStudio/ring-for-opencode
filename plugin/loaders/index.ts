@@ -14,8 +14,8 @@ export {
 export {
   type CommandConfig,
   type CommandValidationWarning,
-  type LoadCommandsResult,
   countRingCommands,
+  type LoadCommandsResult,
   loadRingCommands,
 } from "./command-loader.js"
 // Skill loader

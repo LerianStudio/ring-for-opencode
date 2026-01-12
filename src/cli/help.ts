@@ -298,7 +298,7 @@ export async function help(options: HelpOptions = {}): Promise<number> {
 
   const lines: string[] = []
   lines.push("Ring for OpenCode - Available Capabilities\n")
-  lines.push("=".repeat(50) + "\n")
+  lines.push(`${"=".repeat(50)}\n`)
 
   if (showSkills) {
     lines.push(`\nSkills (${skills.length})`)
@@ -321,7 +321,7 @@ export async function help(options: HelpOptions = {}): Promise<number> {
     lines.push("\nUsage: Dispatch with '@<name>' or Task tool")
   }
 
-  lines.push("\n\n" + "=".repeat(50))
+  lines.push(`\n\n${"=".repeat(50)}`)
   lines.push("For details on a specific item: /ring:help <name>")
   lines.push("Documentation: https://github.com/fredcamaral/ring-for-opencode")
 
