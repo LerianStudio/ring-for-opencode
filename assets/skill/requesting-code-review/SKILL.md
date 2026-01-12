@@ -1,5 +1,5 @@
 ---
-name: requesting-code-review
+name: "ring:requesting-code-review"
 description: |
   Gate 4 of development cycle - dispatches 5 specialized reviewers (code, business-logic,
   security, test, nil-safety) in parallel for comprehensive code review feedback.

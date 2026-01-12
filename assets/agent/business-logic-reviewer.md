@@ -1,5 +1,5 @@
 ---
-name: business-logic-reviewer
+name: "ring:business-logic-reviewer"
 description: "Correctness Review: reviews domain correctness, business rules, edge cases, and requirements. Uses mental execution to trace code paths and analyzes full file context, not just changes. Runs in parallel with code-reviewer and security-reviewer for fast feedback."
 mode: subagent
 color: "#E67E22"

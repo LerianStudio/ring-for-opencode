@@ -1,5 +1,5 @@
 ---
-name: frontend-engineer
+name: "ring:frontend-engineer"
 description: Senior Frontend Engineer specialized in React/Next.js for financial dashboards. Expert in App Router, Server Components, accessibility, and performance optimization.
 mode: subagent
 color: "#1ABC9C"

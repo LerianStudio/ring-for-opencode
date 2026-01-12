@@ -1,4 +1,5 @@
 ---
+name: "ring:explore-codebase"
 description: Autonomous two-phase codebase exploration with adaptive agents
 agent: build
 subtask: true

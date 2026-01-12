@@ -1,5 +1,5 @@
 ---
-name: using-dev-team
+name: "ring:using-dev-team"
 description: |
   Guide to the dev-team plugin - specialist developer agents and 6-gate development cycle.
   Provides backend engineers (Go/TypeScript), frontend engineers, DevOps, SRE, and QA agents.

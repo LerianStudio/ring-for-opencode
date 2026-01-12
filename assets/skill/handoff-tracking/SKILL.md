@@ -1,5 +1,5 @@
 ---
-name: handoff-tracking
+name: "ring:handoff-tracking"
 description: |
   Create detailed handoff documents for session transitions. Captures task status,
   learnings, decisions, and next steps in a structured format that gets indexed

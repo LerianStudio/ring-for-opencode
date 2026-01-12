@@ -1,5 +1,5 @@
 ---
-name: interviewing-user
+name: "ring:interviewing-user"
 description: |
   Proactive requirements gathering - systematically interviews the user to uncover
   ambiguities, preferences, and constraints BEFORE implementation begins.

@@ -1,4 +1,5 @@
 ---
+name: "ring:brainstorm"
 description: Interactive design refinement using Socratic method
 agent: build
 subtask: false

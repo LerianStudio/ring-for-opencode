@@ -1,5 +1,5 @@
 ---
-name: dev-cycle
+name: "ring:dev-cycle"
 description: |
   Orchestrates the 6-gate development workflow for implementing tasks.
   Manages state, dispatches specialist agents, and enforces gate requirements.

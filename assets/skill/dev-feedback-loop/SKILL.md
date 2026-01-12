@@ -1,5 +1,5 @@
 ---
-name: dev-feedback-loop
+name: "ring:dev-feedback-loop"
 description: |
   Captures metrics and learnings from completed development cycles.
   Enables continuous improvement by analyzing patterns across cycles.

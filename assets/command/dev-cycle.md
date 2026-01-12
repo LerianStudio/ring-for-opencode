@@ -1,4 +1,5 @@
 ---
+name: "ring:dev-cycle"
 description: Execute the 6-gate development cycle for tasks in a markdown file
 agent: build
 ---

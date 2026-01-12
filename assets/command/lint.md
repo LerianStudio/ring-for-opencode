@@ -1,4 +1,5 @@
 ---
+name: "ring:lint"
 description: Run lint checks and dispatch parallel agents to fix all issues
 agent: build
 subtask: true

@@ -1,4 +1,5 @@
 ---
+name: "ring:codereview"
 description: Run comprehensive parallel code review with all 5 specialized reviewers
 agent: build
 subtask: true

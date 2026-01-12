@@ -1,4 +1,5 @@
 ---
+name: "ring:dev-report"
 description: View the feedback report from the last development cycle
 agent: build
 ---

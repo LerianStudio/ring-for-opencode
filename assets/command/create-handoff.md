@@ -1,4 +1,5 @@
 ---
+name: "ring:create-handoff"
 description: Create a handoff document capturing current session state for future resumption
 agent: build
 subtask: false

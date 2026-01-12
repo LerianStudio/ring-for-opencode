@@ -1,4 +1,5 @@
 ---
+name: "ring:resume-handoff"
 description: Resume work from a handoff document with context analysis and validation
 agent: build
 subtask: false

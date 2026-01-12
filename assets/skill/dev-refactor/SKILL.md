@@ -1,5 +1,5 @@
 ---
-name: dev-refactor
+name: "ring:dev-refactor"
 description: Analyzes codebase against standards and generates refactoring tasks for dev-cycle.
 license: MIT
 compatibility:

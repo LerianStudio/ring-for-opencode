@@ -1,4 +1,5 @@
 ---
+name: "ring:dev-refactor"
 description: Analyze existing codebase against standards and generate refactoring tasks for dev-cycle
 agent: build
 ---

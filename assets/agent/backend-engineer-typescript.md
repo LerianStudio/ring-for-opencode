@@ -1,5 +1,5 @@
 ---
-name: backend-engineer-typescript
+name: "ring:backend-engineer-typescript"
 description: Senior Backend Engineer specialized in TypeScript for financial services. Expert in Clean Architecture, DDD, NestJS, and Ring/Lerian standards compliance.
 mode: subagent
 color: "#3498DB"

@@ -1,5 +1,5 @@
 ---
-name: sre
+name: "ring:sre"
 description: Senior Site Reliability Engineer specialized in VALIDATING observability implementations. Does NOT implement observability - validates that developers implemented it correctly.
 mode: subagent
 color: "#229954"

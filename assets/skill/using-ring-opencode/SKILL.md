@@ -1,5 +1,5 @@
 ---
-name: using-ring-opencode
+name: "ring:using-ring-opencode"
 description: |
   Skill discovery workflow and agent dispatch patterns for every conversation.
 license: MIT

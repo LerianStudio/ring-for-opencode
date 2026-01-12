@@ -1,4 +1,5 @@
 ---
+name: "ring:commit"
 description: Organize and create atomic git commits with intelligent change grouping
 agent: build
 subtask: false

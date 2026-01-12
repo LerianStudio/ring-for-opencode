@@ -1,5 +1,5 @@
 ---
-name: security-reviewer
+name: "ring:security-reviewer"
 description: "Safety Review: Reviews vulnerabilities, authentication, input validation, and OWASP risks. Runs in parallel with code-reviewer and business-logic-reviewer for fast feedback."
 mode: subagent
 color: "#C0392B"

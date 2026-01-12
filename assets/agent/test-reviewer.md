@@ -1,5 +1,5 @@
 ---
-name: test-reviewer
+name: "ring:test-reviewer"
 description: "Test Quality Review: Reviews test coverage, edge cases, test independence, assertion quality, and test anti-patterns across unit, integration, and E2E tests. Runs in parallel with other reviewers for fast feedback."
 mode: subagent
 color: "#D35400"

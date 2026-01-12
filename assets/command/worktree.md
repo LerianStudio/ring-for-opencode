@@ -1,4 +1,5 @@
 ---
+name: "ring:worktree"
 description: Create isolated git worktree with interactive setup
 agent: build
 subtask: false

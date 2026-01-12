@@ -1,4 +1,5 @@
 ---
+name: "ring:dev-cancel"
 description: Cancel the current development cycle
 agent: build
 ---

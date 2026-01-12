@@ -1,5 +1,5 @@
 ---
-name: nil-safety-reviewer
+name: "ring:nil-safety-reviewer"
 description: "Nil/Null Safety Review: Traces nil/null pointer risks from git diff changes through the codebase. Identifies missing guards, unsafe dereferences, panic paths, and API response consistency in Go and TypeScript. Runs in parallel with other reviewers."
 mode: subagent
 color: "#CB4335"

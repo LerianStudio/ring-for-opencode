@@ -1,5 +1,5 @@
 ---
-name: dev-devops
+name: "ring:dev-devops"
 description: |
   Gate 1 of the development cycle. Creates containerization, local development setup,
   and CI/CD configuration using the devops-engineer agent.
