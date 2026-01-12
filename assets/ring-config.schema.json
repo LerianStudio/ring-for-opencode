@@ -189,6 +189,271 @@
         }
       }
     },
+    "orchestrator": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "basePort": {
+          "default": 14096,
+          "type": "number"
+        },
+        "autoSpawn": {
+          "default": true,
+          "type": "boolean"
+        },
+        "startupTimeout": {
+          "default": 30000,
+          "type": "number"
+        },
+        "ui": {
+          "default": {
+            "toasts": true,
+            "injectSystemContext": true,
+            "systemContextMaxWorkers": 12,
+            "defaultListFormat": "markdown",
+            "debug": false
+          },
+          "type": "object",
+          "properties": {
+            "toasts": {
+              "default": true,
+              "type": "boolean"
+            },
+            "injectSystemContext": {
+              "default": true,
+              "type": "boolean"
+            },
+            "systemContextMaxWorkers": {
+              "default": 12,
+              "type": "number"
+            },
+            "defaultListFormat": {
+              "default": "markdown",
+              "type": "string",
+              "enum": [
+                "markdown",
+                "json"
+              ]
+            },
+            "debug": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        },
+        "profiles": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "server",
+                      "agent",
+                      "subagent"
+                    ]
+                  },
+                  "model": {
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "type": "string"
+                  },
+                  "whenToUse": {
+                    "type": "string"
+                  },
+                  "systemPrompt": {
+                    "type": "string"
+                  },
+                  "supportsVision": {
+                    "type": "boolean"
+                  },
+                  "supportsWeb": {
+                    "type": "boolean"
+                  },
+                  "tools": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "boolean"
+                    }
+                  },
+                  "temperature": {
+                    "type": "number"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "model",
+                  "purpose",
+                  "whenToUse"
+                ]
+              }
+            ]
+          }
+        },
+        "workers": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "server",
+                      "agent",
+                      "subagent"
+                    ]
+                  },
+                  "model": {
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "type": "string"
+                  },
+                  "whenToUse": {
+                    "type": "string"
+                  },
+                  "systemPrompt": {
+                    "type": "string"
+                  },
+                  "supportsVision": {
+                    "type": "boolean"
+                  },
+                  "supportsWeb": {
+                    "type": "boolean"
+                  },
+                  "tools": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "boolean"
+                    }
+                  },
+                  "temperature": {
+                    "type": "number"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "model",
+                  "purpose",
+                  "whenToUse"
+                ]
+              }
+            ]
+          }
+        },
+        "workflows": {
+          "default": {
+            "enabled": true,
+            "limits": {
+              "maxSteps": 4,
+              "maxTaskChars": 12000,
+              "maxCarryChars": 24000,
+              "perStepTimeoutMs": 120000
+            }
+          },
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "limits": {
+              "default": {
+                "maxSteps": 4,
+                "maxTaskChars": 12000,
+                "maxCarryChars": 24000,
+                "perStepTimeoutMs": 120000
+              },
+              "type": "object",
+              "properties": {
+                "maxSteps": {
+                  "default": 4,
+                  "type": "number"
+                },
+                "maxTaskChars": {
+                  "default": 12000,
+                  "type": "number"
+                },
+                "maxCarryChars": {
+                  "default": 24000,
+                  "type": "number"
+                },
+                "perStepTimeoutMs": {
+                  "default": 120000,
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "security": {
+          "default": {
+            "preventRecursiveSpawn": true,
+            "recursiveSpawnEnvVar": "RING_ORCHESTRATOR_WORKER"
+          },
+          "type": "object",
+          "properties": {
+            "preventRecursiveSpawn": {
+              "default": true,
+              "type": "boolean"
+            },
+            "recursiveSpawnEnvVar": {
+              "default": "RING_ORCHESTRATOR_WORKER",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": {}
+    },
     "hooks": {
       "type": "object",
       "propertyNames": {

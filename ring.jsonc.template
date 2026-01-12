@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
+
+  // Hooks to disable. Allowed: "session-start", "context-injection", "notification", "task-completion",
+  // "session-outcome", "outcome-inference", "doubt-resolver", "background-notification",
+  // "compaction-context", "rules-injector", "agent-reminder".
+  "disabled_hooks": [],
+
+  // Agents to disable. Allowed: "code-reviewer", "security-reviewer", "business-logic-reviewer",
+  // "test-reviewer", "nil-safety-reviewer", "codebase-explorer", "write-plan",
+  // "backend-engineer-golang", "backend-engineer-typescript", "frontend-engineer",
+  // "frontend-designer", "devops-engineer", "sre", "qa-analyst".
+  "disabled_agents": [],
+
+  // Skills to disable. Allowed: "using-ring", "test-driven-development", "systematic-debugging",
+  // "requesting-code-review", "writing-plans", "executing-plans", "dispatching-parallel-agents",
+  // "verification-before-completion", "commit", "brainstorm", "codereview", "lint", "worktree".
+  "disabled_skills": [],
+
+  // Commands to disable. Allowed: "commit", "codereview", "brainstorm", "execute-plan", "worktree",
+  // "lint", "create-handoff", "resume-handoff", "explore-codebase", "interview-me", "write-plan".
+  "disabled_commands": [],
+
+  "background_tasks": {
+    // Default concurrency (1-10).
+    "defaultConcurrency": 3,
+    // Task timeout in ms (60000-3600000).
+    "taskTimeoutMs": 1800000,
+    // Per-agent concurrency overrides (1-10).
+    "agentConcurrency": {}
+  },
+
+  "notifications": {
+    "enabled": true,
+    "onIdle": true,
+    "onError": true,
+    "onBackgroundComplete": true
+  },
+
+  "experimental": {
+    "preemptiveCompaction": false,
+    "compactionThreshold": 0.8,
+    "aggressiveTruncation": false
+  },
+
+  // Orchestrator configuration (workers, workflows).
+  "orchestrator": {
+    // Base port for worker processes.
+    "basePort": 14096,
+
+    // Automatically spawn workers when needed.
+    "autoSpawn": true,
+
+    // Worker startup timeout in ms.
+    "startupTimeout": 30000,
+
+    "ui": {
+      // Show toast notifications for worker events.
+      "toasts": true,
+
+      // Inject worker summaries into the system prompt.
+      "injectSystemContext": true,
+
+      // Max workers summarized in system context.
+      "systemContextMaxWorkers": 12,
+
+      // Default output format for task_list (markdown | json).
+      "defaultListFormat": "markdown",
+
+      // Enable orchestrator debug logging.
+      "debug": false
+    },
+
+    // Custom worker profiles (merged with built-ins).
+    // Each entry can be a string (profile id) or a full profile object.
+    "profiles": [],
+
+    // Workers to spawn on startup (by id or full profile object).
+    "workers": [],
+
+    "workflows": {
+      // Enable workflow execution engine.
+      "enabled": true,
+
+      "limits": {
+        // Max number of steps per workflow run.
+        "maxSteps": 4,
+
+        // Max size of task payload sent to a worker.
+        "maxTaskChars": 12000,
+
+        // Max size of carry-forward context between steps.
+        "maxCarryChars": 24000,
+
+        // Timeout per workflow step in ms.
+        "perStepTimeoutMs": 120000
+      }
+    },
+
+    "security": {
+      // Prevent workers from recursively spawning more workers.
+      "preventRecursiveSpawn": true,
+
+      // Env var set in worker processes to block recursive spawn.
+      "recursiveSpawnEnvVar": "RING_ORCHESTRATOR_WORKER"
+    }
+  },
+
+  // Hook-specific overrides keyed by hook name.
+  "hooks": {}
+}

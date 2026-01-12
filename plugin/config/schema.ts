@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod"
+import { OrchestratorConfigFileSchema } from "../orchestrator/config.js"
 
 /**
  * Hook names that can be disabled.
@@ -170,6 +171,9 @@ export const RingConfigSchema = z.object({
     compactionThreshold: 0.8,
     aggressiveTruncation: false,
   }),
+
+  /** Orchestrator configuration */
+  orchestrator: OrchestratorConfigFileSchema.optional(),
 
   /** Custom hook configurations */
   hooks: z.record(z.string(), z.record(z.string(), z.unknown())).optional(),

@@ -3,8 +3,9 @@
  *
  * Three-level configuration merging:
  * 1. Built-in defaults (in code)
- * 2. Global config (~/.config/opencode/ring/orchestrator.json)
- * 3. Project config (.ring/orchestrator.json or .opencode/orchestrator.json)
+ * 2. Global config (~/.config/opencode/ring/config.jsonc|.json -> orchestrator section)
+ * 3. Project config (.opencode/ring.jsonc or .ring/config.jsonc -> orchestrator section)
+ *    (Legacy: orchestrator.jsonc/.json in global/project locations)
  *
  * Ported from Orchestra's configuration pattern.
  */
@@ -20,6 +21,7 @@ import {
 } from "node:fs"
 import { homedir } from "node:os"
 import { join, normalize } from "node:path"
+import { parse as parseJsonc } from "jsonc-parser"
 import { z } from "zod"
 import { builtInProfiles } from "./profiles.js"
 import type { OrchestratorContext, WorkerProfile, WorkflowRunLimits } from "./types.js"
@@ -31,6 +33,23 @@ import { BLOCKED_HOSTS } from "./types.js"
 
 const PROTECTED_PROFILE_IDS = ["vision", "docs", "coder", "architect", "explorer"] as const
 const MAX_CONFIG_SIZE = 1_000_000 // 1MB
+
+function parseJsoncContent<T>(content: string): T {
+  const errors: Array<{ error: number; offset: number; length: number }> = []
+  const result = parseJsonc(content, errors, {
+    allowTrailingComma: true,
+    disallowComments: false,
+  })
+
+  if (errors.length > 0) {
+    const firstError = errors[0]
+    throw new Error(
+      `JSONC parse error at offset ${firstError.offset}: error code ${firstError.error}`,
+    )
+  }
+
+  return result as T
+}
 
 // =============================================================================
 // Zod Schemas
@@ -58,7 +77,7 @@ const WorkflowLimitsSchema = z.object({
   perStepTimeoutMs: z.number().default(120000),
 })
 
-const OrchestratorConfigFileSchema = z
+export const OrchestratorConfigFileSchema = z
   .object({
     $schema: z.string().optional(),
     basePort: z.number().default(14096),
@@ -195,7 +214,7 @@ function tryReadJson(filePath: string, projectRoot?: string): unknown | null {
     const bytesRead = readSync(fd, buffer, 0, stats.size, 0)
     const content = buffer.slice(0, bytesRead).toString("utf-8")
 
-    return JSON.parse(content)
+    return parseJsoncContent(content)
   } catch (err) {
     if (existsSync(filePath)) {
       console.warn(
@@ -213,6 +232,47 @@ function tryReadJson(filePath: string, projectRoot?: string): unknown | null {
       }
     }
   }
+}
+
+type ConfigFileResult = { path: string; data: unknown }
+
+type JsonObject = Record<string, unknown>
+
+function isObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function tryReadConfig(paths: string[], projectRoot?: string): ConfigFileResult | null {
+  for (const filePath of paths) {
+    const data = tryReadJson(filePath, projectRoot)
+    if (data !== null && data !== undefined) {
+      return { path: filePath, data }
+    }
+  }
+  return null
+}
+
+function extractOrchestratorConfig(raw: unknown): JsonObject | null {
+  if (!isObject(raw)) return null
+  const value = raw.orchestrator
+  if (!isObject(value)) return null
+  return value
+}
+
+function resolveOrchestratorLayer(input: {
+  ringPaths: string[]
+  orchestratorPaths: string[]
+  projectRoot?: string
+}): ConfigFileResult | null {
+  const ringResult = tryReadConfig(input.ringPaths, input.projectRoot)
+  if (ringResult) {
+    const extracted = extractOrchestratorConfig(ringResult.data)
+    if (extracted) {
+      return { path: ringResult.path, data: extracted }
+    }
+  }
+
+  return tryReadConfig(input.orchestratorPaths, input.projectRoot)
 }
 
 /**
@@ -344,31 +404,48 @@ export function loadOrchestratorConfig(directory: string): LoadedOrchestratorCon
   let merged = { ...DEFAULT_CONFIG }
 
   // Layer 2: Global config
-  const globalPath = join(getUserConfigDir(), "orchestrator.json")
-  const globalRaw = tryReadJson(globalPath) // No project root check for global
-  if (globalRaw) {
-    sources.global = globalPath
-    const parsed = OrchestratorConfigFileSchema.safeParse(globalRaw)
+  const ringGlobalPaths = [
+    join(getUserConfigDir(), "config.jsonc"),
+    join(getUserConfigDir(), "config.json"),
+  ]
+  const orchestratorGlobalPaths = [
+    join(getUserConfigDir(), "orchestrator.jsonc"),
+    join(getUserConfigDir(), "orchestrator.json"),
+  ]
+  const globalResult = resolveOrchestratorLayer({
+    ringPaths: ringGlobalPaths,
+    orchestratorPaths: orchestratorGlobalPaths,
+  }) // No project root check for global
+  if (globalResult) {
+    sources.global = globalResult.path
+    const parsed = OrchestratorConfigFileSchema.safeParse(globalResult.data)
     if (parsed.success) {
       merged = deepMerge(merged, parsed.data)
     }
   }
 
   // Layer 3: Project config (with symlink protection)
-  const projectPaths = [
+  const ringProjectPaths = [
+    join(directory, ".opencode", "ring.jsonc"),
+    join(directory, ".ring", "config.jsonc"),
+  ]
+  const orchestratorProjectPaths = [
+    join(directory, ".ring", "orchestrator.jsonc"),
     join(directory, ".ring", "orchestrator.json"),
+    join(directory, ".opencode", "orchestrator.jsonc"),
     join(directory, ".opencode", "orchestrator.json"),
   ]
 
-  for (const projectPath of projectPaths) {
-    const projectRaw = tryReadJson(projectPath, directory) // Pass directory for symlink check
-    if (projectRaw) {
-      sources.project = projectPath
-      const parsed = OrchestratorConfigFileSchema.safeParse(projectRaw)
-      if (parsed.success) {
-        merged = deepMerge(merged, parsed.data)
-      }
-      break
+  const projectResult = resolveOrchestratorLayer({
+    ringPaths: ringProjectPaths,
+    orchestratorPaths: orchestratorProjectPaths,
+    projectRoot: directory,
+  })
+  if (projectResult) {
+    sources.project = projectResult.path
+    const parsed = OrchestratorConfigFileSchema.safeParse(projectResult.data)
+    if (parsed.success) {
+      merged = deepMerge(merged, parsed.data)
     }
   }
 

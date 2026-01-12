@@ -109,12 +109,40 @@ copy_file() {
   fi
 }
 
+backup_root_config() {
+  local filename="$1"
+  local dest_name="${2:-$1}"
+  local src="$SCRIPT_DIR/$filename"
+  local dst="$TARGET_ROOT/ring/$dest_name"
+
+  [[ -e "$src" ]] || return 0
+
+  if [[ -e "$dst" ]]; then
+    mkdir -p "$BACKUP_DIR/ring"
+    cp -a "$dst" "$BACKUP_DIR/ring/$dest_name"
+  fi
+}
+
+copy_root_config() {
+  local filename="$1"
+  local dest_name="${2:-$1}"
+  local src="$SCRIPT_DIR/$filename"
+  local dst="$TARGET_ROOT/ring/$dest_name"
+
+  if [[ -e "$src" ]]; then
+    mkdir -p "$(dirname "$dst")"
+    cp -a "$src" "$dst"
+    echo "Copied: ring/$dest_name"
+  fi
+}
+
 # Backup any files we might overwrite
 # Plugin files (from root plugin/)
 backup_if_exists "plugin/index.ts" "$SOURCE_PLUGIN/.."
 backup_if_exists "plugin/ring-plugin.ts" "$SOURCE_PLUGIN/.."
 backup_if_exists "plugin/ring-unified.ts" "$SOURCE_PLUGIN/.."
 backup_if_exists "package.json"
+backup_root_config "ring.jsonc" "config.jsonc"
 
 # Back up all Ring plugin .ts files (best-effort)
 if [[ -d "$SOURCE_PLUGIN" ]]; then
@@ -140,6 +168,9 @@ done
 echo "Copying schema files..."
 copy_file "ring-config.schema.json" "$SOURCE_ASSETS"
 copy_file "background-tasks.schema.json" "$SOURCE_ASSETS"
+
+# Copy config templates
+copy_root_config "ring.jsonc" "config.jsonc"
 
 # Ensure global state dir exists in user config (no overwrite)
 # Note: Project-level state is in <project>/.opencode/state/ and created dynamically
