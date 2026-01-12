@@ -8,7 +8,7 @@ compatibility: opencode
 metadata:
   trigger: "New feature or product idea, user says plan/design/architect, multiple approaches possible"
   skip_when: "Design already complete and validated, have detailed plan ready, just need task breakdown"
-  sequence_before: "writing-plans, using-git-worktrees"
+  sequence_before: "ring:writing-plans, ring:using-git-worktrees"
   source: ring-default
 ---
 
@@ -16,7 +16,7 @@ metadata:
 
 ## Related Skills
 
-**Similar:** writing-plans
+**Similar:** ring:writing-plans
 
 ---
 
@@ -36,9 +36,9 @@ Transform rough ideas into fully-formed designs through structured questioning a
 | **1. Understanding** | Share findings, ask only for missing context | AskUserQuestion for real decisions | Purpose, constraints, criteria (confirmed) |
 | **2. Exploration** | Propose 2-3 approaches | AskUserQuestion for approach selection | Architecture options with trade-offs |
 | **3. Design Presentation** | Present in 200-300 word sections | Open-ended questions | Complete design with validation |
-| **4. Design Documentation** | Write design document | writing-clearly-and-concisely skill | Design doc in docs/plans/ |
-| **5. Worktree Setup** | Set up isolated workspace | using-git-worktrees skill | Ready development environment |
-| **6. Planning Handoff** | Create implementation plan | writing-plans skill | Detailed task breakdown |
+| **4. Design Documentation** | Write design document | ring:writing-clearly-and-concisely skill | Design doc in docs/plans/ |
+| **5. Worktree Setup** | Set up isolated workspace | ring:using-git-worktrees skill | Ready development environment |
+| **6. Planning Handoff** | Create implementation plan | ring:writing-plans skill | Detailed task breakdown |
 
 ## The Process
 
@@ -147,8 +147,8 @@ After validating the design, write it to a permanent document:
 
 ### Phase 5: Worktree Setup (for implementation)
 When design is approved and implementation will follow:
-- Announce: "I'm using the using-git-worktrees skill to set up an isolated workspace."
-- **REQUIRED SUB-SKILL:** Use using-git-worktrees
+- Announce: "I'm using the ring:using-git-worktrees skill to set up an isolated workspace."
+- **REQUIRED SUB-SKILL:** Use ring:using-git-worktrees
 - Follow that skill's process for directory selection, safety verification, and setup
 - Return here when worktree ready
 
@@ -156,8 +156,8 @@ When design is approved and implementation will follow:
 Ask: "Ready to create the implementation plan?"
 
 When your human partner confirms (any affirmative response):
-- Announce: "I'm using the writing-plans skill to create the implementation plan."
-- **REQUIRED SUB-SKILL:** Use writing-plans
+- Announce: "I'm using the ring:writing-plans skill to create the implementation plan."
+- **REQUIRED SUB-SKILL:** Use ring:writing-plans
 - Create detailed plan in the worktree
 
 ## Question Patterns

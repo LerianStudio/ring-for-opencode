@@ -38,14 +38,14 @@ Ring uses a unified plugin architecture with four core components:
 
 | Skill | Description |
 |-------|-------------|
-| `test-driven-development` | RED-GREEN-REFACTOR methodology |
-| `requesting-code-review` | Parallel 5-reviewer system |
-| `executing-plans` | Batch task execution with checkpoints |
-| `brainstorming` | Socratic design refinement |
-| `exploring-codebase` | Deep codebase analysis |
-| `writing-plans` | Implementation planning with context |
-| `handoff-tracking` | Session state preservation |
-| `linting-codebase` | Parallel lint fixing |
+| `ring:test-driven-development` | RED-GREEN-REFACTOR methodology |
+| `ring:requesting-code-review` | Parallel 5-reviewer system |
+| `ring:executing-plans` | Batch task execution with checkpoints |
+| `ring:brainstorming` | Socratic design refinement |
+| `ring:exploring-codebase` | Deep codebase analysis |
+| `ring:writing-plans` | Implementation planning with context |
+| `ring:handoff-tracking` | Session state preservation |
+| `ring:linting-codebase` | Parallel lint fixing |
 
 ## Available Agents
 
@@ -53,42 +53,42 @@ Ring uses a unified plugin architecture with four core components:
 
 | Agent | Focus |
 |-------|-------|
-| `@code-reviewer` | Code quality, architecture, design patterns |
-| `@business-logic-reviewer` | Business rules, domain correctness |
-| `@security-reviewer` | Security vulnerabilities, OWASP Top 10 |
-| `@test-reviewer` | Test quality, coverage, anti-patterns |
-| `@nil-safety-reviewer` | Nil/null pointer safety |
+| `@ring:code-reviewer` | Code quality, architecture, design patterns |
+| `@ring:business-logic-reviewer` | Business rules, domain correctness |
+| `@ring:security-reviewer` | Security vulnerabilities, OWASP Top 10 |
+| `@ring:test-reviewer` | Test quality, coverage, anti-patterns |
+| `@ring:nil-safety-reviewer` | Nil/null pointer safety |
 
 ### Specialists
 
 | Agent | Focus |
 |-------|-------|
-| `@codebase-explorer` | Deep codebase analysis |
-| `@write-plan` | Implementation planning |
-| `@backend-engineer-golang` | Go backend development |
-| `@backend-engineer-typescript` | TypeScript backend development |
-| `@frontend-engineer` | Frontend development |
-| `@frontend-bff-engineer-typescript` | BFF/API layer development |
-| `@frontend-designer` | UI/UX implementation |
-| `@devops-engineer` | Infrastructure and CI/CD |
-| `@qa-analyst` | Testing and quality assurance |
-| `@sre` | Site reliability engineering |
+| `@ring:codebase-explorer` | Deep codebase analysis |
+| `@ring:write-plan` | Implementation planning |
+| `@ring:backend-engineer-golang` | Go backend development |
+| `@ring:backend-engineer-typescript` | TypeScript backend development |
+| `@ring:frontend-engineer` | Frontend development |
+| `@ring:frontend-bff-engineer-typescript` | BFF/API layer development |
+| `@ring:frontend-designer` | UI/UX implementation |
+| `@ring:devops-engineer` | Infrastructure and CI/CD |
+| `@ring:qa-analyst` | Testing and quality assurance |
+| `@ring:sre` | Site reliability engineering |
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/commit` | Atomic git commits with intelligent grouping |
-| `/codereview` | Parallel 5-reviewer code review |
-| `/brainstorm` | Socratic design refinement |
-| `/execute-plan` | Batch task execution |
-| `/write-plan` | Create implementation plans |
-| `/lint` | Run lint checks with auto-fix |
-| `/explore-codebase` | Deep codebase analysis |
-| `/create-handoff` | Session state handoff |
-| `/resume-handoff` | Resume from handoff |
-| `/dev-cycle` | Full development cycle |
-| `/dev-refactor` | Codebase refactoring |
+| `/ring:commit` | Atomic git commits with intelligent grouping |
+| `/ring:codereview` | Parallel 5-reviewer code review |
+| `/ring:brainstorm` | Socratic design refinement |
+| `/ring:execute-plan` | Batch task execution |
+| `/ring:write-plan` | Create implementation plans |
+| `/ring:lint` | Run lint checks with auto-fix |
+| `/ring:explore-codebase` | Deep codebase analysis |
+| `/ring:create-handoff` | Session state handoff |
+| `/ring:resume-handoff` | Resume from handoff |
+| `/ring:dev-cycle` | Full development cycle |
+| `/ring:dev-refactor` | Codebase refactoring |
 
 > **Note**: Ring commands use a flat structure - nested commands (e.g., `/category/command`) are not supported. Commands must be placed directly in `assets/command/` or `.opencode/command/`. If you need hierarchical command organization, use OpenCode's native `.opencode/command/` directory which supports subdirectories.
 

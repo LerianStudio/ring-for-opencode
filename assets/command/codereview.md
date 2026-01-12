@@ -7,11 +7,11 @@ subtask: true
 
 Dispatch all 5 code reviewers in parallel for comprehensive feedback:
 
-- **@code-reviewer** - Foundation review (quality, architecture, patterns)
-- **@security-reviewer** - Security analysis (vulnerabilities, data protection)
-- **@business-logic-reviewer** - Business logic verification (requirements, edge cases)
-- **@test-reviewer** - Test quality review (coverage, edge cases, anti-patterns)
-- **@nil-safety-reviewer** - Nil/null pointer safety (Go and TypeScript)
+- **@ring:code-reviewer** - Foundation review (quality, architecture, patterns)
+- **@ring:security-reviewer** - Security analysis (vulnerabilities, data protection)
+- **@ring:business-logic-reviewer** - Business logic verification (requirements, edge cases)
+- **@ring:test-reviewer** - Test quality review (coverage, edge cases, anti-patterns)
+- **@ring:nil-safety-reviewer** - Nil/null pointer safety (Go and TypeScript)
 
 ## Review Process
 
@@ -40,9 +40,9 @@ When aggregating findings, detect and flag conflicting recommendations between r
 | Conflict Type | Resolution | Priority |
 |--------------|------------|----------|
 | Security vs Performance | Security recommendation wins | CRITICAL |
-| More tests vs Over-testing | Defer to test-reviewer for test scope | MEDIUM |
-| More mocks vs Less mocks | Evaluate based on test-reviewer guidance | MEDIUM |
-| Refactor vs Keep simple | Defer to code-reviewer for architecture decisions | MEDIUM |
+| More tests vs Over-testing | Defer to ring:test-reviewer for test scope | MEDIUM |
+| More mocks vs Less mocks | Evaluate based on ring:test-reviewer guidance | MEDIUM |
+| Refactor vs Keep simple | Defer to ring:code-reviewer for architecture decisions | MEDIUM |
 
 **Flagging Conflicts:**
 When reviewers provide contradictory guidance:

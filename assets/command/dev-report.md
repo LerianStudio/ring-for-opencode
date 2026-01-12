@@ -74,8 +74,8 @@ Top Issues:
 2. Gate 4 (review): Security findings in 2 tasks
 
 Recommendations:
-- Skill dev-testing: Add test planning phase
-- Agent backend-*: Reinforce input validation
+- Skill ring:dev-testing: Add test planning phase
+- Agent ring:backend-*: Reinforce input validation
 
 Full report: .ring/dev-team/feedback/cycle-2024-01-15.md
 ```

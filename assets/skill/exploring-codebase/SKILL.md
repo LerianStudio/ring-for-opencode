@@ -16,8 +16,8 @@ metadata:
 
 ## Related Skills
 
-**Sequence after:** brainstorming
-**Sequence before:** writing-plans, executing-plans
+**Sequence after:** ring:brainstorming
+**Sequence before:** ring:writing-plans, ring:executing-plans
 
 ---
 
@@ -183,9 +183,9 @@ Based on Phase 1 discoveries, launch **N targeted explorers** (where N = number 
 
 | Skill | When to use together |
 |-------|----------------------|
-| **brainstorming** | Use exploring-codebase in Phase 1 (Understanding) to gather context |
-| **writing-plans** | Use exploring-codebase before creating implementation plans |
-| **executing-plans** | Use exploring-codebase if plan execution reveals gaps |
+| **ring:brainstorming** | Use ring:exploring-codebase in Phase 1 (Understanding) to gather context |
+| **ring:writing-plans** | Use ring:exploring-codebase before creating implementation plans |
+| **ring:executing-plans** | Use ring:exploring-codebase if plan execution reveals gaps |
 
 ## Key Principles
 

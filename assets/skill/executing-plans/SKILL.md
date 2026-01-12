@@ -8,7 +8,7 @@ compatibility: opencode
 metadata:
   trigger: "Have a plan file ready to execute, want human review between batches"
   skip_when: "Same session with independent tasks, no plan exists, plan needs revision"
-  sequence_after: "writing-plans, pre-dev-task-breakdown"
+  sequence_after: "ring:writing-plans, ring:pre-dev-task-breakdown"
   source: ring-default
 ---
 
@@ -76,7 +76,7 @@ User saying "don't wait", "don't ask questions", or "just execute" does NOT skip
 For each task: Mark in_progress -> Dispatch to agent -> Follow plan steps exactly -> Run verifications -> Mark completed
 
 ### Step 4: Run Code Review
-**After each batch, REQUIRED:** Use requesting-code-review (all 5 reviewers in parallel)
+**After each batch, REQUIRED:** Use ring:requesting-code-review (all 5 reviewers in parallel)
 
 **Handle by severity:**
 - **Critical/High/Medium:** Fix immediately (no TODO) -> re-run all 5 reviewers -> repeat until resolved

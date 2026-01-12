@@ -15,7 +15,7 @@ metadata:
 
 ## Related Skills
 
-**Complementary:** testing-anti-patterns
+**Complementary:** ring:testing-anti-patterns
 
 ## Compliance Rules
 
@@ -34,7 +34,7 @@ metadata:
 ## Skill Composition
 
 **Works well with:**
-- requesting-code-review: After completing RED-GREEN-REFACTOR cycle for feature
+- ring:requesting-code-review: After completing RED-GREEN-REFACTOR cycle for feature
 
 **Typical workflow:**
 1. Write failing test (RED)

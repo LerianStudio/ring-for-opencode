@@ -8,8 +8,8 @@ compatibility: opencode
 metadata:
   trigger: "Starting feature needing isolation, before executing plan, multiple features"
   skip_when: "Quick fix in current branch, already in worktree, repo doesn't use worktrees"
-  sequence_after: "brainstorming"
-  sequence_before: "writing-plans, executing-plans"
+  sequence_after: "ring:brainstorming"
+  sequence_before: "ring:writing-plans, ring:executing-plans"
   source: ring-default
 ---
 
@@ -107,8 +107,8 @@ Announce -> Check `.worktrees/` exists -> Verify .gitignore -> `git worktree add
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
+- **ring:brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
 - Any skill needing isolated workspace
 
 **Pairs with:**
-- **executing-plans** - Work happens in this worktree
+- **ring:executing-plans** - Work happens in this worktree

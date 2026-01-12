@@ -8,8 +8,8 @@ compatibility: opencode
 metadata:
   trigger: "Gate 4 of development cycle, after completing major feature, before merge to main, after fixing complex bug"
   skip_when: "Never - code review is always required for blocking issues"
-  sequence_after: "dev-testing"
-  sequence_before: "dev-validation"
+  sequence_after: "ring:dev-testing"
+  sequence_before: "ring:dev-validation"
   source: ring-default
 ---
 
@@ -17,7 +17,7 @@ metadata:
 
 ## Related Skills
 
-**Complementary:** dev-cycle, dev-implementation, dev-testing
+**Complementary:** ring:dev-cycle, ring:dev-implementation, ring:dev-testing
 
 ## Input Schema
 

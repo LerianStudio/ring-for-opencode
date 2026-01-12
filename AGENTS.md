@@ -13,38 +13,38 @@ Ring is a comprehensive skills library that enforces proven software engineering
 Skills are loaded on-demand via the native `skill` tool. See `assets/skill/` for available skills.
 
 ### Core Skills
-- `test-driven-development` - RED-GREEN-REFACTOR methodology
-- `brainstorming` - Socratic design refinement
-- `requesting-code-review` - Parallel 5-reviewer code review
-- `executing-plans` - Batch task execution with checkpoints
+- `ring:test-driven-development` - RED-GREEN-REFACTOR methodology
+- `ring:brainstorming` - Socratic design refinement
+- `ring:requesting-code-review` - Parallel 5-reviewer code review
+- `ring:executing-plans` - Batch task execution with checkpoints
 
 ### Development Workflow
-1. Use `brainstorming` to refine ideas into designs
-2. Use `test-driven-development` for implementation
-3. Use `requesting-code-review` before merging
+1. Use `ring:brainstorming` to refine ideas into designs
+2. Use `ring:test-driven-development` for implementation
+3. Use `ring:requesting-code-review` before merging
 
 ## Available Agents
 
 Agents are invoked via @ mention or automatically by primary agents.
 
 ### Reviewers (subagents)
-- `@code-reviewer` - Code quality, architecture, design patterns
-- `@business-logic-reviewer` - Business rules, domain correctness
-- `@security-reviewer` - Security vulnerabilities, data protection
-- `@test-reviewer` - Test quality, coverage, anti-patterns
-- `@nil-safety-reviewer` - Nil/null pointer safety (Go and TypeScript)
+- `@ring:code-reviewer` - Code quality, architecture, design patterns
+- `@ring:business-logic-reviewer` - Business rules, domain correctness
+- `@ring:security-reviewer` - Security vulnerabilities, data protection
+- `@ring:test-reviewer` - Test quality, coverage, anti-patterns
+- `@ring:nil-safety-reviewer` - Nil/null pointer safety (Go and TypeScript)
 
 ### Specialist Agents (subagents)
-- `@codebase-explorer` - Codebase exploration and analysis
-- `@write-plan` - Implementation planning
+- `@ring:codebase-explorer` - Codebase exploration and analysis
+- `@ring:write-plan` - Implementation planning
 
 ## Available Commands
 
-Commands are invoked via `/command-name`.
+Commands are invoked via `/ring:command-name`.
 
-- `/commit` - Atomic commits with intelligent grouping
-- `/codereview` - Dispatch all 5 reviewers in parallel
-- `/brainstorm` - Start design refinement session
+- `/ring:commit` - Atomic commits with intelligent grouping
+- `/ring:codereview` - Dispatch all 5 reviewers in parallel
+- `/ring:brainstorm` - Start design refinement session
 
 ## Compliance Rules
 

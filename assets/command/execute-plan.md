@@ -30,11 +30,11 @@ Execute an existing implementation plan with controlled checkpoints and code rev
 
 ### Step 4: Run Code Review
 After each batch, run all 5 reviewers in parallel:
-- @code-reviewer - Architecture and patterns
-- @business-logic-reviewer - Requirements and edge cases
-- @security-reviewer - OWASP and auth validation
-- @test-reviewer - Test quality and coverage
-- @nil-safety-reviewer - Nil/null pointer safety
+- @ring:code-reviewer - Architecture and patterns
+- @ring:business-logic-reviewer - Requirements and edge cases
+- @ring:security-reviewer - OWASP and auth validation
+- @ring:test-reviewer - Test quality and coverage
+- @ring:nil-safety-reviewer - Nil/null pointer safety
 
 **Issue handling by severity:**
 

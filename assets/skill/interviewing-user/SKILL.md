@@ -8,7 +8,7 @@ compatibility: opencode
 metadata:
   trigger: "Claude detects ambiguity, multiple valid paths exist, task involves architecture decisions"
   skip_when: "Requirements crystal clear, detailed specifications provided, following existing plan"
-  sequence_before: "brainstorming, writing-plans"
+  sequence_before: "ring:brainstorming, ring:writing-plans"
   source: ring-default
 ---
 
@@ -16,8 +16,8 @@ metadata:
 
 ## Related Skills
 
-**Similar:** brainstorming
-**Uses:** doubt-triggered-questions
+**Similar:** ring:brainstorming
+**Uses:** ring:doubt-triggered-questions
 
 ---
 
@@ -174,9 +174,9 @@ Claude should NOT auto-trigger when:
 
 | Skill | Relationship |
 |-------|--------------|
-| `doubt-triggered-questions` | Use for single questions during work; use interviewing-user for systematic upfront gathering |
-| `brainstorming` | Interview first to gather requirements, THEN brainstorm solutions |
-| `writing-plans` | Interview first to clarify scope, THEN create plan |
+| `ring:doubt-triggered-questions` | Use for single questions during work; use ring:interviewing-user for systematic upfront gathering |
+| `ring:brainstorming` | Interview first to gather requirements, THEN brainstorm solutions |
+| `ring:writing-plans` | Interview first to clarify scope, THEN create plan |
 
 ## Exit Criteria
 

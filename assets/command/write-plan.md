@@ -45,15 +45,15 @@ After plan is ready, ask user:
 ## Agent Selection
 
 > **Note:** The specialized agents below are available when the dev-team skills are installed.
-> Without them, use `@write-plan` for planning and `@codebase-explorer` for research.
+> Without them, use `@ring:write-plan` for planning and `@ring:codebase-explorer` for research.
 
 | Task Type | Recommended Agent |
 |-----------|-------------------|
-| Backend (Go) | @backend-engineer-golang |
-| Backend (TypeScript) | @backend-engineer-typescript |
-| Frontend (BFF/API) | @frontend-bff-engineer-typescript |
-| Infrastructure | @devops-engineer |
-| Testing | @qa-analyst |
-| Reliability | @sre |
+| Backend (Go) | @ring:backend-engineer-golang |
+| Backend (TypeScript) | @ring:backend-engineer-typescript |
+| Frontend (BFF/API) | @ring:frontend-bff-engineer-typescript |
+| Infrastructure | @ring:devops-engineer |
+| Testing | @ring:qa-analyst |
+| Reliability | @ring:sre |
 
 $ARGUMENTS

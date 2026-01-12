@@ -204,7 +204,7 @@ You don't read files, run grep chains, or manually explore - you **dispatch agen
 
 **Exceptions to default agents:**
 1. User explicitly provides a file path AND explicitly requests you read it (e.g., "read src/foo.ts")
-2. **A skill has its own specialized agents** - Some skills (e.g., `dev-refactor`) define their own agents that MUST be used instead of Explore/Plan/general-purpose. When a skill specifies "OVERRIDE" or "FORBIDDEN agents", follow the skill's agent requirements, not the defaults above.
+2. **A skill has its own specialized agents** - Some skills (e.g., `ring:dev-refactor`) define their own agents that MUST be used instead of Explore/Plan/general-purpose. When a skill specifies "OVERRIDE" or "FORBIDDEN agents", follow the skill's agent requirements, not the defaults above.
 
 **All these are STILL orchestration tasks:**
 - "I need to understand the codebase structure first" -> Explore agent
@@ -224,7 +224,7 @@ You are breaking ORCHESTRATOR. Use an agent instead.
 
 **Built-in (Opus):** `Explore` (navigation), `Plan` (implementation), `general-purpose` (research).
 
-**Ring:** `code-reviewer`, `business-logic-reviewer`, `security-reviewer`, `write-plan`.
+**Ring:** `ring:code-reviewer`, `ring:business-logic-reviewer`, `ring:security-reviewer`, `ring:write-plan`.
 
 ### Decision: Which Agent?
 
@@ -304,11 +304,11 @@ Ring includes skills for managing context and enabling self-improvement:
 
 | Skill | Use When | Trigger |
 |-------|----------|---------|
-| `continuity-ledger` | Save session state for future resumption | At 70%+ context OR task completion |
-| `create-handoff` | Full handoff document with all context | At 85%+ context OR session end |
-| `artifact-query` | Search past handoffs, plans, or outcomes by keywords | Need historical context |
-| `handoff-tracking` | Mark task completion with what_worked/what_failed/key_decisions | Task complete |
-| `compound-learnings` | Analyze learnings from multiple sessions, detect patterns | After 3+ sessions |
+| `ring:continuity-ledger` | Save session state for future resumption | At 70%+ context OR task completion |
+| `ring:create-handoff` | Full handoff document with all context | At 85%+ context OR session end |
+| `ring:artifact-query` | Search past handoffs, plans, or outcomes by keywords | Need historical context |
+| `ring:handoff-tracking` | Mark task completion with what_worked/what_failed/key_decisions | Task complete |
+| `ring:compound-learnings` | Analyze learnings from multiple sessions, detect patterns | After 3+ sessions |
 
 **Compound Learnings workflow:** Session ends -> Hook extracts learnings -> After 3+ sessions, patterns emerge -> User approves -> Permanent rules/skills created.
 

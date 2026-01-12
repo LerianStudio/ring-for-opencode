@@ -8,8 +8,8 @@ compatibility: opencode
 metadata:
   trigger: "Design phase complete, need executable task breakdown, creating work for others"
   skip_when: "Design not validated, requirements unclear, already have a plan"
-  sequence_after: "brainstorming, pre-dev-trd-creation"
-  sequence_before: "executing-plans"
+  sequence_after: "ring:brainstorming, ring:pre-dev-trd-creation"
+  sequence_before: "ring:executing-plans"
   source: ring-default
 ---
 
@@ -17,7 +17,7 @@ metadata:
 
 ## Related Skills
 
-**Similar:** brainstorming
+**Similar:** ring:brainstorming
 
 ---
 
@@ -82,7 +82,7 @@ python3 default/lib/validate-plan-precedent.py docs/plans/YYYY-MM-DD-<feature>.m
 **Step 4: Ask User About Execution**
 
 Ask via `AskUserQuestion`: "Execute now?" Options:
-1. Parallel session -> user opens new session with `executing-plans`
+1. Parallel session -> user opens new session with `ring:executing-plans`
 2. Save for later -> report location and end
 
 ## Why Use an Agent?
@@ -112,7 +112,7 @@ Every plan: **Historical Precedent section** | Header (goal, architecture, tech 
 
 | Option | Description |
 |--------|-------------|
-| **Parallel session** | User opens new session, batch execution with human review -> `executing-plans` |
+| **Parallel session** | User opens new session, batch execution with human review -> `ring:executing-plans` |
 | **Save for later** | Plan at `docs/plans/YYYY-MM-DD-<feature>.md`, manual review before execution |
 
 ## Required Patterns

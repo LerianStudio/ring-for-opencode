@@ -15,7 +15,7 @@ metadata:
 
 ## Related Skills
 
-**Complementary:** testing-skills-with-subagents
+**Complementary:** ring:testing-skills-with-subagents
 
 ---
 
@@ -27,7 +27,7 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
-**REQUIRED BACKGROUND:** You MUST understand test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
+**REQUIRED BACKGROUND:** You MUST understand ring:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
 ## What is a Skill?
 
@@ -137,7 +137,7 @@ Edit skill without testing? Same violation.
 | **GREEN** | Write skill addressing specific failures -> verify agent complies |
 | **REFACTOR** | Find new rationalizations -> add counters -> re-test until bulletproof |
 
-**REQUIRED SUB-SKILL:** Use testing-skills-with-subagents for pressure scenarios, pressure types, hole-plugging, meta-testing.
+**REQUIRED SUB-SKILL:** Use ring:testing-skills-with-subagents for pressure scenarios, pressure types, hole-plugging, meta-testing.
 
 ## Bulletproofing Skills Against Rationalization
 

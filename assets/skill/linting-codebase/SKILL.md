@@ -119,7 +119,7 @@ After all agents complete, run `<lint_command> 2>&1`.
 |------------|------------|
 | TypeScript/JavaScript | `general-purpose` |
 | Go | `general-purpose` or `backend-engineer-golang` |
-| Security lints | `security-reviewer` for analysis first |
+| Security lints | `ring:security-reviewer` for analysis first |
 | Style/formatting | `general-purpose` |
 
 ## Output Format
@@ -140,7 +140,7 @@ After all agents complete, run `<lint_command> 2>&1`.
 
 | Skill | When to use |
 |-------|-------------|
-| `requesting-code-review` | After lint passes, before merge |
+| `ring:requesting-code-review` | After lint passes, before merge |
 
 ## Example Session
 

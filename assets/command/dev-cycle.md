@@ -33,12 +33,12 @@ Execute the development cycle for tasks in a markdown file.
 
 | Gate | Skill | Description |
 |------|-------|-------------|
-| 0 | `dev-implementation` | Implement code (TDD) |
-| 1 | `dev-devops` | Create Docker/compose |
-| 2 | `dev-sre` | Observability validation |
-| 3 | `dev-testing` | Write and run tests (85%+ coverage) |
-| 4 | `requesting-code-review` | Code review (5 reviewers in parallel) |
-| 5 | `dev-validation` | Final validation |
+| 0 | `ring:dev-implementation` | Implement code (TDD) |
+| 1 | `ring:dev-devops` | Create Docker/compose |
+| 2 | `ring:dev-sre` | Observability validation |
+| 3 | `ring:dev-testing` | Write and run tests (85%+ coverage) |
+| 4 | `ring:requesting-code-review` | Code review (5 reviewers in parallel) |
+| 5 | `ring:dev-validation` | Final validation |
 
 ## Execution Mode
 
@@ -62,6 +62,6 @@ Before executing, ask user for execution mode:
 
 ---
 
-**Now loading skill: dev-cycle**
+**Now loading skill: ring:dev-cycle**
 
 Pass arguments: $ARGUMENTS

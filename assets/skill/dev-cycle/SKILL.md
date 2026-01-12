@@ -93,7 +93,7 @@ Extract: acceptance_criteria, technical_context, language
 ### Step 3: Execute Gate 0 (Implementation)
 
 ```yaml
-Skill: dev-implementation
+Skill: ring:dev-implementation
 Input:
   unit_id: task.id
   requirements: task.acceptance_criteria
@@ -106,7 +106,7 @@ Input:
 ### Step 4: Execute Gate 1 (DevOps)
 
 ```yaml
-Skill: dev-devops
+Skill: ring:dev-devops
 Input:
   unit_id: task.id
   language: detected_language
@@ -116,7 +116,7 @@ Input:
 ### Step 5: Execute Gate 2 (SRE)
 
 ```yaml
-Skill: dev-sre
+Skill: ring:dev-sre
 Input:
   unit_id: task.id
   language: detected_language
@@ -127,7 +127,7 @@ Input:
 ### Step 6: Execute Gate 3 (Testing)
 
 ```yaml
-Skill: dev-testing
+Skill: ring:dev-testing
 Input:
   unit_id: task.id
   acceptance_criteria: task.acceptance_criteria
@@ -138,17 +138,17 @@ Input:
 ### Step 7: Execute Gate 4 (Review)
 
 ```yaml
-Skill: requesting-code-review
+Skill: ring:requesting-code-review
 # Dispatches 3 parallel reviewers:
-# - code-reviewer
-# - security-reviewer
-# - business-logic-reviewer
+# - ring:code-reviewer
+# - ring:security-reviewer
+# - ring:business-logic-reviewer
 ```
 
 ### Step 8: Execute Gate 5 (Validation)
 
 ```yaml
-Skill: dev-validation
+Skill: ring:dev-validation
 # Presents validation checklist
 # Requires explicit APPROVED/REJECTED
 ```
@@ -167,7 +167,7 @@ Skill: dev-validation
 ### Step 10: Feedback Loop
 
 ```yaml
-Skill: dev-feedback-loop
+Skill: ring:dev-feedback-loop
 # Captures metrics and learnings
 ```
 

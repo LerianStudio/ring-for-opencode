@@ -512,16 +512,16 @@ Agent "build" orchestrates workflow
 ### Parallel Code Review
 
 ```
-User types /codereview
+User types /ring:codereview
          │
          ▼
 Command dispatches 5 reviewers in parallel
          │
-         ├─→ @code-reviewer
-         ├─→ @business-logic-reviewer
-         ├─→ @security-reviewer
-         ├─→ @test-reviewer
-         └─→ @nil-safety-reviewer
+         ├─→ @ring:code-reviewer
+         ├─→ @ring:business-logic-reviewer
+         ├─→ @ring:security-reviewer
+         ├─→ @ring:test-reviewer
+         └─→ @ring:nil-safety-reviewer
          │
          ▼
 Results aggregated into unified report

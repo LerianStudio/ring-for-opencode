@@ -12,7 +12,7 @@ Analyze existing codebase against Ring/Lerian standards and execute refactoring 
 
 ```
 Does docs/PROJECT_RULES.md exist?
-├── YES → Load skill: dev-refactor
+├── YES → Load skill: ring:dev-refactor
 └── NO  → Output blocker and STOP
 ```
 
@@ -89,6 +89,6 @@ Before executing dev-cycle, ask user:
 
 ---
 
-**Now loading skill: dev-refactor**
+**Now loading skill: ring:dev-refactor**
 
 Pass arguments: $ARGUMENTS

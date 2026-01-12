@@ -40,12 +40,12 @@ The dev-team plugin provides specialist developer agents for structured software
 
 | Gate | Name | Skill | Agent |
 |------|------|-------|-------|
-| 0 | Implementation | dev-implementation | backend-engineer-* / frontend-* |
-| 1 | DevOps Setup | dev-devops | devops-engineer |
-| 2 | SRE Validation | dev-sre | sre |
-| 3 | Testing | dev-testing | qa-analyst |
-| 4 | Code Review | requesting-code-review | code-reviewer, security-reviewer, business-logic-reviewer |
-| 5 | Validation | dev-validation | User approval |
+| 0 | Implementation | ring:dev-implementation | backend-engineer-* / frontend-* |
+| 1 | DevOps Setup | ring:dev-devops | devops-engineer |
+| 2 | SRE Validation | ring:dev-sre | sre |
+| 3 | Testing | ring:dev-testing | qa-analyst |
+| 4 | Code Review | ring:requesting-code-review | ring:code-reviewer, ring:security-reviewer, ring:business-logic-reviewer |
+| 5 | Validation | ring:dev-validation | User approval |
 
 ## Commands
 
@@ -79,15 +79,15 @@ Gate 0 MUST produce test failure output before implementation.
 
 ```
 1. User provides task requirements
-2. /dev-cycle invokes dev-cycle skill
-3. dev-implementation dispatches appropriate specialist agent
+2. /dev-cycle invokes ring:dev-cycle skill
+3. ring:dev-implementation dispatches appropriate specialist agent
 4. Agent writes tests (RED) then implementation (GREEN)
-5. dev-devops creates Docker/compose setup
-6. dev-sre validates observability
-7. dev-testing ensures coverage threshold
-8. requesting-code-review dispatches 3 parallel reviewers
-9. dev-validation requests user approval
-10. dev-feedback-loop captures metrics for improvement
+5. ring:dev-devops creates Docker/compose setup
+6. ring:dev-sre validates observability
+7. ring:dev-testing ensures coverage threshold
+8. ring:requesting-code-review dispatches 3 parallel reviewers
+9. ring:dev-validation requests user approval
+10. ring:dev-feedback-loop captures metrics for improvement
 ```
 
 ## When to Use
