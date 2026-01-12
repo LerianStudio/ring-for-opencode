@@ -118,6 +118,12 @@ export interface WorkerInstance {
   modelRef?: string
   modelPolicy?: "dynamic" | "sticky"
   shutdown?: () => void | Promise<void>
+  /** Cryptographically random auth token for worker verification */
+  authToken?: string
+  /** Token expiration timestamp */
+  tokenExpiry?: number
+  /** Allowed origins for serverUrl (SSRF protection) */
+  allowedOrigins?: string[]
 }
 
 // =============================================================================
@@ -271,6 +277,26 @@ export interface DeviceRegistryFile {
   updatedAt: number
   entries: DeviceRegistryEntry[]
 }
+
+// =============================================================================
+// Security Constants
+// =============================================================================
+
+export const BLOCKED_HOSTS = [
+  "169.254.169.254",      // AWS metadata
+  "metadata.google.internal", // GCP metadata
+  "localhost",
+  "127.0.0.1",
+  "0.0.0.0",
+  "::1",
+] as const
+
+export const MAX_WORKERS = 50
+export const MAX_WORKERS_PER_SESSION = 10
+export const SPAWN_RATE_LIMIT_MS = 1000
+export const MAX_TASK_LENGTH = 100_000
+export const MAX_BASE64_LENGTH = 10_000_000
+export const MAX_ATTACHMENTS = 10
 ```
 
 **Step 3: Verify the file was created**
@@ -589,6 +615,8 @@ EOF
  * - In-flight spawn deduplication
  * - Event-based status updates
  * - Session ownership tracking
+ * - Worker limits and rate limiting (SEC-H1)
+ * - State machine validation for status transitions (BL-H3)
  *
  * Ported from Orchestra's WorkerPool pattern.
  */
@@ -602,6 +630,24 @@ import type {
   WorkerProfile,
   WorkerStatus,
 } from "./types.js"
+import { MAX_WORKERS, MAX_WORKERS_PER_SESSION, SPAWN_RATE_LIMIT_MS } from "./types.js"
+import { validateServerUrl } from "./config.js"
+
+/**
+ * Valid worker status transitions (BL-H3).
+ * Note: "stopped" is allowed from any active state for explicit shutdown.
+ */
+const VALID_TRANSITIONS: Record<WorkerStatus, WorkerStatus[]> = {
+  starting: ["ready", "error", "stopped"],  // Added stopped for explicit shutdown
+  ready: ["busy", "error", "stopped"],
+  busy: ["ready", "error", "stopped"],
+  error: ["stopped", "starting"], // Allow restart from error
+  stopped: [], // Terminal state
+}
+
+function isValidTransition(from: WorkerStatus, to: WorkerStatus): boolean {
+  return VALID_TRANSITIONS[from]?.includes(to) ?? false
+}
 
 export interface SpawnOptions {
   basePort: number
@@ -617,6 +663,7 @@ export class WorkerPool {
   private sessionWorkers: Map<string, Set<string>> = new Map()
   private inFlightSpawns: Map<string, Promise<WorkerInstance>> = new Map()
   private instanceId = ""
+  private lastSpawnTime = 0 // Rate limiting (SEC-H1)
 
   setInstanceId(id: string): void {
     this.instanceId = id
@@ -625,6 +672,7 @@ export class WorkerPool {
   /**
    * Get or spawn a worker by profile ID.
    * Handles deduplication - concurrent calls return the same promise.
+   * Registers spawned instance automatically (BL-H1).
    */
   async getOrSpawn(
     profile: WorkerProfile,
@@ -649,6 +697,21 @@ export class WorkerPool {
 
     try {
       const instance = await spawnPromise
+
+      // BL-H2 FIX: Wrap registration in try-catch to cleanup on failure
+      if (!this.workers.has(profile.id)) {
+        try {
+          this.register(instance)
+        } catch (regError) {
+          // Cleanup spawned process if registration fails
+          try {
+            await instance.shutdown?.()
+          } catch {
+            // Ignore shutdown errors during cleanup
+          }
+          throw regError
+        }
+      }
       return instance
     } finally {
       if (this.inFlightSpawns.get(profile.id) === spawnPromise) {
@@ -659,8 +722,34 @@ export class WorkerPool {
 
   /**
    * Register a worker instance.
+   * @throws Error if worker limit reached or rate limited (SEC-H1)
    */
   register(instance: WorkerInstance): void {
+    // Enforce global worker limit (SEC-H1)
+    if (this.workers.size >= MAX_WORKERS) {
+      throw new Error(`Worker limit reached (max: ${MAX_WORKERS})`)
+    }
+
+    // Enforce per-session limit (SEC-H1)
+    if (instance.parentSessionId) {
+      const sessionCount = this.getWorkersForSession(instance.parentSessionId).length
+      if (sessionCount >= MAX_WORKERS_PER_SESSION) {
+        throw new Error(`Session worker limit reached (max: ${MAX_WORKERS_PER_SESSION})`)
+      }
+    }
+
+    // SEC-CRIT-2 FIX: Validate serverUrl to prevent SSRF attacks
+    if (instance.serverUrl) {
+      validateServerUrl(instance.serverUrl)
+    }
+
+    // Rate limiting (SEC-H1)
+    const now = Date.now()
+    if (now - this.lastSpawnTime < SPAWN_RATE_LIMIT_MS) {
+      throw new Error(`Rate limited: wait ${SPAWN_RATE_LIMIT_MS}ms between spawns`)
+    }
+    this.lastSpawnTime = now
+
     this.workers.set(instance.profile.id, instance)
     this.emit("spawn", instance)
   }
@@ -735,26 +824,35 @@ export class WorkerPool {
   }
 
   /**
-   * Update worker status.
+   * Update worker status with state machine validation (BL-H3).
    */
   updateStatus(id: string, status: WorkerStatus, error?: string): void {
     const instance = this.workers.get(id)
-    if (instance) {
-      const prevStatus = instance.status
-      instance.status = status
-      instance.lastActivity = new Date()
-      if (error) instance.error = error
+    if (!instance) return
 
-      // Emit appropriate event
-      if (status === "ready" && prevStatus !== "ready") {
-        this.emit("ready", instance)
-      } else if (status === "busy") {
-        this.emit("busy", instance)
-      } else if (status === "error") {
-        this.emit("error", instance)
-      }
-      this.emit("update", instance)
+    const prevStatus = instance.status
+
+    // Validate state transition (BL-H3)
+    if (!isValidTransition(prevStatus, status)) {
+      console.warn(
+        `[WorkerPool] Invalid state transition for ${id}: ${prevStatus} -> ${status}`
+      )
+      return // Reject invalid transitions
     }
+
+    instance.status = status
+    instance.lastActivity = new Date()
+    if (error) instance.error = error
+
+    // Emit appropriate event
+    if (status === "ready" && prevStatus !== "ready") {
+      this.emit("ready", instance)
+    } else if (status === "busy") {
+      this.emit("busy", instance)
+    } else if (status === "error") {
+      this.emit("error", instance)
+    }
+    this.emit("update", instance)
   }
 
   /**
@@ -782,13 +880,15 @@ export class WorkerPool {
   }
 
   /**
-   * Subscribe to pool events.
+   * Subscribe to pool events (NIL-M1: avoid non-null assertion).
    */
   on(event: WorkerPoolEvent, callback: WorkerPoolCallback): () => void {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set())
+    let set = this.listeners.get(event)
+    if (!set) {
+      set = new Set()
+      this.listeners.set(event, set)
     }
-    this.listeners.get(event)!.add(callback)
+    set.add(callback)
     return () => this.off(event, callback)
   }
 
@@ -803,8 +903,11 @@ export class WorkerPool {
     this.listeners.get(event)?.forEach((cb) => {
       try {
         cb(instance)
-      } catch {
-        // Ignore listener errors
+      } catch (err) {
+        // Log listener errors instead of silently swallowing
+        if (process.env.RING_DEBUG === "true") {
+          console.warn(`[WorkerPool] Listener error on '${event}':`, err)
+        }
       }
     })
   }
@@ -896,6 +999,7 @@ export class WorkerPool {
 
   /**
    * Stop a specific worker.
+   * Uses state machine validation via updateStatus.
    */
   async stop(workerId: string): Promise<boolean> {
     const instance = this.workers.get(workerId)
@@ -903,10 +1007,15 @@ export class WorkerPool {
 
     try {
       await instance.shutdown?.()
-      instance.status = "stopped"
+      // BL-M3 FIX: Use updateStatus instead of direct assignment
+      this.updateStatus(workerId, "stopped")
       this.unregister(workerId)
       return true
-    } catch {
+    } catch (err) {
+      // Log error in debug mode (consistent with emit pattern)
+      if (process.env.RING_DEBUG === "true") {
+        console.warn(`[WorkerPool] Stop failed for ${workerId}:`, err)
+      }
       return false
     }
   }
@@ -1211,11 +1320,19 @@ Run: `mkdir -p /Users/fredamaral/repos/fredcamaral/ring-for-opencode/plugin/orch
  * Ported from Orchestra's task tools pattern.
  */
 
-import { tool, type ToolDefinition } from "@opencode-ai/plugin"
+import { tool } from "@opencode-ai/plugin/tool"
+import type { ToolContext, ToolDefinition } from "@opencode-ai/plugin"
+import { resolve, normalize, sep } from "node:path"
+import { existsSync } from "node:fs"
 import { jobRegistry } from "../jobs.js"
 import { workerPool } from "../worker-pool.js"
 import { getProfile, builtInProfiles } from "../profiles.js"
 import type { OrchestratorContext, WorkerProfile } from "../types.js"
+import {
+  MAX_TASK_LENGTH,
+  MAX_BASE64_LENGTH,
+  MAX_ATTACHMENTS,
+} from "../types.js"
 
 type TaskTools = {
   taskStart: ToolDefinition
@@ -1230,6 +1347,34 @@ type ToolAttachment = {
   path?: string
   base64?: string
   mimeType?: string
+}
+
+/**
+ * Validate attachment path is safe (no traversal, within project).
+ */
+function validateAttachmentPath(path: string, projectRoot: string): string {
+  // Reject absolute paths
+  if (resolve(path) === normalize(path)) {
+    throw new Error("Attachment path must be relative")
+  }
+
+  // Reject path traversal attempts
+  if (path.includes("..")) {
+    throw new Error("Path traversal not allowed in attachment paths")
+  }
+
+  const resolved = resolve(projectRoot, path)
+  const normalizedRoot = normalize(projectRoot) + sep
+
+  if (!resolved.startsWith(normalizedRoot)) {
+    throw new Error("Attachment path must be within project directory")
+  }
+
+  if (!existsSync(resolved)) {
+    throw new Error(`Attachment file not found: ${path}`)
+  }
+
+  return resolved
 }
 
 /**
@@ -1284,21 +1429,35 @@ export function createTaskTools(context: OrchestratorContext): TaskTools {
         .enum(["auto", "worker"])
         .optional()
         .describe("Task kind (default: auto = pick a worker based on task/attachments)"),
-      task: tool.schema.string().describe("What to do (sent to worker)"),
+      task: tool.schema
+        .string()
+        .max(MAX_TASK_LENGTH, `Task must be <= ${MAX_TASK_LENGTH} chars`)
+        .describe("What to do (sent to worker)"),
       workerId: tool.schema.string().optional().describe("Worker id (e.g. 'docs', 'coder')"),
       attachments: tool.schema
         .array(
           tool.schema.object({
             type: tool.schema.enum(["image", "file"]),
-            path: tool.schema.string().optional(),
-            base64: tool.schema.string().optional(),
+            path: tool.schema
+              .string()
+              .refine((p) => !p.includes(".."), "Path must not contain ..")
+              .optional(),
+            base64: tool.schema
+              .string()
+              .max(MAX_BASE64_LENGTH, "Base64 too large")
+              .optional(),
             mimeType: tool.schema.string().optional(),
           }),
         )
+        .max(MAX_ATTACHMENTS, `Max ${MAX_ATTACHMENTS} attachments`)
         .optional()
         .describe("Optional attachments (images/files) to forward to the worker"),
       autoSpawn: tool.schema.boolean().optional().describe("Auto-spawn missing workers (default: true)"),
-      timeoutMs: tool.schema.number().optional().describe("Timeout for the task (default: 10 minutes)"),
+      timeoutMs: tool.schema
+        .number()
+        .min(1000, "Timeout must be >= 1000ms")
+        .optional()
+        .describe("Timeout for the task (default: 10 minutes)"),
     },
     async execute(args, ctx) {
       const kind = args.kind ?? "auto"
@@ -1312,6 +1471,21 @@ export function createTaskTools(context: OrchestratorContext): TaskTools {
 
       if (!resolvedWorkerId) {
         return JSON.stringify({ error: "Missing workerId" }, null, 2)
+      }
+
+      // SEC-CRIT-1 FIX: Validate all attachment paths before processing
+      if (args.attachments) {
+        for (const attachment of args.attachments) {
+          if (attachment.path) {
+            try {
+              validateAttachmentPath(attachment.path, context.directory)
+            } catch (err) {
+              return JSON.stringify({
+                error: `Invalid attachment path: ${err instanceof Error ? err.message : String(err)}`,
+              }, null, 2)
+            }
+          }
+        }
       }
 
       // Create job record
@@ -1357,7 +1531,7 @@ export function createTaskTools(context: OrchestratorContext): TaskTools {
       timeoutMs: tool.schema.number().optional().describe("Timeout in ms (default: 10 minutes)"),
     },
     async execute(args) {
-      const timeoutMs = args.timeoutMs ?? 600_000
+      const timeoutMs = Math.max(1000, Math.min(args.timeoutMs ?? 600_000, 600_000))
       const ids = args.taskId ? [args.taskId] : args.taskIds ?? []
 
       if (ids.length === 0) {
@@ -1843,6 +2017,17 @@ function appendCarry(
 // Workflow Execution
 // =============================================================================
 
+/**
+ * Apply template variables to a prompt string.
+ *
+ * Supported variables:
+ * - {task} - The original task description
+ * - {carry} - Accumulated carry content from previous steps
+ *
+ * NOTE: Prompt snippet expansion ({{snippet:name}}) is NOT supported
+ * in this implementation. If needed, pre-expand snippets before
+ * registering workflows.
+ */
 function applyTemplate(template: string, vars: Record<string, string>): string {
   let out = template
   for (const [key, value] of Object.entries(vars)) {
@@ -1853,10 +2038,14 @@ function applyTemplate(template: string, vars: Record<string, string>): string {
 
 function resolveStepTimeout(step: WorkflowStepDefinition, limits: WorkflowRunLimits): number {
   const requested =
-    typeof step.timeoutMs === "number" && Number.isFinite(step.timeoutMs) && step.timeoutMs > 0
+    typeof step.timeoutMs === "number" &&
+    Number.isFinite(step.timeoutMs) &&
+    step.timeoutMs > 0
       ? step.timeoutMs
       : limits.perStepTimeoutMs
-  return Math.min(requested, limits.perStepTimeoutMs)
+
+  // Clamp to limits and ensure minimum of 1 second
+  return Math.max(1000, Math.min(requested, limits.perStepTimeoutMs))
 }
 
 export function validateWorkflowInput(input: WorkflowRunInput, workflow: WorkflowDefinition): void {
@@ -1870,6 +2059,7 @@ export function validateWorkflowInput(input: WorkflowRunInput, workflow: Workflo
 
 /**
  * Execute a single workflow step.
+ * @throws Error if stepIndex is out of bounds
  */
 export async function executeWorkflowStep(
   input: {
@@ -1884,7 +2074,17 @@ export async function executeWorkflowStep(
   },
   deps: WorkflowRunDependencies,
 ): Promise<{ step: WorkflowStepResult; response?: string; carry: string }> {
+  // BOUNDS CHECK - NIL-H1 fix
+  if (input.stepIndex < 0 || input.stepIndex >= input.workflow.steps.length) {
+    throw new Error(
+      `Invalid stepIndex ${input.stepIndex} for workflow "${input.workflow.id}" ` +
+      `with ${input.workflow.steps.length} steps`
+    )
+  }
+
   const step = input.workflow.steps[input.stepIndex]
+  // Now safe to access step.id, step.workerId, etc.
+
   const stepStarted = Date.now()
 
   const workerId = await deps.resolveWorker(step.workerId, input.autoSpawn)
@@ -1988,7 +2188,8 @@ export async function runWorkflow(
     finishedAt,
     currentStepIndex: Math.min(steps.length, workflow.steps.length),
     steps,
-    lastStepResult: steps[steps.length - 1],
+    // NIL-M2 fix: Use .at(-1) which returns undefined for empty arrays
+    lastStepResult: steps.at(-1),
   }
 }
 ```
@@ -2047,12 +2248,20 @@ EOF
  * Ported from Orchestra's configuration pattern.
  */
 
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readFileSync, lstatSync, realpathSync, openSync, fstatSync, closeSync } from "node:fs"
 import { homedir } from "node:os"
-import { join } from "node:path"
+import { join, resolve, normalize } from "node:path"
 import { z } from "zod"
 import type { OrchestratorContext, WorkerProfile, WorkflowRunLimits } from "./types.js"
 import { builtInProfiles } from "./profiles.js"
+import { BLOCKED_HOSTS } from "./types.js"
+
+// =============================================================================
+// Security Constants
+// =============================================================================
+
+const PROTECTED_PROFILE_IDS = ["vision", "docs", "coder", "architect", "explorer"] as const
+const MAX_CONFIG_SIZE = 1_000_000 // 1MB
 
 // =============================================================================
 // Zod Schemas
@@ -2151,13 +2360,91 @@ function getUserConfigDir(): string {
   return join(home, ".config", "opencode", "ring")
 }
 
-function tryReadJson(filePath: string): unknown | null {
+/**
+ * Safely read JSON config file with TOCTOU protection.
+ * Uses file descriptor to ensure atomic check and read.
+ */
+function tryReadJson(filePath: string, projectRoot?: string): unknown | null {
+  let fd: number | null = null
   try {
     if (!existsSync(filePath)) return null
-    const content = readFileSync(filePath, "utf-8")
+
+    // Pre-check with lstat for symlink outside project (before opening)
+    const lstats = lstatSync(filePath)
+    if (lstats.isSymbolicLink()) {
+      const realPath = realpathSync(filePath)
+      const normalizedRoot = projectRoot ? normalize(projectRoot) : null
+
+      if (normalizedRoot && !realPath.startsWith(normalizedRoot)) {
+        console.warn(`[Orchestrator] Blocked symlink outside project: ${filePath}`)
+        return null
+      }
+    }
+
+    // SEC-HIGH-2 FIX: Open file and use fd for atomic stat+read
+    fd = openSync(filePath, "r")
+    const stats = fstatSync(fd)
+
+    // Size limit to prevent DoS
+    if (stats.size > MAX_CONFIG_SIZE) {
+      console.warn(`[Orchestrator] Config file too large (${stats.size} bytes): ${filePath}`)
+      return null
+    }
+
+    // Read from same fd to prevent TOCTOU
+    const buffer = Buffer.alloc(stats.size)
+    const bytesRead = require("node:fs").readSync(fd, buffer, 0, stats.size, 0)
+    const content = buffer.slice(0, bytesRead).toString("utf-8")
+
     return JSON.parse(content)
-  } catch {
+  } catch (err) {
+    if (existsSync(filePath)) {
+      console.warn(
+        `[Orchestrator] Failed to parse ${filePath}:`,
+        err instanceof Error ? err.message : err
+      )
+    }
     return null
+  } finally {
+    if (fd !== null) {
+      try {
+        closeSync(fd)
+      } catch {
+        // Ignore close errors
+      }
+    }
+  }
+}
+
+/**
+ * Validate serverUrl is not pointing to internal/metadata services.
+ */
+export function validateServerUrl(url: string): void {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error(`Invalid server URL: ${url}`)
+  }
+
+  // Block known metadata endpoints
+  if (BLOCKED_HOSTS.includes(parsed.hostname as any)) {
+    throw new Error(`Blocked host: ${parsed.hostname}`)
+  }
+
+  // Block private IP ranges (basic check)
+  const hostname = parsed.hostname
+  if (
+    hostname.startsWith("10.") ||
+    hostname.startsWith("192.168.") ||
+    hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)
+  ) {
+    throw new Error(`Private IP not allowed: ${hostname}`)
+  }
+
+  // Require HTTPS in production
+  if (process.env.NODE_ENV === "production" && parsed.protocol !== "https:") {
+    throw new Error("HTTPS required for worker URLs in production")
   }
 }
 
@@ -2190,6 +2477,7 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
 
 /**
  * Resolve a worker profile entry (string ID or full object).
+ * Protected profiles cannot be overridden by config.
  */
 function resolveProfileEntry(
   entry: string | Partial<WorkerProfile>,
@@ -2201,6 +2489,18 @@ function resolveProfileEntry(
 
   if (!entry.id) return undefined
 
+  // Validate ID format (alphanumeric + hyphen only)
+  if (!/^[a-z0-9-]+$/i.test(entry.id)) {
+    console.warn(`[Orchestrator] Invalid profile ID format: ${entry.id}`)
+    return undefined
+  }
+
+  // Protect built-in profiles from override
+  if (PROTECTED_PROFILE_IDS.includes(entry.id as any)) {
+    console.warn(`[Orchestrator] Cannot override protected profile: ${entry.id}`)
+    return builtInProfiles[entry.id]
+  }
+
   const base = existingProfiles[entry.id] ?? builtInProfiles[entry.id]
   if (base) {
     return { ...base, ...entry, id: entry.id }
@@ -2211,7 +2511,21 @@ function resolveProfileEntry(
     return undefined
   }
 
-  return entry as WorkerProfile
+  // Explicit construction instead of type assertion
+  return {
+    id: entry.id,
+    name: entry.name,
+    model: entry.model,
+    purpose: entry.purpose,
+    whenToUse: entry.whenToUse,
+    kind: entry.kind,
+    systemPrompt: entry.systemPrompt,
+    supportsVision: entry.supportsVision,
+    supportsWeb: entry.supportsWeb,
+    tools: entry.tools,
+    temperature: entry.temperature,
+    tags: entry.tags,
+  }
 }
 
 export interface LoadedOrchestratorConfig {
@@ -2232,7 +2546,7 @@ export function loadOrchestratorConfig(directory: string): LoadedOrchestratorCon
 
   // Layer 2: Global config
   const globalPath = join(getUserConfigDir(), "orchestrator.json")
-  const globalRaw = tryReadJson(globalPath)
+  const globalRaw = tryReadJson(globalPath) // No project root check for global
   if (globalRaw) {
     sources.global = globalPath
     const parsed = OrchestratorConfigFileSchema.safeParse(globalRaw)
@@ -2241,14 +2555,14 @@ export function loadOrchestratorConfig(directory: string): LoadedOrchestratorCon
     }
   }
 
-  // Layer 3: Project config
+  // Layer 3: Project config (with symlink protection)
   const projectPaths = [
     join(directory, ".ring", "orchestrator.json"),
     join(directory, ".opencode", "orchestrator.json"),
   ]
 
   for (const projectPath of projectPaths) {
-    const projectRaw = tryReadJson(projectPath)
+    const projectRaw = tryReadJson(projectPath, directory) // Pass directory for symlink check
     if (projectRaw) {
       sources.project = projectPath
       const parsed = OrchestratorConfigFileSchema.safeParse(projectRaw)
@@ -2985,10 +3299,458 @@ describe("WorkerPool", () => {
       expect(r1).toBe(r2) // Same instance
     })
   })
+
+  describe("register rate limiting", () => {
+    it("enforces rate limit between spawns", () => {
+      const pool = new WorkerPool()
+      // First register succeeds
+      pool.register(createMockInstance(mockProfile))
+
+      // Second register within SPAWN_RATE_LIMIT_MS should throw
+      const secondProfile = { ...mockProfile, id: "worker-2" }
+      expect(() => pool.register(createMockInstance(secondProfile))).toThrow(/Rate limited/)
+    })
+
+    it("allows registration after rate limit window", async () => {
+      const pool = new WorkerPool()
+      pool.register(createMockInstance(mockProfile))
+
+      // Wait for rate limit window to pass (use shorter timeout for test)
+      await new Promise((r) => setTimeout(r, 1100))
+
+      const secondProfile = { ...mockProfile, id: "worker-2" }
+      expect(() => pool.register(createMockInstance(secondProfile))).not.toThrow()
+    })
+  })
+
+  describe("state machine validation", () => {
+    it("rejects invalid state transitions", () => {
+      const pool = new WorkerPool()
+      const instance = createMockInstance(mockProfile)
+      instance.status = "starting"
+      pool.register(instance)
+
+      // Invalid: starting -> busy (not in VALID_TRANSITIONS)
+      pool.updateStatus(mockProfile.id, "busy")
+
+      // Status should remain unchanged
+      expect(pool.get(mockProfile.id)?.status).toBe("starting")
+    })
+
+    it("allows valid state transitions", () => {
+      const pool = new WorkerPool()
+      const instance = createMockInstance(mockProfile)
+      instance.status = "starting"
+      pool.register(instance)
+
+      // Valid: starting -> ready
+      pool.updateStatus(mockProfile.id, "ready")
+      expect(pool.get(mockProfile.id)?.status).toBe("ready")
+
+      // Valid: ready -> busy
+      pool.updateStatus(mockProfile.id, "busy")
+      expect(pool.get(mockProfile.id)?.status).toBe("busy")
+    })
+
+    it("allows stopped from any active state via stop()", async () => {
+      const pool = new WorkerPool()
+      const instance = createMockInstance(mockProfile)
+      instance.status = "starting"
+      pool.register(instance)
+
+      // stop() should work from any state
+      const result = await pool.stop(mockProfile.id)
+      expect(result).toBe(true)
+    })
+  })
+
+  describe("orphaned worker cleanup", () => {
+    it("cleans up spawned worker when registration fails", async () => {
+      const pool = new WorkerPool()
+
+      // Register first worker to set lastSpawnTime
+      pool.register(createMockInstance(mockProfile))
+
+      // Try to spawn second worker immediately (within rate limit)
+      const secondProfile = { ...mockProfile, id: "worker-2" }
+      let shutdownCalled = false
+
+      const spawnFn = async () => {
+        const instance = createMockInstance(secondProfile)
+        instance.shutdown = async () => { shutdownCalled = true }
+        return instance
+      }
+
+      // Should throw rate limit error AND cleanup
+      await expect(
+        pool.getOrSpawn(secondProfile, { basePort: 14100, timeout: 5000, directory: "/tmp" }, spawnFn)
+      ).rejects.toThrow(/Rate limited/)
+
+      // Verify shutdown was called for cleanup
+      expect(shutdownCalled).toBe(true)
+    })
+  })
 })
 ```
 
-**Step 4: Run tests**
+**Step 4: Write workflow engine tests**
+
+Create file: `__tests__/plugin/orchestrator/workflow/engine.test.ts`
+
+Run: `mkdir -p /Users/fredamaral/repos/fredcamaral/ring-for-opencode/__tests__/plugin/orchestrator/workflow`
+
+```typescript
+/**
+ * Workflow Engine Tests
+ */
+
+import { describe, expect, it, beforeEach } from "bun:test"
+import {
+  registerWorkflow,
+  getWorkflow,
+  listWorkflows,
+  runWorkflow,
+  executeWorkflowStep,
+  validateWorkflowInput,
+  type WorkflowRunDependencies,
+} from "../../../../plugin/orchestrator/workflow/engine.js"
+import type { WorkflowDefinition, WorkflowRunInput } from "../../../../plugin/orchestrator/types.js"
+
+describe("Workflow Registry", () => {
+  it("registers and retrieves workflows", () => {
+    const workflow: WorkflowDefinition = {
+      id: "test-workflow",
+      name: "Test Workflow",
+      description: "A test workflow",
+      steps: [
+        { id: "step1", title: "Step 1", workerId: "coder", prompt: "{task}" },
+      ],
+    }
+
+    registerWorkflow(workflow)
+    const retrieved = getWorkflow("test-workflow")
+
+    expect(retrieved).toBeDefined()
+    expect(retrieved?.id).toBe("test-workflow")
+  })
+
+  it("returns undefined for unknown workflow", () => {
+    expect(getWorkflow("nonexistent")).toBeUndefined()
+  })
+})
+
+describe("executeWorkflowStep", () => {
+  const mockDeps: WorkflowRunDependencies = {
+    resolveWorker: async (id) => id,
+    sendToWorker: async () => ({ success: true, response: "## Summary\nDone" }),
+  }
+
+  const testWorkflow: WorkflowDefinition = {
+    id: "test-wf",
+    name: "Test",
+    description: "Test",
+    steps: [
+      { id: "s1", title: "Step 1", workerId: "coder", prompt: "{task}", carry: true },
+    ],
+  }
+
+  it("throws for invalid stepIndex (bounds check)", async () => {
+    await expect(
+      executeWorkflowStep(
+        {
+          runId: "run-1",
+          workflow: testWorkflow,
+          stepIndex: 99, // Out of bounds
+          task: "Test task",
+          carry: "",
+          autoSpawn: true,
+          limits: { maxSteps: 4, maxTaskChars: 1000, maxCarryChars: 1000, perStepTimeoutMs: 5000 },
+        },
+        mockDeps,
+      )
+    ).rejects.toThrow(/Invalid stepIndex/)
+  })
+
+  it("throws for negative stepIndex", async () => {
+    await expect(
+      executeWorkflowStep(
+        {
+          runId: "run-1",
+          workflow: testWorkflow,
+          stepIndex: -1,
+          task: "Test task",
+          carry: "",
+          autoSpawn: true,
+          limits: { maxSteps: 4, maxTaskChars: 1000, maxCarryChars: 1000, perStepTimeoutMs: 5000 },
+        },
+        mockDeps,
+      )
+    ).rejects.toThrow(/Invalid stepIndex/)
+  })
+
+  it("executes valid step successfully", async () => {
+    const result = await executeWorkflowStep(
+      {
+        runId: "run-1",
+        workflow: testWorkflow,
+        stepIndex: 0,
+        task: "Test task",
+        carry: "",
+        autoSpawn: true,
+        limits: { maxSteps: 4, maxTaskChars: 1000, maxCarryChars: 1000, perStepTimeoutMs: 5000 },
+      },
+      mockDeps,
+    )
+
+    expect(result.step.status).toBe("success")
+    expect(result.step.workerId).toBe("coder")
+  })
+})
+
+describe("runWorkflow", () => {
+  const mockDeps: WorkflowRunDependencies = {
+    resolveWorker: async (id) => id,
+    sendToWorker: async () => ({ success: true, response: "## Summary\nDone" }),
+  }
+
+  it("throws for unknown workflow", async () => {
+    await expect(
+      runWorkflow(
+        {
+          workflowId: "nonexistent",
+          task: "Test",
+          limits: { maxSteps: 4, maxTaskChars: 1000, maxCarryChars: 1000, perStepTimeoutMs: 5000 },
+        },
+        mockDeps,
+      )
+    ).rejects.toThrow(/Unknown workflow/)
+  })
+
+  it("handles empty workflow gracefully", async () => {
+    registerWorkflow({
+      id: "empty-wf",
+      name: "Empty",
+      description: "Empty",
+      steps: [],
+    })
+
+    const result = await runWorkflow(
+      {
+        workflowId: "empty-wf",
+        task: "Test",
+        limits: { maxSteps: 4, maxTaskChars: 1000, maxCarryChars: 1000, perStepTimeoutMs: 5000 },
+      },
+      mockDeps,
+    )
+
+    expect(result.status).toBe("success")
+    expect(result.steps.length).toBe(0)
+    expect(result.lastStepResult).toBeUndefined()
+  })
+})
+
+describe("validateWorkflowInput", () => {
+  const workflow: WorkflowDefinition = {
+    id: "test",
+    name: "Test",
+    description: "Test",
+    steps: [{ id: "s1", title: "S1", workerId: "coder", prompt: "{task}" }],
+  }
+
+  it("throws when task exceeds maxTaskChars", () => {
+    const longTask = "a".repeat(1001)
+    expect(() =>
+      validateWorkflowInput(
+        { workflowId: "test", task: longTask, limits: { maxSteps: 4, maxTaskChars: 1000, maxCarryChars: 1000, perStepTimeoutMs: 5000 } },
+        workflow,
+      )
+    ).toThrow(/maxTaskChars/)
+  })
+})
+```
+
+**Step 5: Write config tests**
+
+Create file: `__tests__/plugin/orchestrator/config.test.ts`
+
+```typescript
+/**
+ * Configuration Tests
+ */
+
+import { describe, expect, it } from "bun:test"
+import {
+  loadOrchestratorConfig,
+  isInsideWorker,
+  validateServerUrl,
+} from "../../../plugin/orchestrator/config.js"
+
+describe("loadOrchestratorConfig", () => {
+  it("uses defaults when no config files exist", () => {
+    const loaded = loadOrchestratorConfig("/nonexistent/path")
+
+    expect(loaded.config.basePort).toBe(14096)
+    expect(loaded.config.autoSpawn).toBe(true)
+    expect(loaded.profiles).toHaveProperty("vision")
+    expect(loaded.profiles).toHaveProperty("coder")
+    expect(loaded.profiles).toHaveProperty("docs")
+  })
+
+  it("includes all built-in profiles", () => {
+    const loaded = loadOrchestratorConfig("/tmp")
+
+    expect(Object.keys(loaded.profiles)).toContain("vision")
+    expect(Object.keys(loaded.profiles)).toContain("docs")
+    expect(Object.keys(loaded.profiles)).toContain("coder")
+    expect(Object.keys(loaded.profiles)).toContain("architect")
+    expect(Object.keys(loaded.profiles)).toContain("explorer")
+  })
+})
+
+describe("isInsideWorker", () => {
+  it("returns false when env var not set", () => {
+    const config = {
+      security: {
+        preventRecursiveSpawn: true,
+        recursiveSpawnEnvVar: "RING_ORCHESTRATOR_WORKER",
+      },
+    } as any
+
+    const original = process.env.RING_ORCHESTRATOR_WORKER
+    delete process.env.RING_ORCHESTRATOR_WORKER
+
+    expect(isInsideWorker(config)).toBe(false)
+
+    if (original) process.env.RING_ORCHESTRATOR_WORKER = original
+  })
+})
+
+describe("validateServerUrl", () => {
+  it("allows valid HTTPS URLs", () => {
+    expect(() => validateServerUrl("https://api.example.com")).not.toThrow()
+  })
+
+  it("blocks AWS metadata endpoint", () => {
+    expect(() => validateServerUrl("http://169.254.169.254/latest/meta-data/")).toThrow(/Blocked host/)
+  })
+
+  it("blocks localhost", () => {
+    expect(() => validateServerUrl("http://localhost:8080")).toThrow(/Blocked host/)
+  })
+
+  it("blocks private IPs", () => {
+    expect(() => validateServerUrl("http://192.168.1.1:8080")).toThrow(/Private IP/)
+    expect(() => validateServerUrl("http://10.0.0.1:8080")).toThrow(/Private IP/)
+  })
+
+  it("throws for invalid URLs", () => {
+    expect(() => validateServerUrl("not-a-url")).toThrow(/Invalid server URL/)
+  })
+})
+```
+
+**Step 6: Write profiles tests**
+
+Create file: `__tests__/plugin/orchestrator/profiles.test.ts`
+
+```typescript
+/**
+ * Profiles Tests
+ */
+
+import { describe, expect, it } from "bun:test"
+import {
+  builtInProfiles,
+  getProfile,
+  mergeProfile,
+  resolveModelTag,
+  listProfileIds,
+} from "../../../plugin/orchestrator/profiles.js"
+
+describe("builtInProfiles", () => {
+  it("includes all expected profiles", () => {
+    expect(builtInProfiles).toHaveProperty("vision")
+    expect(builtInProfiles).toHaveProperty("docs")
+    expect(builtInProfiles).toHaveProperty("coder")
+    expect(builtInProfiles).toHaveProperty("architect")
+    expect(builtInProfiles).toHaveProperty("explorer")
+  })
+
+  it("vision profile supports vision", () => {
+    expect(builtInProfiles.vision.supportsVision).toBe(true)
+  })
+
+  it("docs profile supports web", () => {
+    expect(builtInProfiles.docs.supportsWeb).toBe(true)
+  })
+})
+
+describe("getProfile", () => {
+  it("returns built-in profile", () => {
+    const profile = getProfile("vision")
+    expect(profile?.id).toBe("vision")
+  })
+
+  it("returns undefined for unknown profile", () => {
+    expect(getProfile("nonexistent")).toBeUndefined()
+  })
+})
+
+describe("mergeProfile", () => {
+  it("merges overrides with base profile", () => {
+    const merged = mergeProfile("vision", { name: "My Vision Worker" })
+
+    expect(merged.id).toBe("vision")
+    expect(merged.name).toBe("My Vision Worker")
+    expect(merged.model).toBe(builtInProfiles.vision.model)
+  })
+
+  it("throws for unknown base profile", () => {
+    expect(() => mergeProfile("nonexistent", {})).toThrow(/Unknown base profile/)
+  })
+})
+
+describe("resolveModelTag", () => {
+  const defaults = {
+    default: "anthropic/claude-3-5-sonnet",
+    vision: "anthropic/claude-3-5-sonnet",
+    fast: "anthropic/claude-3-haiku",
+    docs: "anthropic/claude-3-5-sonnet",
+  }
+
+  it("resolves node:vision tag", () => {
+    expect(resolveModelTag("node:vision", defaults)).toBe(defaults.vision)
+  })
+
+  it("resolves node:fast tag", () => {
+    expect(resolveModelTag("node:fast", defaults)).toBe(defaults.fast)
+  })
+
+  it("returns non-tag strings as-is", () => {
+    expect(resolveModelTag("openai/gpt-4", defaults)).toBe("openai/gpt-4")
+  })
+})
+```
+
+**Step 7: Add timeout test to jobs.test.ts**
+
+Add this test to the existing `__tests__/plugin/orchestrator/jobs.test.ts` file, inside the `describe("await")` block after the existing tests:
+
+```typescript
+    it("rejects when timeout expires", async () => {
+      const job = registry.create({
+        workerId: "test-worker",
+        message: "Test task",
+      })
+
+      // Job never completes - should timeout
+      await expect(
+        registry.await(job.id, { timeoutMs: 50 })
+      ).rejects.toThrow(/Timed out waiting for job/)
+    })
+```
+
+**Step 8: Run tests**
 
 Run: `cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && bun test __tests__/plugin/orchestrator/`
 
@@ -2999,34 +3761,53 @@ bun test v1.x.x
 __tests__/plugin/orchestrator/jobs.test.ts:
 ✓ JobRegistry > create > creates a job with running status
 ✓ JobRegistry > create > includes optional sessionId and requestedBy
+✓ JobRegistry > await > rejects when timeout expires
 ... (all tests passing)
 
 __tests__/plugin/orchestrator/worker-pool.test.ts:
 ✓ WorkerPool > register/unregister > registers a worker
 ... (all tests passing)
 
+__tests__/plugin/orchestrator/config.test.ts:
+✓ loadOrchestratorConfig > uses defaults when no config files exist
+... (all tests passing)
+
+__tests__/plugin/orchestrator/profiles.test.ts:
+✓ builtInProfiles > includes all expected profiles
+... (all tests passing)
+
+__tests__/plugin/orchestrator/workflow/engine.test.ts:
+✓ Workflow Registry > registers and retrieves workflows
+✓ executeWorkflowStep > throws for invalid stepIndex (bounds check)
+✓ runWorkflow > throws for unknown workflow
+... (all tests passing)
+
  XX pass
  0 fail
 ```
 
-**Step 5: Commit**
+**Step 9: Commit**
 
 ```bash
 cd /Users/fredamaral/repos/fredcamaral/ring-for-opencode && git add __tests__/plugin/orchestrator/ && git commit -m "$(cat <<'EOF'
 test(orchestrator): add unit tests for core modules
 
 Add comprehensive tests for:
-- JobRegistry: create, get, setResult, setError, cancel, list, await
+- JobRegistry: create, get, setResult, setError, cancel, list, await, timeout rejection
 - WorkerPool: register, unregister, list, status updates, ownership, events, deduplication
+- Workflow Engine: registry, step execution, bounds checking, empty workflow handling
+- Config: defaults loading, isInsideWorker, validateServerUrl (SSRF protection)
+- Profiles: built-in profiles, getProfile, mergeProfile, resolveModelTag
 
 Tests verify core orchestrator patterns work correctly.
 EOF
 )"
 ```
 
+
 ---
 
-### Task 12: Final Code Review
+### Task 12:### Task 12: Final Code Review
 
 1. **Dispatch all reviewers:**
    - REQUIRED SUB-SKILL: Use requesting-code-review
@@ -3082,6 +3863,9 @@ This plan ports the following Orchestra patterns to Ring:
 - `plugin/orchestrator/index.ts`
 - `__tests__/plugin/orchestrator/jobs.test.ts`
 - `__tests__/plugin/orchestrator/worker-pool.test.ts`
+- `__tests__/plugin/orchestrator/workflow/engine.test.ts`
+- `__tests__/plugin/orchestrator/config.test.ts`
+- `__tests__/plugin/orchestrator/profiles.test.ts`
 
 **Files Modified:**
 - `plugin/tools/index.ts`

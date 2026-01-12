@@ -56,7 +56,7 @@ describe("security hardening", () => {
       writeFile(path.join(pluginRoot, "assets", "command", "ok.md"), "# ok")
       writeFile(path.join(pluginRoot, "assets", "command", "__proto__.md"), "# bad")
 
-      const commands = loadRingCommands(pluginRoot, projectRoot)
+      const { commands } = loadRingCommands(pluginRoot, projectRoot)
       expect(Object.getPrototypeOf(commands)).toBeNull()
       expect(Object.keys(commands)).toEqual(["ring:ok"])
 

@@ -21,6 +21,23 @@ export interface CommandConfig {
 }
 
 /**
+ * Validation warning for command references.
+ */
+export interface CommandValidationWarning {
+  command: string
+  issue: string
+  severity: "warning" | "error"
+}
+
+/**
+ * Result of loading commands with validation.
+ */
+export interface LoadCommandsResult {
+  commands: Record<string, CommandConfig>
+  validation: CommandValidationWarning[]
+}
+
+/**
  * Frontmatter data from command markdown files.
  */
 interface CommandFrontmatter {
@@ -145,18 +162,83 @@ function loadCommandsFromDir(
 }
 
 /**
+ * Validate command references in a directory.
+ * Checks for references to skills or other commands that don't exist.
+ */
+function validateCommandReferences(
+  commandsDir: string,
+  allSkillNames: Set<string>,
+  allCommandNames: Set<string>,
+): CommandValidationWarning[] {
+  const warnings: CommandValidationWarning[] = []
+
+  if (!existsSync(commandsDir)) {
+    return warnings
+  }
+
+  try {
+    const entries = readdirSync(commandsDir, { withFileTypes: true })
+
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".md")) continue
+
+      const commandPath = join(commandsDir, entry.name)
+      const commandName = basename(entry.name, ".md")
+
+      try {
+        const content = readFileSync(commandPath, "utf-8")
+
+        // Check for skill references like "skill: <name>" or "@skill-name"
+        const skillRefs = content.match(/skill:\s*(\S+)/gi) ?? []
+        for (const ref of skillRefs) {
+          const skillName = ref.replace(/skill:\s*/i, "").trim()
+          if (skillName && !allSkillNames.has(skillName)) {
+            warnings.push({
+              command: commandName,
+              issue: `References unknown skill: '${skillName}'`,
+              severity: "warning",
+            })
+          }
+        }
+
+        // Check for command references like "/ring:<name>"
+        const cmdRefs = content.match(/\/ring:(\S+)/g) ?? []
+        for (const ref of cmdRefs) {
+          const refName = ref.replace("/ring:", "")
+          if (refName && !allCommandNames.has(refName) && refName !== commandName) {
+            warnings.push({
+              command: commandName,
+              issue: `References unknown command: '${refName}'`,
+              severity: "warning",
+            })
+          }
+        }
+      } catch {
+        // Skip unreadable files
+      }
+    }
+  } catch {
+    // Skip unreadable directories
+  }
+
+  return warnings
+}
+
+/**
  * Load Ring commands from both plugin's assets/ and user's .opencode/ directories.
  *
  * @param pluginRoot - Path to the plugin directory (contains assets/)
  * @param projectRoot - Path to the user's project directory (contains .opencode/)
  * @param disabledCommands - List of command names to skip
- * @returns Merged command configs with user's taking priority
+ * @param validateRefs - Whether to validate command references (default: false)
+ * @returns Object containing merged commands and validation warnings
  */
 export function loadRingCommands(
   pluginRoot: string,
   projectRoot: string,
   disabledCommands: string[] = [],
-): Record<string, CommandConfig> {
+  validateRefs = false,
+): LoadCommandsResult {
   const disabledSet = new Set(disabledCommands)
 
   // Load Ring's built-in commands from assets/command/
@@ -171,7 +253,44 @@ export function loadRingCommands(
   const merged: Record<string, CommandConfig> = Object.create(null)
   Object.assign(merged, builtInCommands)
   Object.assign(merged, userCommands)
-  return merged
+
+  // Validate references if requested
+  let validation: CommandValidationWarning[] = []
+  if (validateRefs) {
+    // Get all skill names (would need skill loader integration)
+    const allSkillNames = new Set<string>()
+    const skillsDir = join(pluginRoot, "assets", "skill")
+    if (existsSync(skillsDir)) {
+      try {
+        const skillEntries = readdirSync(skillsDir, { withFileTypes: true })
+        for (const entry of skillEntries) {
+          if (entry.isDirectory() && !entry.name.startsWith(".")) {
+            allSkillNames.add(entry.name)
+          }
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    // Get all command names (without ring: prefix)
+    const allCommandNames = new Set<string>()
+    for (const key of Object.keys(merged)) {
+      allCommandNames.add(key.replace("ring:", ""))
+    }
+
+    // Validate built-in commands
+    validation = validation.concat(
+      validateCommandReferences(builtInDir, allSkillNames, allCommandNames),
+    )
+
+    // Validate user commands
+    validation = validation.concat(
+      validateCommandReferences(userDir, allSkillNames, allCommandNames),
+    )
+  }
+
+  return { commands: merged, validation }
 }
 
 /**

@@ -86,7 +86,7 @@ function parseFrontmatter(content: string): { data: AgentFrontmatter; body: stri
     if (key === "model") data.model = value
     if (key === "temperature") {
       const parsed = parseFloat(value)
-      if (!isNaN(parsed)) data.temperature = parsed
+      if (!Number.isNaN(parsed)) data.temperature = parsed
     }
     if (key === "tools") data.tools = value
     if (key === "color") data.color = value

@@ -94,7 +94,12 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     }
 
     // Load Ring commands (from plugin's assets/ + user's .opencode/)
-    const ringCommands = loadRingCommands(pluginRoot, projectRoot, ringConfig.disabled_commands)
+    const { commands: ringCommands, validation: commandValidation } = loadRingCommands(
+      pluginRoot,
+      projectRoot,
+      ringConfig.disabled_commands,
+      debug, // Only validate refs in debug mode
+    )
 
     if (debug) {
       const commandNames = Object.keys(ringCommands)
@@ -103,6 +108,11 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
         commandNames.slice(0, 5).join(", "),
         commandNames.length > 5 ? "..." : "",
       )
+
+      // Log validation warnings
+      for (const warning of commandValidation) {
+        console.debug(`[ring] Command '${warning.command}': ${warning.issue}`)
+      }
     }
 
     // Inject agents into config

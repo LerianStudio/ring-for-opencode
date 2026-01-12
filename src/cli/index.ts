@@ -2,6 +2,8 @@
 import { Command } from "commander"
 import type { DoctorOptions } from "./doctor"
 import { doctor } from "./doctor"
+import { help } from "./help"
+import type { HelpOptions } from "./help"
 import { install } from "./install"
 import type { InstallArgs } from "./types"
 import { version as versionCmd } from "./version"
@@ -85,6 +87,39 @@ program
   .option("--json", "Output in JSON format")
   .action(async (options) => {
     const exitCode = await versionCmd({ json: options.json ?? false })
+    process.exit(exitCode)
+  })
+
+program
+  .command("help [item]")
+  .description("Show available Ring skills, commands, and agents")
+  .option("--skills", "Show only skills")
+  .option("--commands", "Show only commands")
+  .option("--agents", "Show only agents")
+  .option("--json", "Output in JSON format")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ ring help              # Show all categories
+  $ ring help --skills     # Show only skills
+  $ ring help --commands   # Show only commands
+  $ ring help --agents     # Show only agents
+  $ ring help brainstorm   # Show details for 'brainstorm' skill/command
+  $ ring help --json       # Output in JSON format
+
+This command lists all available Ring capabilities that can be used in OpenCode.
+`,
+  )
+  .action(async (item, options) => {
+    const helpOptions: HelpOptions = {
+      skills: options.skills ?? false,
+      commands: options.commands ?? false,
+      agents: options.agents ?? false,
+      json: options.json ?? false,
+      item: item,
+    }
+    const exitCode = await help(helpOptions)
     process.exit(exitCode)
   })
 

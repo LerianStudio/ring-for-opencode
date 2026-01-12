@@ -13,6 +13,8 @@ export {
 // Command loader
 export {
   type CommandConfig,
+  type CommandValidationWarning,
+  type LoadCommandsResult,
   countRingCommands,
   loadRingCommands,
 } from "./command-loader.js"
