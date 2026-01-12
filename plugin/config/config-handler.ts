@@ -136,20 +136,20 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
     const agentConfig = config.agent as Record<string, { tools?: Record<string, boolean> }>
 
     // Prevent explore agents from using task recursively
-    if (agentConfig["codebase-explorer"]) {
-      agentConfig["codebase-explorer"].tools = {
-        ...agentConfig["codebase-explorer"].tools,
+    if (agentConfig["ring:codebase-explorer"]) {
+      agentConfig["ring:codebase-explorer"].tools = {
+        ...agentConfig["ring:codebase-explorer"].tools,
         task: false,
       }
     }
 
     // Prevent reviewers from spawning more reviewers
     const reviewerAgents = [
-      "code-reviewer",
-      "security-reviewer",
-      "business-logic-reviewer",
-      "test-reviewer",
-      "nil-safety-reviewer",
+      "ring:code-reviewer",
+      "ring:security-reviewer",
+      "ring:business-logic-reviewer",
+      "ring:test-reviewer",
+      "ring:nil-safety-reviewer",
     ]
 
     for (const reviewerName of reviewerAgents) {

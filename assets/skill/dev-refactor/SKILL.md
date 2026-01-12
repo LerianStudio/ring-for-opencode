@@ -100,7 +100,7 @@ Present plan for approval before execution.
 ### Step 9: Handoff to dev-cycle
 ```yaml
 Skill tool:
-  skill: "dev-cycle"
+  skill: "ring:dev-cycle"
 ```
 Pass tasks file: `docs/refactor/{timestamp}/tasks.md`
 
