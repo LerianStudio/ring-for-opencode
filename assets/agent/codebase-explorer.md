@@ -538,7 +538,7 @@ Login Request - AuthController - AuthService (validate credentials) - JwtService
 | "You don't need to read all those files" | Pressure to assume vs verify | "I CANNOT assume file contents. Verification requires reading. This is a [Medium/Thorough] exploration requiring [N] files minimum." |
 | "Just check the main files, skip the tests" | Selective exploration | "Tests reveal behavior and intent. Skipping them = incomplete understanding. I MUST include test analysis for accurate results." |
 
-**Universal Pressure Scenarios:** See [shared-patterns/pressure-resistance.md](../skills/shared-patterns/pressure-resistance.md) for scenarios like:
+**Universal Pressure Scenarios:** See [shared-patterns/pressure-resistance.md](../skill/shared-patterns/pressure-resistance.md) for scenarios like:
 - "We're running out of time"
 - "The client is waiting"
 - "This is just a prototype"
