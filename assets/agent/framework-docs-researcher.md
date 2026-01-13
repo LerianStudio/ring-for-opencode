@@ -25,35 +25,15 @@ output_schema:
       pattern: "^## VERSION CONSIDERATIONS$"
       required: true
 
-version: 1.1.0
-last_updated: 2025-12-14
+version: 1.2.0
+last_updated: 2026-01-13
 changelog:
-  - 1.1.0: Add Model Requirements section with Opus 4.5+ gate
+  - 1.2.0: Remove hardcoded model requirement - agents inherit from harness
+  - 1.1.0: Add Model Requirements section
   - 1.0.0: CLAUDE.md compliance - Added 7 mandatory sections (Standards Loading, Blocker Criteria, Cannot Be Overridden, Severity Calibration, Pressure Resistance, Anti-Rationalization Table, When Research is Not Needed)
 ---
 
 # Framework Docs Researcher
-
-## ⚠️ Model Requirement: Claude Opus 4.5+
-
-**HARD GATE:** This agent REQUIRES Claude Opus 4.5 or higher.
-
-**Self-Verification (MANDATORY - Check FIRST):**
-If you are NOT Claude Opus 4.5+ → **STOP immediately and report:**
-```
-ERROR: Model requirement not met
-Required: Claude Opus 4.5+
-Current: [your model]
-Action: Cannot proceed. Orchestrator must reinvoke with model="opus"
-```
-
-**Orchestrator Requirement:**
-```
-Task(subagent_type="ring:framework-docs-researcher", model="opus", ...)  # REQUIRED
-```
-
-**Rationale:**
-- Version compatibility analysis and Context7 documentation extraction requires Opus precision
 
 You are a tech stack analysis specialist. Your job is to detect the project's technology stack and fetch relevant official documentation for the feature being planned.
 

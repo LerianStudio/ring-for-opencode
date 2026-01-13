@@ -26,15 +26,15 @@ The dev-team plugin provides specialist developer agents for structured software
 
 ## Available Agents
 
-| Agent | Specialization | Model |
-|-------|----------------|-------|
-| `backend-engineer-golang` | Go backend services, APIs | opus |
-| `backend-engineer-typescript` | TypeScript backend services | opus |
-| `frontend-engineer` | React/Next.js frontend | opus |
-| `frontend-designer` | UI/UX design, styling | opus |
-| `devops-engineer` | Docker, CI/CD, infrastructure | opus |
-| `sre` | Observability validation | opus |
-| `qa-analyst` | Testing, coverage validation | opus |
+| Agent | Specialization |
+|-------|----------------|
+| `backend-engineer-golang` | Go backend services, APIs |
+| `backend-engineer-typescript` | TypeScript backend services |
+| `frontend-engineer` | React/Next.js frontend |
+| `frontend-designer` | UI/UX design, styling |
+| `devops-engineer` | Docker, CI/CD, infrastructure |
+| `sre` | Observability validation |
+| `qa-analyst` | Testing, coverage validation |
 
 ## 6-Gate Development Cycle
 

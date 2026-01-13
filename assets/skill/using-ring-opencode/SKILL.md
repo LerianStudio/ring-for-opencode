@@ -100,8 +100,7 @@ Before responding to ANY user message, you MUST complete this checklist IN ORDER
 
 1. [ ] **Check for MANDATORY-USER-MESSAGE** - If additionalContext contains `<MANDATORY-USER-MESSAGE>` tags, display the message FIRST, verbatim, at the start of your response
 2. [ ] **ORCHESTRATION DECISION** - Determine which agent handles this task
-   - Create todowrite tool: "Orchestration decision: [agent-name] with Opus"
-   - Default model: **Opus** (use unless user specifies otherwise)
+   - Create todowrite tool: "Orchestration decision: [agent-name]"
    - If considering direct tools, document why the exception applies (user explicitly requested specific file read)
    - Mark todo complete only after documenting decision
 3. [ ] **Skill Check** - List available skills in your mind, ask: "Does ANY skill match this request?"
@@ -193,14 +192,14 @@ You don't read files, run grep chains, or manually explore - you **dispatch agen
 
 **You dispatch agents. You do not operate tools directly.**
 
-**Default answer for ANY exploration/search/investigation:** Use one of the three built-in agents (Explore, Plan, or general-purpose) with Opus model.
+**Default answer for ANY exploration/search/investigation:** Use one of the three built-in agents (Explore, Plan, or general-purpose).
 
 **Which agent?**
 - **Explore** - Fast codebase navigation, finding files/code, understanding architecture
 - **Plan** - Implementation planning, breaking down features into tasks
 - **general-purpose** - Multi-step research, complex investigations, anything not fitting Explore/Plan
 
-**Model Selection:** Always use **Opus** for agent dispatching unless user explicitly specifies otherwise (e.g., "use Haiku", "use Sonnet").
+**Model Selection:** Agents inherit the model from the harness configuration.
 
 **Exceptions to default agents:**
 1. User explicitly provides a file path AND explicitly requests you read it (e.g., "read src/foo.ts")
@@ -222,14 +221,14 @@ You are breaking ORCHESTRATOR. Use an agent instead.
 
 ### Available Agents
 
-**Built-in (Opus):** `Explore` (navigation), `Plan` (implementation), `general-purpose` (research).
+**Built-in:** `Explore` (navigation), `Plan` (implementation), `general-purpose` (research).
 
 **Ring:** `ring:code-reviewer`, `ring:business-logic-reviewer`, `ring:security-reviewer`, `ring:write-plan`.
 
 ### Decision: Which Agent?
 
-| Task Type | Agent (Opus default) |
-|-----------|---------------------|
+| Task Type | Agent |
+|-----------|-------|
 | Explore/find/understand/search | **Explore** |
 | Plan implementation, break down features | **Plan** |
 | Multi-step research, complex investigation | **general-purpose** |
@@ -260,7 +259,7 @@ WRONG: Three separate messages (sequential, 3x slower)
 ## todowrite tool requirements
 
 **First two todos for ANY task:**
-1. "Orchestration decision: [agent-name] with Opus" (or exception justification)
+1. "Orchestration decision: [agent-name]" (or exception justification)
 2. "Check for relevant skills"
 
 **If skill has checklist:** Create todowrite tool todos for EACH item. No mental checklists.
@@ -347,17 +346,15 @@ Ring includes skills for managing context and enabling self-improvement:
 ## Summary
 
 **Starting any task:**
-1. **Orchestration decision** -> Which agent handles this? Use **Opus** model by default (todowrite tool required)
+1. **Orchestration decision** -> Which agent handles this? (todowrite tool required)
 2. **Skill check** -> If relevant skill exists, use it
 3. **Announce** -> State which skill/agent you're using
-4. **Execute** -> Dispatch agent with Opus OR follow skill exactly
+4. **Execute** -> Dispatch agent OR follow skill exactly
 
 **Before ANY tool use (Read/Grep/Glob/Bash):** Complete PRE-ACTION CHECKPOINT.
 
 **Skill has checklist?** Use todowrite tool for every item.
 
-**Default answer: Use an agent with Opus. Exception is rare (user explicitly requests specific file read).**
-
-**Model default: Opus** (unless user specifies Haiku/Sonnet explicitly).
+**Default answer: Use an agent. Exception is rare (user explicitly requests specific file read).**
 
 **Finding a relevant skill = mandatory to read and use it. Not optional.**

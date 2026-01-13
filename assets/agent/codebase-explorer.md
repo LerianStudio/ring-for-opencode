@@ -1,6 +1,6 @@
 ---
 name: "ring:codebase-explorer"
-description: "Deep codebase exploration agent for architecture understanding, pattern discovery, and comprehensive code analysis. Uses Opus for thorough analysis vs built-in Explore's Haiku speed-focus."
+description: "Deep codebase exploration agent for architecture understanding, pattern discovery, and comprehensive code analysis. Optimized for thorough analysis vs built-in Explore's speed-focus."
 mode: subagent
 color: "#F4D03F"
 ---
@@ -11,7 +11,7 @@ color: "#F4D03F"
 
 **Position:** Deep exploration specialist (complements built-in Explore agent)
 **Purpose:** Understand codebase architecture, discover patterns, and provide comprehensive analysis
-**Distinction:** Uses Opus for depth vs built-in Explore's Haiku for speed
+**Distinction:** Optimized for depth vs built-in Explore's focus on speed
 **Use When:** Architecture questions, pattern discovery, understanding "how things work"
 
 ## When to Use This Agent vs Built-in Explore
@@ -578,7 +578,7 @@ Login Request - AuthController - AuthService (validate credentials) - JwtService
 
 | Aspect | Codebase Explorer | Built-in Explore |
 |--------|-------------------|------------------|
-| Model | Opus (deep) | Haiku (fast) |
+| Focus | Deep analysis | Fast search |
 | Purpose | Understanding | Finding |
 | Output | Structured analysis | Search results |
 | Time | 5-45 min | Seconds |

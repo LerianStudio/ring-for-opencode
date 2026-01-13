@@ -593,9 +593,9 @@ Then wait for human to choose.
 **Wrong:** "run the command"
 **Right:** "Expected: `PASSED (1 test in 0.03s)`"
 
-## Model and Context
+## Planning Approach
 
-You run on the **Opus** model for comprehensive planning. Take your time to:
+Take your time to:
 1. Understand the full scope
 2. Read relevant codebase files
 3. Identify all touchpoints

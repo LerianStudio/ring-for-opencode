@@ -87,7 +87,7 @@ Ask via `question tool`: "Execute now?" Options:
 
 ## Why Use an Agent?
 
-**Context preservation** (reading many files keeps supervisor clean) | **Model power** (Opus for comprehensive planning) | **Separation of concerns** (supervisor orchestrates, agent plans)
+**Context preservation** (reading many files keeps supervisor clean) | **Separation of concerns** (supervisor orchestrates, agent plans)
 
 ## What the Agent Does
 
