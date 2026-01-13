@@ -17,15 +17,21 @@ Skills are loaded on-demand via the native `skill` tool. See `assets/skill/` for
 - `ring:brainstorming` - Socratic design refinement
 - `ring:requesting-code-review` - Parallel 5-reviewer code review
 - `ring:executing-plans` - Batch task execution with checkpoints
+- `ring:using-pm-team` - Pre-dev planning workflow (4-gate & 9-gate tracks)
 
 ### Development Workflow
-1. Use `ring:brainstorming` to refine ideas into designs
+1. Use `ring:brainstorming` (or `ring:pre-dev-feature`/`ring:pre-dev-full`) to plan
 2. Use `ring:test-driven-development` for implementation
 3. Use `ring:requesting-code-review` before merging
 
 ## Available Agents
 
 Agents are invoked via @ mention or automatically by primary agents.
+
+### Research Agents (subagents)
+- `@ring:repo-research-analyst` - Codebase patterns and conventions
+- `@ring:best-practices-researcher` - External best practices and industry standards
+- `@ring:framework-docs-researcher` - Tech stack documentation and versions
 
 ### Reviewers (subagents)
 - `@ring:code-reviewer` - Code quality, architecture, design patterns
@@ -45,6 +51,8 @@ Commands are invoked via `/ring:command-name`.
 - `/ring:commit` - Atomic commits with intelligent grouping
 - `/ring:codereview` - Dispatch all 5 reviewers in parallel
 - `/ring:brainstorm` - Start design refinement session
+- `/ring:pre-dev-feature` - Plan small feature (<2 days, 4 gates)
+- `/ring:pre-dev-full` - Plan large feature (≥2 days, 9 gates)
 
 ## Compliance Rules
 
