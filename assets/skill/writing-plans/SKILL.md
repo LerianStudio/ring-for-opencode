@@ -81,7 +81,7 @@ python3 default/lib/validate-plan-precedent.py docs/plans/YYYY-MM-DD-<feature>.m
 
 **Step 4: Ask User About Execution**
 
-Ask via `AskUserQuestion`: "Execute now?" Options:
+Ask via `question tool`: "Execute now?" Options:
 1. Parallel session -> user opens new session with `ring:executing-plans`
 2. Save for later -> report location and end
 
@@ -121,6 +121,6 @@ This skill uses these universal patterns:
 - **State Tracking:** See `shared-patterns/state-tracking.md`
 - **Failure Recovery:** See `shared-patterns/failure-recovery.md`
 - **Exit Criteria:** See `shared-patterns/exit-criteria.md`
-- **TodoWrite:** See `shared-patterns/todowrite-integration.md`
+- **todowrite tool:** See `shared-patterns/todowrite-integration.md`
 
 Apply ALL patterns when using this skill.

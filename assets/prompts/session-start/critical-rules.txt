@@ -6,4 +6,4 @@
 4. **NEVER make assumptions** - If unclear, ask for clarification
 5. **ALWAYS follow project conventions** - Match existing code style and patterns
 6. **ALWAYS preserve working code** - Don't break existing functionality
-7. **ALWAYS use TodoWrite** - Track multi-step tasks with the todo list
+7. **ALWAYS use todowrite tool** - Track multi-step tasks with the todo list

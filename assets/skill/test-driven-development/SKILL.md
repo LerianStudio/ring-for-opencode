@@ -368,7 +368,7 @@ This skill uses these universal patterns:
 - **State Tracking:** See `shared-patterns/state-tracking.md`
 - **Failure Recovery:** See `shared-patterns/failure-recovery.md`
 - **Exit Criteria:** See `shared-patterns/exit-criteria.md`
-- **TodoWrite:** See `shared-patterns/todowrite-integration.md`
+- **todowrite tool:** See `shared-patterns/todowrite-integration.md`
 
 Apply ALL patterns when using this skill.
 

@@ -184,7 +184,7 @@ Make it easy for agents to self-check when rationalizing:
 
 ## Skill Creation Checklist (TDD Adapted)
 
-**Use TodoWrite for each phase.**
+**Use todowrite tool for each phase.**
 
 | Phase | Requirements |
 |-------|--------------|

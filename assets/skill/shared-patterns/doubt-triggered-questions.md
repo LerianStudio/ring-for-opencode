@@ -15,7 +15,7 @@ Add this section to agents and skills that make decisions:
 
 ## Genuine Doubt Criteria
 
-Use `AskUserQuestion` only when ALL of these are true:
+Use `question tool` only when ALL of these are true:
 
 □ Cannot resolve from context hierarchy above
 □ Multiple approaches are genuinely viable

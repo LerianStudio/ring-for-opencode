@@ -7,4 +7,4 @@ Before and during implementation:
 - [ ] Ask if requirements are unclear
 - [ ] Match existing conventions and patterns
 - [ ] Preserve working code (don't break what works)
-- [ ] Use TodoWrite for multi-step tasks
+- [ ] Use todowrite tool for multi-step tasks

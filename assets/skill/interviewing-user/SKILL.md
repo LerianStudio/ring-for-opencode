@@ -35,7 +35,7 @@ Proactively surface and resolve ambiguities by systematically interviewing the u
 |-------|---------------|--------|
 | **1. Context Analysis** | Analyze task, identify ambiguities | Ambiguity inventory |
 | **2. Question Clustering** | Group questions by category | Prioritized question list |
-| **3. Structured Interview** | Ask questions using AskUserQuestion | User responses |
+| **3. Structured Interview** | Ask questions using question tool | User responses |
 | **4. Understanding Summary** | Synthesize and confirm | Validated Understanding |
 | **5. Proceed or Iterate** | User confirms or clarifies | Green light to proceed |
 
@@ -84,13 +84,13 @@ Group questions by category and prioritize:
 | **P3** | Preferences | Affects style, not correctness |
 
 **Question Budget:**
-- **Maximum 4 questions per AskUserQuestion call** (tool limitation)
+- **Maximum 4 questions per question tool call** (tool limitation)
 - **Maximum 3 rounds of questions** (respect user's time)
 - **Prefer fewer, higher-quality questions**
 
 ### Phase 3: Structured Interview
 
-Use `AskUserQuestion` tool with well-structured options:
+Use `question tool` tool with well-structured options:
 
 **Question Quality Checklist:**
 - [ ] Shows what I already know (evidence of exploration)
@@ -193,7 +193,7 @@ Interview is complete when ALL of these are true:
 | Principle | Application |
 |-----------|-------------|
 | **Explore before asking** | 30 seconds of exploration can save a question |
-| **Structured choices** | Use AskUserQuestion with 2-4 concrete options |
+| **Structured choices** | Use question tool with 2-4 concrete options |
 | **Show your work** | Include what you found and why you're uncertain |
 | **Respect time** | Max 3 rounds, max 4 questions per round |
 | **Confirm understanding** | Always present summary for validation |

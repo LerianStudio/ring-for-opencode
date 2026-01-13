@@ -34,17 +34,17 @@ Load plan, review critically, choose execution mode, execute tasks with code rev
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
 3. If concerns: Raise them with your human partner before starting
-4. If no concerns: Create TodoWrite and proceed to Step 2
+4. If no concerns: Create todowrite tool and proceed to Step 2
 
 ### Step 2: Choose Execution Mode (MANDATORY)
 
-**THIS STEP IS NON-NEGOTIABLE. You MUST use `AskUserQuestion` before executing ANY tasks.**
+**THIS STEP IS NON-NEGOTIABLE. You MUST use `question tool` before executing ANY tasks.**
 
 Ask: "How would you like to execute this plan?" Options: (1) **One-go (autonomous)** - all batches with code review, no human review until completion (2) **Batch (with review)** - pause for human review after each batch
 
 **Based on response:** One-go -> Steps 3-4 loop until done | Batch -> Steps 3-5 loop
 
-### Why AskUserQuestion is Mandatory (Not "Contextual Guidance")
+### Why question tool is Mandatory (Not "Contextual Guidance")
 
 **This is a structural checkpoint, not optional UX polish.**
 
@@ -52,7 +52,7 @@ User saying "don't wait", "don't ask questions", or "just execute" does NOT skip
 
 1. **Execution mode affects architecture** - One-go vs batch determines review checkpoints, error recovery paths, and rollback points
 2. **Implicit intent != explicit choice** - "Don't wait" might mean "use one-go" OR "ask quickly and proceed"
-3. **AskUserQuestion takes 3 seconds** - It's not an interruption, it's a confirmation
+3. **question tool takes 3 seconds** - It's not an interruption, it's a confirmation
 4. **Emergency pressure is exactly when mistakes happen** - Structural gates exist FOR high-pressure moments
 
 **Common Rationalizations That Mean You're About to Violate This Rule:**
@@ -61,12 +61,12 @@ User saying "don't wait", "don't ask questions", or "just execute" does NOT skip
 |-----------------|---------|
 | "User intent is crystal clear" | Intent is not the same as explicit selection. Ask anyway. |
 | "This is contextual guidance, not absolute law" | Wrong. It says MANDATORY. That means mandatory. |
-| "Asking would violate their 'don't ask' instruction" | AskUserQuestion is a 3-second structural gate, not a conversation. |
+| "Asking would violate their 'don't ask' instruction" | question tool is a 3-second structural gate, not a conversation. |
 | "Skills are tools, not bureaucratic checklists" | This skill IS the checklist. Follow it. |
-| "Interpreting spirit over letter" | The spirit IS the letter. Use AskUserQuestion. |
+| "Interpreting spirit over letter" | The spirit IS the letter. Use question tool. |
 | "User already chose by saying 'just execute'" | Verbal shorthand != structured mode selection. Ask. |
 
-**If you catch yourself thinking any of these -> STOP -> Use AskUserQuestion anyway.**
+**If you catch yourself thinking any of these -> STOP -> Use question tool anyway.**
 
 ### Step 3: Execute Batch
 **Default: First 3 tasks**
@@ -100,10 +100,10 @@ Verify all tests pass and present completion options to the user.
 
 ## Remember
 
-- **MANDATORY:** `AskUserQuestion` for execution mode - NO exceptions
+- **MANDATORY:** `question tool` for execution mode - NO exceptions
 - Use `*` agents over `general-purpose` when available
 - Run code review after each batch (all 5 parallel)
 - Fix Critical/High/Medium immediately (no TODO)
 - Low -> TODO, Cosmetic -> FIXME
 - Stop when blocked, don't guess
-- **If rationalizing why to skip AskUserQuestion -> You're wrong -> Ask anyway**
+- **If rationalizing why to skip question tool -> You're wrong -> Ask anyway**
