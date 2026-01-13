@@ -1,7 +1,7 @@
 ---
 name: "ring:using-dev-team"
 description: |
-  Guide to the dev-team plugin - specialist developer agents and 6-gate development cycle.
+  Guide to the dev-team skills - specialist developer agents and 6-gate development cycle.
   Provides backend engineers (Go/TypeScript), frontend engineers, DevOps, SRE, and QA agents.
 license: MIT
 compatibility:
@@ -18,11 +18,11 @@ metadata:
     - Need for structured development workflow
 ---
 
-# Using Dev-Team Plugin
+# Using Dev-Team Skills
 
 ## Overview
 
-The dev-team plugin provides specialist developer agents for structured software development through a 6-gate workflow.
+The dev-team skills provide specialist developer agents for structured software development through a 6-gate workflow.
 
 ## Available Agents
 
@@ -60,11 +60,11 @@ The dev-team plugin provides specialist developer agents for structured software
 ## Standards
 
 All agents follow standards defined in:
-- `dev-team/docs/standards/golang.md` - Go coding standards
-- `dev-team/docs/standards/typescript.md` - TypeScript standards
-- `dev-team/docs/standards/frontend.md` - Frontend standards
-- `dev-team/docs/standards/devops.md` - DevOps standards
-- `dev-team/docs/standards/sre.md` - SRE/observability standards
+- `assets/standards/golang.md` - Go coding standards
+- `assets/standards/typescript.md` - TypeScript standards
+- `assets/standards/frontend.md` - Frontend standards
+- `assets/standards/devops.md` - DevOps standards
+- `assets/standards/sre.md` - SRE/observability standards
 
 ## TDD Requirement
 

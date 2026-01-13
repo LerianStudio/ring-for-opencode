@@ -6,7 +6,6 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  source: ring-pm-team
   trigger: |
     - PRD passed Gate 1 (required)
     - Feature Map passed Gate 2 (if Large Track)
@@ -48,15 +47,17 @@ Specifying technologies in TRD creates:
 
 **If ambiguous, AskUserQuestion:** "What is the primary technology stack?" Options: Go (Backend), TypeScript (Backend), TypeScript (Frontend), Full-Stack TypeScript
 
-### Step 0.2: Load Ring Standards via WebFetch
+### Step 0.2: Load Ring Standards from Local Files
 
-| Standard | URL | Purpose |
-|----------|-----|---------|
-| **golang.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md` | Go patterns, DDD |
-| **typescript.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md` | TS patterns, async |
-| **frontend.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/frontend.md` | React, Next.js, a11y |
-| **devops.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/devops.md` | Docker, CI/CD |
-| **sre.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/sre.md` | Health checks, logging |
+Use the Read tool to load the relevant standards from `assets/standards/`:
+
+| Standard | Local Path | Purpose |
+|----------|------------|---------|
+| **golang.md** | `assets/standards/golang.md` | Go patterns, DDD |
+| **typescript.md** | `assets/standards/typescript.md` | TS patterns, async |
+| **frontend.md** | `assets/standards/frontend.md` | React, Next.js, a11y |
+| **devops.md** | `assets/standards/devops.md` | Docker, CI/CD |
+| **sre.md** | `assets/standards/sre.md` | Health checks, logging |
 
 | Tech Stack | Load |
 |------------|------|

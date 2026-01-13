@@ -10,7 +10,6 @@ metadata:
   skip_when: "Design not validated, requirements unclear, already have a plan"
   sequence_after: "ring:brainstorming, ring:pre-dev-trd-creation"
   sequence_before: "ring:executing-plans"
-  source: ring-default
 ---
 
 # Writing Plans

@@ -6,7 +6,6 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  source: ring-pm-team
   trigger: |
     - Starting new product or major feature
     - User asks to "plan", "design", or "architect"

@@ -3,8 +3,7 @@ name: "ring:pre-dev-full"
 description: Complete 9-gate pre-dev workflow for large features (≥2 days)
 license: MIT
 compatibility: opencode
-metadata:
-  source: ring-pm-team
+metadata: {}
 argument-hint: "[feature-name]"
 ---
 

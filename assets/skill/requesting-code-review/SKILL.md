@@ -10,7 +10,6 @@ metadata:
   skip_when: "Never - code review is always required for blocking issues"
   sequence_after: "ring:dev-testing"
   sequence_before: "ring:dev-validation"
-  source: ring-default
 ---
 
 # Code Review (Gate 4)

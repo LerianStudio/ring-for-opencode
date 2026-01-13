@@ -6,7 +6,6 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  source: ring-pm-team
   trigger: |
     - Starting any feature implementation
     - Need systematic planning before coding
@@ -19,7 +18,7 @@ metadata:
 
 # Using Ring Team-Product: Pre-Dev Workflow
 
-The ring-pm-team plugin provides 10 pre-development planning skills and 3 research agents. Use them via `Skill tool: "ring:gate-name"` or via slash commands.
+Ring provides 10 pre-development planning skills and 3 research agents. Use them via `Skill tool: "ring:gate-name"` or via slash commands.
 
 **Remember:** Follow the **ORCHESTRATOR principle** from `using-ring`. Dispatch pre-dev workflow to handle planning; plan thoroughly before coding.
 
@@ -147,10 +146,10 @@ docs/pre-dev/{feature}/
 
 **You can switch:** If Small Track feature grows, pause and complete Large Track gates.
 
-## Integration with Other Plugins
+## Integration with Other Skills
 
-| Plugin | Use For |
-|--------|---------|
+| Skill | Use For |
+|-------|---------|
 | using-ring (default) | ORCHESTRATOR principle for ALL tasks |
 | using-dev-team | Developer specialists for reviewing designs |
 | using-finops-team | Regulatory compliance planning |

@@ -9,7 +9,6 @@ metadata:
   trigger: "Have a plan file ready to execute, want human review between batches"
   skip_when: "Same session with independent tasks, no plan exists, plan needs revision"
   sequence_after: "ring:writing-plans, ring:pre-dev-task-breakdown"
-  source: ring-default
 ---
 
 # Executing Plans

@@ -8,7 +8,6 @@ compatibility: opencode
 metadata:
   trigger: "Starting implementation of new feature, bugfix, or writing new production code"
   skip_when: "Reviewing/modifying existing tests, code exists without tests, exploratory/spike work"
-  source: ring-default
 ---
 
 # Test-Driven Development (TDD)

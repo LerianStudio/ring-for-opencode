@@ -10,7 +10,6 @@ metadata:
   skip_when: "Quick fix in current branch, already in worktree, repo doesn't use worktrees"
   sequence_after: "ring:brainstorming"
   sequence_before: "ring:writing-plans, ring:executing-plans"
-  source: ring-default
 ---
 
 # Using Git Worktrees

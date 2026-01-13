@@ -9,7 +9,6 @@ metadata:
   trigger: "New feature or product idea, user says plan/design/architect, multiple approaches possible"
   skip_when: "Design already complete and validated, have detailed plan ready, just need task breakdown"
   sequence_before: "ring:writing-plans, ring:using-git-worktrees"
-  source: ring-default
 ---
 
 # Brainstorming Ideas Into Designs

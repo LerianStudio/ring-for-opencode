@@ -7,7 +7,6 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  source: ring-pm-team
   trigger: |
     - Data Model passed Gate 5 validation
     - About to select specific technologies
@@ -49,15 +48,17 @@ Read `docs/pre-dev/{feature-name}/trd.md` and extract: `deployment.model`, `tech
 
 **If TRD metadata missing:** BLOCKER → Go back to TRD (Gate 3) and complete Step 0.4
 
-### Step 0.2: Load Ring Standards via WebFetch
+### Step 0.2: Load Ring Standards from Local Files
 
-| Standard | URL | Purpose |
-|----------|-----|---------|
-| **golang.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md` | Go coding patterns |
-| **typescript.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md` | TypeScript patterns |
-| **frontend.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/frontend.md` | Frontend patterns |
-| **devops.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/devops.md` | DevOps patterns |
-| **sre.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/sre.md` | Observability, logging |
+Use the Read tool to load the relevant standards from `assets/standards/`:
+
+| Standard | Local Path | Purpose |
+|----------|------------|---------|
+| **golang.md** | `assets/standards/golang.md` | Go coding patterns |
+| **typescript.md** | `assets/standards/typescript.md` | TypeScript patterns |
+| **frontend.md** | `assets/standards/frontend.md` | Frontend patterns |
+| **devops.md** | `assets/standards/devops.md` | DevOps patterns |
+| **sre.md** | `assets/standards/sre.md` | Observability, logging |
 
 **Ring Standards** = coding patterns, observability, logging, error handling (shared across ALL projects)
 **PROJECT_RULES.md** = specific technologies, versions, database choices (specific to THIS project)

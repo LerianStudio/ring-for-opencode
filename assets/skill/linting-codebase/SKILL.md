@@ -8,7 +8,6 @@ compatibility: opencode
 metadata:
   trigger: "User runs /lint command, codebase has lint issues, multiple lint errors"
   skip_when: "Single lint error (fix directly), lint already passes, user only wants output"
-  source: ring-default
 ---
 
 # Linting Codebase

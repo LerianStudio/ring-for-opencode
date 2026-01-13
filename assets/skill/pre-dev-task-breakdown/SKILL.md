@@ -6,7 +6,6 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  source: ring-pm-team
   trigger: |
     - PRD passed Gate 1 (required)
     - TRD passed Gate 3 (required)

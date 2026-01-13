@@ -6,7 +6,6 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  source: ring-pm-team
   trigger: |
     - Tasks passed Gate 7 validation
     - Need absolute implementation clarity

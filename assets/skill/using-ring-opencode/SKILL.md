@@ -7,7 +7,6 @@ compatibility: opencode
 metadata:
   trigger: "Every conversation start, before ANY task, when tempted to operate directly"
   skip_when: "Never skip - this skill is always mandatory"
-  source: ring-default
 ---
 
 # Using Ring Skills (OpenCode Edition)

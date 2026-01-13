@@ -8,7 +8,6 @@ compatibility: opencode
 metadata:
   trigger: "Received code review feedback, about to implement reviewer suggestions"
   skip_when: "Feedback is clear and obviously correct, no feedback received"
-  source: ring-default
 ---
 
 # Code Review Reception

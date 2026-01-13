@@ -148,7 +148,7 @@ bun test
 
 ## Source
 
-Converted from [Ring](https://github.com/LerianStudio/ring) Claude Code plugin.
+Converted from Ring Claude Code plugin to OpenCode.
 
 ## License
 

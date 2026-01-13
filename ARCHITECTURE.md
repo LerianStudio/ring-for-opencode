@@ -259,7 +259,6 @@ compatibility: opencode
 metadata:
   trigger: "When to use"
   skip_when: "When not to use"
-  source: ring-default
 ---
 ```
 
@@ -390,7 +389,6 @@ compatibility: opencode
 metadata:
   trigger: "When to invoke"
   skip_when: "When to skip"
-  source: ring-default
 ---
 
 # Skill Name
@@ -574,7 +572,6 @@ compatibility: opencode
 metadata:
   trigger: "When to use"
   skip_when: "When not to use"
-  source: ring-default
 ---
 
 # My Skill

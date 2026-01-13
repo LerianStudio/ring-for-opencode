@@ -8,7 +8,6 @@ compatibility: opencode
 metadata:
   trigger: "Creating a new skill, editing an existing skill, skill needs to resist rationalization"
   skip_when: "Writing pure reference skill (API docs), skill has no compliance costs"
-  source: ring-default
 ---
 
 # Writing Skills
@@ -102,7 +101,6 @@ compatibility: opencode
 metadata:
   trigger: "specific triggers"
   skip_when: "when to skip"
-  source: ring-default
 ---
 # Skill Name
 ## Overview (1-2 sentences), ## When to Use (symptoms, NOT to use)

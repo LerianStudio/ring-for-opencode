@@ -11,7 +11,6 @@ metadata:
   skip_when: "Quick Q&A with no implementation, no meaningful work, exploratory session"
   sequence_before: "ring:executing-plans"
   sequence_after: "ring:artifact-query"
-  source: ring-default
 ---
 
 # Handoff Tracking

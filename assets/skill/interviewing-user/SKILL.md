@@ -9,7 +9,6 @@ metadata:
   trigger: "Claude detects ambiguity, multiple valid paths exist, task involves architecture decisions"
   skip_when: "Requirements crystal clear, detailed specifications provided, following existing plan"
   sequence_before: "ring:brainstorming, ring:writing-plans"
-  source: ring-default
 ---
 
 # Interviewing User for Requirements

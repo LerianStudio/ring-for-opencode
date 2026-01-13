@@ -9,7 +9,6 @@ compatibility: opencode
 metadata:
   trigger: "Need to understand how feature/system works, starting on unfamiliar codebase, planning multi-layer changes"
   skip_when: "Pure reference lookup, checking if file exists, reading known error location"
-  source: ring-default
 ---
 
 # Autonomous Two-Phase Codebase Exploration

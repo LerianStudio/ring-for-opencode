@@ -3,8 +3,7 @@ name: "ring:pre-dev-feature"
 description: Lightweight 4-gate pre-dev workflow for small features (<2 days)
 license: MIT
 compatibility: opencode
-metadata:
-  source: ring-pm-team
+metadata: {}
 argument-hint: "[feature-name]"
 ---
 

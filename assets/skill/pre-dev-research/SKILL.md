@@ -7,7 +7,6 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  source: ring-pm-team
   trigger: |
     - Before any pre-dev workflow (Gate 0)
     - When planning new features or modifications
