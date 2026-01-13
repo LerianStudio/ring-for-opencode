@@ -2,7 +2,7 @@
 name: "ring:execute-plan"
 description: Execute plan in batches with review checkpoints
 agent: build
-subtask: true
+subtask: false
 ---
 
 Execute an existing implementation plan with controlled checkpoints and code review between batches.

@@ -2,10 +2,10 @@
 name: "ring:codereview"
 description: Run comprehensive parallel code review with all 5 specialized reviewers
 agent: build
-subtask: true
+subtask: false
 ---
 
-Dispatch all 5 code reviewers in parallel for comprehensive feedback:
+Dispatch all 5 code reviewers subagents in parallel for comprehensive feedback:
 
 - **@ring:code-reviewer** - Foundation review (quality, architecture, patterns)
 - **@ring:security-reviewer** - Security analysis (vulnerabilities, data protection)

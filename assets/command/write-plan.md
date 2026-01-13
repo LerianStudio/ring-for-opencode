@@ -2,7 +2,7 @@
 name: "ring:write-plan"
 description: Create detailed implementation plan with bite-sized tasks
 agent: build
-subtask: true
+subtask: false
 ---
 
 Create a comprehensive implementation plan for a feature with exact file paths, complete code examples, and verification steps.
