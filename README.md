@@ -100,7 +100,7 @@ Example `.opencode/ring.jsonc`:
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
+  "$schema": "https://raw.githubusercontent.com/LerianStudio/ring-for-opencode/main/assets/ring-config.schema.json",
   "disabled_agents": []
 }
 ```

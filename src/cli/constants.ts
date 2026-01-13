@@ -12,7 +12,7 @@ export const USER_CONFIG_PATHS = [
   ".config/opencode/ring/config.json",
 ]
 export const SCHEMA_URL =
-  "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json"
+  "https://raw.githubusercontent.com/LerianStudio/ring-for-opencode/main/assets/ring-config.schema.json"
 
 export const SYMBOLS = {
   check: color.green("\u2713"),

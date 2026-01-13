@@ -323,7 +323,7 @@ export async function help(options: HelpOptions = {}): Promise<number> {
 
   lines.push(`\n\n${"=".repeat(50)}`)
   lines.push("For details on a specific item: /ring:help <name>")
-  lines.push("Documentation: https://github.com/fredcamaral/ring-for-opencode")
+  lines.push("Documentation: https://github.com/LerianStudio/ring-for-opencode")
 
   console.log(lines.join("\n"))
   return 0

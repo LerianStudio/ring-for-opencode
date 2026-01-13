@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/fredcamaral/ring-for-opencode/main/assets/ring-config.schema.json",
+  "$id": "https://raw.githubusercontent.com/LerianStudio/ring-for-opencode/main/assets/ring-config.schema.json",
   "title": "Ring Configuration",
   "description": "Configuration schema for Ring",
   "type": "object",
