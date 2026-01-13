@@ -189,7 +189,7 @@ Use this matrix to quickly determine the appropriate exploration depth:
 | **NOT RELEVANT** | Unrelated to question scope, common boilerplate, generated files | Omit from report entirely |
 
 **Escalation for contradictory findings:**
-- If exploration reveals conflicting patterns (e.g., "Auth uses both JWT and sessions"): Report both in KEY FINDINGS with **[CONFLICT]** prefix and ask user which to prioritize.
+- If exploration reveals conflicting patterns (e.g., "Auth uses both JWT and sessions"): Report both in KEY FINDINGS with **[CONFLICT]** prefix and note that prioritization needs clarification.
 - If architecture contradicts documentation: Report discrepancy in RECOMMENDATIONS - "Potential Concerns Noticed"
 
 ## Thoroughness Levels

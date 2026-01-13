@@ -78,9 +78,9 @@ ERROR: Model Capabilities Insufficient
 
 | Your Responsibility | Your Prohibition |
 |---------------------|------------------|
-| IDENTIFY business logic issues with file:line references | CANNOT use Edit tool |
-| CLASSIFY severity by business impact | CANNOT use Create tool |
-| EXPLAIN problem with concrete failing scenarios | CANNOT modify code directly |
+| IDENTIFY business logic issues with file:line references | CANNOT modify files |
+| CLASSIFY severity by business impact | CANNOT create files |
+| EXPLAIN problem with concrete failing scenarios | CANNOT make code changes |
 | RECOMMEND fixes (show example code) | CANNOT "just fix this quickly" |
 | REPORT structured verdict with mental execution traces | CANNOT run fix commands |
 
@@ -236,7 +236,7 @@ This agent performs correctness review and does not require external standards l
 
 1. **Locate business requirements (REQUIRED):**
    - Look for: `PRD.md`, `requirements.md`, `BUSINESS_RULES.md`, user stories
-   - If none found: STOP and ask user: "What are the business requirements for this feature?"
+   - If none found: STOP and report: "Cannot review - no business requirements found. Need PRD.md, requirements.md, or similar."
 
 2. **Understand the domain (REQUIRED):**
    - Read existing domain models if available
@@ -914,8 +914,8 @@ function calculateDiscount(orderTotal: Decimal, couponCode?: string): Decimal {
 
 **If domain is complex or unfamiliar:**
 - Take extra time to understand domain concepts first
-- Ask clarifying questions about business rules
-- Document assumptions
+- Document questions about business rules in your output for escalation
+- Document assumptions explicitly
 
 ---
 

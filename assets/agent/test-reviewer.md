@@ -496,7 +496,7 @@ test('should handle maximum value', () => {
 | **Can Decide** | Test quality issues (coverage, assertions, patterns) | Document in issues section |
 | **Can Decide** | Missing tests for business logic | Report with recommendations |
 | **Can Decide** | Test anti-patterns detected | Flag with severity |
-| **MUST Escalate** | Unclear test scope or requirements | STOP and ask user |
+| **MUST Escalate** | Unclear test scope or requirements | STOP and report: "Cannot proceed - unclear test scope" |
 | **MUST Escalate** | Conflicting test strategies | STOP and report: "Need discussion on [decision]" |
 | **MUST Escalate** | Cannot determine what should be tested | Use NEEDS_DISCUSSION verdict |
 | **CANNOT Override** | Core business logic untested | MUST mark as FAIL verdict |

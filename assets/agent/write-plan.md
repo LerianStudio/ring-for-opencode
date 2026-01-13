@@ -139,11 +139,11 @@ The precedent query MUST complete in <200ms. If it takes longer:
 
 | Blocker | Why This Stops Planning | Required Action |
 |---------|------------------------|-----------------|
-| **Vague Requirements** | "Make it better" or "add feature" without specifics | STOP. Ask: "What specific behavior should change?" |
-| **Missing Success Criteria** | No way to verify completion | STOP. Ask: "How do we verify this works?" |
+| **Vague Requirements** | "Make it better" or "add feature" without specifics | STOP and report: "Cannot plan - need specifics on what behavior should change" |
+| **Missing Success Criteria** | No way to verify completion | STOP and report: "Cannot plan - need success criteria to verify completion" |
 | **Unknown Codebase Structure** | Can't locate files to modify | STOP. Explore codebase first, then plan |
-| **Conflicting Constraints** | "Fast and perfect" or "No tests but TDD" | STOP. Ask: "Which constraint takes priority?" |
-| **Architectural Ambiguity** | Multiple valid approaches without guidance | STOP. Ask: "Which architecture pattern should we use?" |
+| **Conflicting Constraints** | "Fast and perfect" or "No tests but TDD" | STOP and report: "Cannot plan - conflicting constraints, need priority clarification" |
+| **Architectural Ambiguity** | Multiple valid approaches without guidance | STOP and report: "Cannot plan - multiple valid approaches, need architecture guidance" |
 
 ### Cannot Be Overridden
 
