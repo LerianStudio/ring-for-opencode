@@ -29,7 +29,9 @@ Ensure every acceptance criterion has at least one **unit test** proving it work
 
 **Core principle:** Untested acceptance criteria are unverified claims. Each criterion MUST map to at least one executable unit test.
 
-**Coverage threshold:** 85% minimum (Ring standard). PROJECT_RULES.md can raise, not lower.
+**Coverage threshold:** 85% minimum (Ring standard). PROJECT_RULES.md can raise this threshold, not lower it.
+
+**If PROJECT_RULES.md not found:** Use Ring default (85%). Optionally offer to create from `{OPENCODE_CONFIG}/templates/PROJECT_RULES.md`.
 
 ## Role Clarification
 

@@ -1,11 +1,8 @@
 # SRE Standards
 
-> **⚠️ MAINTENANCE:** This file is indexed in `dev-team/skills/shared-patterns/standards-coverage-table.md`.
-> When adding/removing `## ` sections, follow FOUR-FILE UPDATE RULE in CLAUDE.md: (1) edit standards file, (2) update TOC, (3) update standards-coverage-table.md, (4) update agent file.
-
 This file defines the specific standards for Site Reliability Engineering and observability.
 
-> **Reference**: Always consult `docs/PROJECT_RULES.md` for common project standards.
+> **Project Rules**: Check if `docs/PROJECT_RULES.md` exists in the target project. If it exists, load it for project-specific technology choices and configurations. If it doesn't exist, ask the user: "Would you like me to create a PROJECT_RULES.md file using the Ring template? This helps document your project's specific tech stack, integrations, and deployment model."
 
 ---
 
@@ -244,7 +241,7 @@ ctx := otel.GetTextMapPropagator().Extract(
 
 All Go services **MUST** integrate OpenTelemetry using `lib-commons/v2`. This ensures consistent observability patterns across all Lerian Studio services.
 
-> **Reference**: See `assets/standards/golang.md` for complete lib-commons integration patterns.
+> **Reference**: See `{OPENCODE_CONFIG}/standards/golang.md` for complete lib-commons integration patterns.
 
 ### Required Imports
 

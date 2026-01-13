@@ -37,6 +37,8 @@ export interface SessionStartConfig {
   injectDuplicationGuard?: boolean
   /** Enable doubt questions */
   injectDoubtQuestions?: boolean
+  /** Enable path context injection */
+  injectPathContext?: boolean
 }
 
 /** Default configuration */
@@ -45,6 +47,7 @@ const DEFAULT_CONFIG: Required<SessionStartConfig> = {
   injectAgentReminder: true,
   injectDuplicationGuard: true,
   injectDoubtQuestions: true,
+  injectPathContext: true,
 }
 
 // Load prompt content from external files
@@ -52,6 +55,7 @@ const CRITICAL_RULES_CONTENT = loadPrompt("session-start/critical-rules.txt")
 const AGENT_REMINDER_CONTENT = loadPrompt("session-start/agent-reminder.txt")
 const DUPLICATION_GUARD_CONTENT = loadPrompt("session-start/duplication-guard.txt")
 const DOUBT_QUESTIONS_CONTENT = loadPrompt("session-start/doubt-questions.txt")
+const PATH_CONTEXT_CONTENT = loadPrompt("session-start/path-context.txt")
 
 /**
  * Critical rules that must be followed in every session.
@@ -90,6 +94,15 @@ ${DOUBT_QUESTIONS_CONTENT}
   : ""
 
 /**
+ * Path context for OpenCode directory structure.
+ */
+const PATH_CONTEXT = PATH_CONTEXT_CONTENT
+  ? `<ring-paths>
+${PATH_CONTEXT_CONTENT}
+</ring-paths>`
+  : ""
+
+/**
  * Create a session start hook.
  */
 export const createSessionStartHook: HookFactory<SessionStartConfig> = (
@@ -125,6 +138,11 @@ export const createSessionStartHook: HookFactory<SessionStartConfig> = (
         // Inject doubt questions
         if (cfg.injectDoubtQuestions && DOUBT_QUESTIONS) {
           systemInjections.push(DOUBT_QUESTIONS)
+        }
+
+        // Inject path context
+        if (cfg.injectPathContext && PATH_CONTEXT) {
+          systemInjections.push(PATH_CONTEXT)
         }
 
         // Add to output

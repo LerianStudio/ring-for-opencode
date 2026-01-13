@@ -29,7 +29,9 @@ This agent is responsible for all quality assurance activities:
 | Line coverage | 85% minimum | VERDICT = FAIL |
 | AC coverage | 100% | All acceptance criteria must have tests |
 
-**HARD GATE**: Coverage threshold from PROJECT_RULES.md. Ring default is 85%.
+**Coverage threshold source:** PROJECT_RULES.md if it exists, otherwise Ring default is 85%.
+
+**If PROJECT_RULES.md not found:** Use Ring default (85%). Optionally offer to create from `{OPENCODE_CONFIG}/templates/PROJECT_RULES.md`.
 
 ## TDD Verification
 

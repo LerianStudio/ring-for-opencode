@@ -63,10 +63,24 @@ State file: `docs/dev-cycle/current-cycle.json`
 
 ### Step 0: Verify PROJECT_RULES.md
 
-Check `docs/PROJECT_RULES.md` exists. If not:
-- Ask if legacy project
-- Generate PROJECT_RULES.md from codebase analysis
-- Or require PM workflow first
+Check if `docs/PROJECT_RULES.md` exists:
+
+```yaml
+If docs/PROJECT_RULES.md exists:
+  - Load and use for project standards
+  - Continue to Step 1
+
+If docs/PROJECT_RULES.md does NOT exist:
+  - Check if {OPENCODE_CONFIG}/templates/PROJECT_RULES.md exists
+  - Present option to user:
+    "PROJECT_RULES.md not found. Would you like me to create one from the Ring template?"
+    - YES: Copy {OPENCODE_CONFIG}/templates/PROJECT_RULES.md to docs/PROJECT_RULES.md
+           Ask user to review and customize for their project
+           Continue to Step 1
+    - NO:  Ask if this is a legacy project that needs analysis
+           If legacy: Generate PROJECT_RULES.md from codebase analysis
+           If greenfield: Recommend running /pre-dev-full first
+```
 
 ### Step 1: Initialize or Resume State
 

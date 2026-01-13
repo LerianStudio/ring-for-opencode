@@ -27,9 +27,11 @@ metadata:
 
 This skill executes the implementation phase of the development cycle:
 - Selects the appropriate specialized agent based on task content
-- Applies project standards from docs/PROJECT_RULES.md
+- Applies project standards from docs/PROJECT_RULES.md (if exists, otherwise uses Ring defaults)
 - Follows TDD methodology (RED -> GREEN -> REFACTOR)
 - Documents implementation decisions
+
+**If PROJECT_RULES.md not found:** Use Ring Standards from `{OPENCODE_CONFIG}/standards/`. Optionally offer to create PROJECT_RULES.md from `{OPENCODE_CONFIG}/templates/PROJECT_RULES.md`.
 
 ## Role Clarification
 

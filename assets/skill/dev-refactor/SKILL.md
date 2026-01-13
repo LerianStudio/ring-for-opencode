@@ -36,7 +36,26 @@ Analyzes existing codebase against Ring/Lerian standards and generates refactori
 ## Workflow Steps
 
 ### Step 0: Validate PROJECT_RULES.md
-Check `docs/PROJECT_RULES.md` exists. If not, STOP.
+
+Check if `docs/PROJECT_RULES.md` exists:
+
+```yaml
+If docs/PROJECT_RULES.md exists:
+  - Load and continue to Step 1
+
+If docs/PROJECT_RULES.md does NOT exist:
+  - Check if {OPENCODE_CONFIG}/templates/PROJECT_RULES.md exists
+  - Present option to user:
+    "PROJECT_RULES.md not found. Would you like me to create one from the Ring template?"
+    - YES: Copy {OPENCODE_CONFIG}/templates/PROJECT_RULES.md to docs/PROJECT_RULES.md
+           Ask user to review and customize for their project
+           Continue to Step 1
+    - NO:  STOP with message:
+           "Cannot proceed without PROJECT_RULES.md. Either:
+           1. Create from template with /dev-refactor --init
+           2. Run /pre-dev-full to generate project standards
+           3. Create manually at docs/PROJECT_RULES.md"
+```
 
 ### Step 1: Detect Project Stack
 | File/Pattern | Stack | Agent |

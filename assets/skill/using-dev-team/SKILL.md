@@ -60,11 +60,11 @@ The dev-team skills provide specialist developer agents for structured software 
 ## Standards
 
 All agents follow standards defined in:
-- `assets/standards/golang.md` - Go coding standards
-- `assets/standards/typescript.md` - TypeScript standards
-- `assets/standards/frontend.md` - Frontend standards
-- `assets/standards/devops.md` - DevOps standards
-- `assets/standards/sre.md` - SRE/observability standards
+- `{OPENCODE_CONFIG}/standards/golang.md` - Go coding standards
+- `{OPENCODE_CONFIG}/standards/typescript.md` - TypeScript standards
+- `{OPENCODE_CONFIG}/standards/frontend.md` - Frontend standards
+- `{OPENCODE_CONFIG}/standards/devops.md` - DevOps standards
+- `{OPENCODE_CONFIG}/standards/sre.md` - SRE/observability standards
 
 ## TDD Requirement
 

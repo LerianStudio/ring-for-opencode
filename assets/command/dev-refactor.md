@@ -13,24 +13,37 @@ Analyze existing codebase against Ring/Lerian standards and execute refactoring 
 ```
 Does docs/PROJECT_RULES.md exist?
 ├── YES → Load skill: ring:dev-refactor
-└── NO  → Output blocker and STOP
+└── NO  → Offer to create from template
 ```
 
 **If file does NOT exist:**
 
 ```markdown
-## HARD BLOCK: PROJECT_RULES.md Not Found
+## PROJECT_RULES.md Not Found
 
-**Status:** BLOCKED - Cannot proceed
+**Status:** Missing project standards file
 
-### Required Action
-Create `docs/PROJECT_RULES.md` with your project's:
-- Architecture patterns
-- Code conventions
-- Testing requirements
-- DevOps standards
+### Options
 
-Then re-run `/dev-refactor`.
+1. **Create from Ring template** (Recommended)
+   - Source: `{OPENCODE_CONFIG}/templates/PROJECT_RULES.md`
+   - Target: `docs/PROJECT_RULES.md`
+   - Action: Copy template, then customize for your project
+
+2. **Create manually**
+   Create `docs/PROJECT_RULES.md` with your project's:
+   - Architecture patterns
+   - Code conventions
+   - Testing requirements
+   - DevOps standards
+
+3. **Run pre-dev workflow**
+   Use `/pre-dev-full` to generate comprehensive project standards
+
+### Proceed?
+Would you like me to create PROJECT_RULES.md from the Ring template?
+- YES: Creates file and continues with /dev-refactor
+- NO: Stops and waits for manual creation
 ```
 
 ## Usage

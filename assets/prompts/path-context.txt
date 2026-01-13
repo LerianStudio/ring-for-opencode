@@ -1,0 +1,19 @@
+OpenCode Configuration Directory: ~/.config/opencode/
+├── skill/           - Skill definitions (SKILL.md files)
+├── agent/           - Agent prompts (.md files)
+├── command/         - Slash command definitions (.md files)
+├── standards/       - Ring coding standards (.md files)
+├── templates/       - Templates (e.g., PROJECT_RULES.md)
+├── plugin/          - TypeScript plugin infrastructure
+├── ring/            - Ring configuration (config.jsonc)
+└── AGENTS.md        - Global agent instructions
+
+Variable Convention:
+- {OPENCODE_CONFIG} = ~/.config/opencode
+- {PROJECT_ROOT} = current working directory
+
+When skills/agents reference paths like "{OPENCODE_CONFIG}/standards/golang.md",
+read from ~/.config/opencode/standards/golang.md
+
+When skills reference "{PROJECT_ROOT}/docs/PROJECT_RULES.md",
+read from the current project's docs/PROJECT_RULES.md file.

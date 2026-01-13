@@ -49,15 +49,15 @@ Specifying technologies in TRD creates:
 
 ### Step 0.2: Load Ring Standards from Local Files
 
-Use the Read tool to load the relevant standards from `assets/standards/`:
+Use the Read tool to load the relevant standards from `{OPENCODE_CONFIG}/standards/`:
 
 | Standard | Local Path | Purpose |
 |----------|------------|---------|
-| **golang.md** | `assets/standards/golang.md` | Go patterns, DDD |
-| **typescript.md** | `assets/standards/typescript.md` | TS patterns, async |
-| **frontend.md** | `assets/standards/frontend.md` | React, Next.js, a11y |
-| **devops.md** | `assets/standards/devops.md` | Docker, CI/CD |
-| **sre.md** | `assets/standards/sre.md` | Health checks, logging |
+| **golang.md** | `{OPENCODE_CONFIG}/standards/golang.md` | Go patterns, DDD |
+| **typescript.md** | `{OPENCODE_CONFIG}/standards/typescript.md` | TS patterns, async |
+| **frontend.md** | `{OPENCODE_CONFIG}/standards/frontend.md` | React, Next.js, a11y |
+| **devops.md** | `{OPENCODE_CONFIG}/standards/devops.md` | Docker, CI/CD |
+| **sre.md** | `{OPENCODE_CONFIG}/standards/sre.md` | Health checks, logging |
 
 | Tech Stack | Load |
 |------------|------|
@@ -68,7 +68,26 @@ Use the Read tool to load the relevant standards from `assets/standards/`:
 
 ### Step 0.3: Read PROJECT_RULES.md
 
-Check: `docs/PROJECT_RULES.md` → `docs/STANDARDS.md` (legacy) → STOP if not found
+Check for project standards file:
+
+```yaml
+Priority order:
+  1. docs/PROJECT_RULES.md (current)
+  2. docs/STANDARDS.md (legacy)
+
+If found:
+  - Load and continue to Step 0.4
+
+If NOT found:
+  - Check if {OPENCODE_CONFIG}/templates/PROJECT_RULES.md exists
+  - Present option to user:
+    "PROJECT_RULES.md not found. Would you like me to create one from the Ring template?"
+    - YES: Copy {OPENCODE_CONFIG}/templates/PROJECT_RULES.md to docs/PROJECT_RULES.md
+           Ask user to review and customize for their project
+           Continue to Step 0.4
+    - NO:  For greenfield projects, continue without (TRD will help define standards)
+           For existing projects, recommend creating PROJECT_RULES.md first
+```
 
 ### Step 0.4: Analyze PRD and Suggest Technologies
 

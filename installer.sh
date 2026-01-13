@@ -156,9 +156,9 @@ fi
 echo "Copying plugin directory..."
 copy_tree_no_delete "plugin" "$SCRIPT_DIR"
 
-# Copy skill/command/agent from assets
-echo "Copying skill/command/agent directories..."
-for d in skill command agent; do
+# Copy skill/command/agent/standards/templates from assets
+echo "Copying skill/command/agent/standards/templates directories..."
+for d in skill command agent standards templates; do
   if [[ -d "$SOURCE_ASSETS/$d" ]]; then
     copy_tree_no_delete "$d" "$SOURCE_ASSETS"
   fi
@@ -261,7 +261,7 @@ echo "=========================================="
 echo ""
 echo "Installed components:"
 echo "  - RingUnifiedPlugin (unified plugin with hook-based architecture)"
-echo "  - Skills, commands, and agents from assets/"
+echo "  - Skills, commands, agents, standards, and templates from assets/"
 echo "  - JSON schemas for IDE autocomplete"
 echo ""
 echo "Backup location (if any): $BACKUP_DIR"
