@@ -18,11 +18,11 @@ This skill library was originally designed for Claude Code and has been adapted 
 
 | Claude Code Term | OpenCode Equivalent | Notes |
 |------------------|---------------------|-------|
-| `todowrite tool` | Task tracking / todo management | Use your platform's task tracking mechanism |
+| Task tracking | Task tracking / todo management | Use your platform's task tracking mechanism |
 | `Skill tool` | Skill invocation | Read and execute skill files via your platform's skill system |
 | `Task(subagent_type=...)` | Dispatch subagent / @agent-name | Launch specialized agents for focused work |
-| `question tool` | Prompt for input / ask the user | Request clarification from user when needed |
-| N/A | question tool / prompt | Request clarification when you have doubts |
+| Prompting | Prompt for input / ask the user | Request clarification from user when needed |
+| N/A | Prompt / ask the user | Request clarification when you have doubts |
 | `.ring/` config | `.opencode/ring.jsonc` or `.ring/config.jsonc` | Project Ring configuration |
 | `$PROJECT_ROOT` | Current working directory | May need adaptation for your environment |
 
@@ -90,7 +90,7 @@ RESULT: [Agent: ___] or [Direct: why]
 -------------------------------------
 ```
 
-**Skipping = violation. Document decision in todowrite tool.**
+**Skipping = violation. Document decision in todo list.**
 
 # Getting Started with Skills
 
@@ -100,7 +100,7 @@ Before responding to ANY user message, you MUST complete this checklist IN ORDER
 
 1. [ ] **Check for MANDATORY-USER-MESSAGE** - If additionalContext contains `<MANDATORY-USER-MESSAGE>` tags, display the message FIRST, verbatim, at the start of your response
 2. [ ] **ORCHESTRATION DECISION** - Determine which agent handles this task
-   - Create todowrite tool: "Orchestration decision: [agent-name]"
+   - Create todo list: "Orchestration decision: [agent-name]"
    - If considering direct tools, document why the exception applies (user explicitly requested specific file read)
    - Mark todo complete only after documenting decision
 3. [ ] **Skill Check** - List available skills in your mind, ask: "Does ANY skill match this request?"
@@ -148,7 +148,7 @@ If you catch yourself thinking ANY of these thoughts, STOP. You are rationalizin
 - "This task is small" -> WRONG. Count files. >3 = agent. Task size is irrelevant.
 - "It's only 5 fixes across 5 files, I can handle it" -> WRONG. 5 files > 3 files. Agent mandatory.
 - "User said 'here' so they want me to do it in this conversation" -> WRONG. "Here" means get it done, not manually.
-- "todowrite tool took priority so I'll execute sequentially" -> WRONG. todowrite tool plans WHAT. Orchestrator decides HOW.
+- "todo list took priority so I'll execute sequentially" -> WRONG. todo list plans WHAT. Orchestrator decides HOW.
 - "The 3-file rule is guidance, not a gate" -> WRONG. It's a PROHIBITION. You DO NOT proceed past 3 files.
 - "User didn't explicitly call an agent so I shouldn't" -> WRONG. Agent dispatch is YOUR decision.
 - "I'm confident I know where the files are" -> WRONG. Confidence doesn't reduce context cost.
@@ -256,13 +256,13 @@ WRONG: Three separate messages (sequential, 3x slower)
 | Explore agent dispatch | ~2-3k tokens | Orchestrator |
 | **Savings** | **15-25x more efficient** | **Orchestrator always wins** |
 
-## todowrite tool requirements
+## todo list requirements
 
 **First two todos for ANY task:**
 1. "Orchestration decision: [agent-name]" (or exception justification)
 2. "Check for relevant skills"
 
-**If skill has checklist:** Create todowrite tool todos for EACH item. No mental checklists.
+**If skill has checklist:** Create todo list todos for EACH item. No mental checklists.
 
 ## Announcing Skill Usage
 
@@ -275,7 +275,7 @@ This skill uses these universal patterns:
 - **State Tracking:** See `shared-patterns/state-tracking.md`
 - **Failure Recovery:** See `shared-patterns/failure-recovery.md`
 - **Exit Criteria:** See `shared-patterns/exit-criteria.md`
-- **todowrite tool:** See `shared-patterns/todowrite-integration.md`
+- **todo list:** See `shared-patterns/todowrite-integration.md`
 
 Apply ALL patterns when using this skill.
 
@@ -346,14 +346,14 @@ Ring includes skills for managing context and enabling self-improvement:
 ## Summary
 
 **Starting any task:**
-1. **Orchestration decision** -> Which agent handles this? (todowrite tool required)
+1. **Orchestration decision** -> Which agent handles this? (todo list required)
 2. **Skill check** -> If relevant skill exists, use it
 3. **Announce** -> State which skill/agent you're using
 4. **Execute** -> Dispatch agent OR follow skill exactly
 
 **Before ANY tool use (Read/Grep/Glob/Bash):** Complete PRE-ACTION CHECKPOINT.
 
-**Skill has checklist?** Use todowrite tool for every item.
+**Skill has checklist?** Use todo list for every item.
 
 **Default answer: Use an agent. Exception is rare (user explicitly requests specific file read).**
 

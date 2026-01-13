@@ -204,6 +204,6 @@ Based on Phase 1 discoveries, launch **N targeted explorers** (where N = number 
 This skill uses these universal patterns:
 - **State Tracking:** See `shared-patterns/state-tracking.md`
 - **Failure Recovery:** See `shared-patterns/failure-recovery.md`
-- **todowrite tool:** See `shared-patterns/todowrite-integration.md`
+- **Todo list:** See `shared-patterns/todowrite-integration.md`
 
 Apply ALL patterns when using this skill.
