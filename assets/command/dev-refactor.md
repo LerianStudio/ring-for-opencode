@@ -1,10 +1,10 @@
 ---
 name: "ring:dev-refactor"
-description: Analyze existing codebase against standards and generate refactoring tasks for dev-cycle
+description: Analyze existing codebase against standards and generate refactoring tasks for ring:dev-cycle
 agent: build
 ---
 
-Analyze existing codebase against Ring/Lerian standards and execute refactoring through dev-cycle.
+Analyze existing codebase against Ring/Lerian standards and execute refactoring through ring:dev-cycle.
 
 ## PRE-EXECUTION CHECK (MANDATORY)
 
@@ -38,18 +38,18 @@ Does docs/PROJECT_RULES.md exist?
    - DevOps standards
 
 3. **Run pre-dev workflow**
-   Use `/pre-dev-full` to generate comprehensive project standards
+   Use `/ring:pre-dev-full` to generate comprehensive project standards
 
 ### Proceed?
 Would you like me to create PROJECT_RULES.md from the Ring template?
-- YES: Creates file and continues with /dev-refactor
+- YES: Creates file and continues with /ring:dev-refactor
 - NO: Stops and waits for manual creation
 ```
 
 ## Usage
 
 ```
-/dev-refactor [path] [options]
+/ring:dev-refactor [path] [options]
 ```
 
 ## Arguments
@@ -95,8 +95,8 @@ Would you like me to create PROJECT_RULES.md from the Ring template?
 
 ## User Approval
 
-Before executing dev-cycle, ask user:
-- **Approve all**: Proceed to dev-cycle execution
+Before executing ring:dev-cycle, ask user:
+- **Approve all**: Proceed to ring:dev-cycle execution
 - **Critical only**: Execute only Critical/High tasks
 - **Cancel**: Keep analysis, skip execution
 

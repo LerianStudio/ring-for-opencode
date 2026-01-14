@@ -9,7 +9,7 @@ View the feedback report from the last development cycle.
 ## Usage
 
 ```
-/dev-report [cycle-date]
+/ring:dev-report [cycle-date]
 ```
 
 ## Arguments
@@ -22,10 +22,10 @@ View the feedback report from the last development cycle.
 
 ```bash
 # View most recent report
-/dev-report
+/ring:dev-report
 
 # View specific date
-/dev-report 2024-01-15
+/ring:dev-report 2024-01-15
 ```
 
 ## Report Contents
@@ -88,9 +88,9 @@ Reports are saved to: `.ring/dev-team/feedback/cycle-YYYY-MM-DD.md`
 
 | Command | Description |
 |---------|-------------|
-| `/dev-cycle` | Start new cycle |
-| `/dev-status` | Check current status |
-| `/dev-cancel` | Cancel running cycle |
+| `/ring:dev-cycle` | Start new cycle |
+| `/ring:dev-status` | Check current status |
+| `/ring:dev-cancel` | Cancel running cycle |
 
 ---
 

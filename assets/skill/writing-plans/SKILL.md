@@ -24,9 +24,9 @@ metadata:
 
 This skill dispatches a specialized agent to write comprehensive implementation plans for engineers with zero codebase context.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+**Announce at start:** "I'm using the ring:writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+**Context:** This should be run in a dedicated worktree (created by ring:brainstorming skill).
 
 ## The Process
 
@@ -55,7 +55,7 @@ If `is_empty_index: true` -> Proceed without precedent (normal for new projects)
 
 **Step 2: Dispatch Write-Plan Agent**
 
-Dispatch via `Task(subagent_type: "write-plan")` with:
+Dispatch via `Task(subagent_type: "ring:write-plan")` with:
 - Instructions to create bite-sized tasks (2-5 min each)
 - Include exact file paths, complete code, verification steps
 - **Include Historical Precedent section** in plan with query results
@@ -101,10 +101,10 @@ Every plan: **Historical Precedent section** | Header (goal, architecture, tech 
 | Task Type | Agent |
 |-----------|-------|
 | Backend API/services | `backend-engineer-{golang,typescript}` |
-| Frontend | `frontend-engineer` |
-| Infra/CI/CD | `devops-engineer` |
-| Testing | `qa-analyst` |
-| Reliability | `sre` |
+| Frontend | `ring:frontend-engineer` |
+| Infra/CI/CD | `ring:devops-engineer` |
+| Testing | `ring:qa-analyst` |
+| Reliability | `ring:sre` |
 | Fallback | `general-purpose` (built-in, no prefix) |
 
 ## Execution Options Reference

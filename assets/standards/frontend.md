@@ -22,7 +22,7 @@ This file defines the specific standards for frontend development.
 | 10 | [Performance](#performance) | Code splitting, image optimization |
 | 11 | [Directory Structure](#directory-structure) | Next.js App Router layout |
 | 12 | [Forbidden Patterns](#forbidden-patterns) | Anti-patterns to avoid |
-| 13 | [Standards Compliance Categories](#standards-compliance-categories) | Categories for dev-refactor |
+| 13 | [Standards Compliance Categories](#standards-compliance-categories) | Categories for ring:dev-refactor |
 
 **Meta-sections (not checked by agents):**
 - [Checklist](#checklist) - Self-verification before submitting code
@@ -712,7 +712,7 @@ const handleClick = useCallback((id: string) => {
 
 ## Standards Compliance Categories
 
-**When invoked from dev-refactor, check all categories:**
+**When invoked from ring:dev-refactor, check all categories:**
 
 | Category | Ring Standard | What to Verify |
 |----------|--------------|----------------|

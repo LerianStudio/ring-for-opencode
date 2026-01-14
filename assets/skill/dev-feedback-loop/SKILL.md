@@ -13,7 +13,7 @@ metadata:
   author: "Lerian Studio"
   category: workflow
   trigger:
-    - After dev-cycle completes (success or failure)
+    - After ring:dev-cycle completes (success or failure)
     - After all gates have been processed
 ---
 
@@ -91,9 +91,9 @@ Captures metrics and learnings from completed development cycles to enable conti
 | Agent | Sections | Compliant | Gaps |
 |-------|----------|-----------|------|
 | backend-engineer-* | X | Y | Z |
-| devops-engineer | X | Y | Z |
-| sre | X | Y | Z |
-| qa-analyst | X | Y | Z |
+| ring:devops-engineer | X | Y | Z |
+| ring:sre | X | Y | Z |
+| ring:qa-analyst | X | Y | Z |
 
 ### Top Issues
 1. [Most common issue type]
@@ -107,9 +107,9 @@ Captures metrics and learnings from completed development cycles to enable conti
 
 ## State Integration
 
-Reads from dev-cycle state file:
-- `docs/dev-cycle/current-cycle.json`
-- `docs/dev-refactor/current-cycle.json`
+Reads from ring:dev-cycle state file:
+- `docs/ring:dev-cycle/current-cycle.json`
+- `docs/ring:dev-refactor/current-cycle.json`
 
 Extracts:
 - `agent_outputs.*` for per-gate data
@@ -118,4 +118,4 @@ Extracts:
 
 ## Usage
 
-Automatically invoked at end of dev-cycle. Can also be manually triggered to analyze historical cycles.
+Automatically invoked at end of ring:dev-cycle. Can also be manually triggered to analyze historical cycles.

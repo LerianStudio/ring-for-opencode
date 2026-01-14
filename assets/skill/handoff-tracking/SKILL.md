@@ -7,7 +7,7 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  trigger: "Session ending, user runs create-handoff, context pressure, completing milestone"
+  trigger: "Session ending, user runs ring:create-handoff, context pressure, completing milestone"
   skip_when: "Quick Q&A with no implementation, no meaningful work, exploratory session"
   sequence_before: "ring:executing-plans"
   sequence_after: "ring:artifact-query"

@@ -9,7 +9,7 @@ Execute the development cycle for tasks in a markdown file.
 ## Usage
 
 ```
-/dev-cycle [tasks-file] [options]
+/ring:dev-cycle [tasks-file] [options]
 ```
 
 ## Arguments
@@ -35,7 +35,7 @@ Execute the development cycle for tasks in a markdown file.
 |------|-------|-------------|
 | 0 | `ring:dev-implementation` | Implement code (TDD) |
 | 1 | `ring:dev-devops` | Create Docker/compose |
-| 2 | `ring:dev-sre` | Observability validation |
+| 2 | `ring:dev-ring:sre` | Observability validation |
 | 3 | `ring:dev-testing` | Write and run tests (85%+ coverage) |
 | 4 | `ring:requesting-code-review` | Code review (5 reviewers in parallel) |
 | 5 | `ring:dev-validation` | Final validation |
@@ -49,7 +49,7 @@ Before executing, ask user for execution mode:
 
 ## Output
 
-- **State file**: `docs/dev-cycle/current-cycle.json`
+- **State file**: `docs/ring:dev-cycle/current-cycle.json`
 - **Feedback report**: `.ring/dev-team/feedback/cycle-YYYY-MM-DD.md`
 
 ## Quick Rules

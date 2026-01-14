@@ -17,8 +17,8 @@ metadata:
     - PRD not validated → complete Gate 1 first
 
 sequence:
-  after: [pre-dev-prd-creation]
-  before: [pre-dev-trd-creation]
+  after: [ring:pre-dev-prd-creation]
+  before: [ring:pre-dev-trd-creation]
 ---
 
 # Feature Map Creation - Understanding the Feature Landscape

@@ -17,8 +17,8 @@ metadata:
     - Task has acceptance criteria requiring test coverage
     - Need to verify implementation meets requirements
   sequence:
-    after: [dev-implementation, dev-devops, dev-sre]
-    before: [requesting-code-review]
+    after: [ring:dev-implementation, ring:dev-devops, ring:dev-ring:sre]
+    before: [ring:requesting-code-review]
 ---
 
 # Dev Testing (Gate 3)
@@ -53,7 +53,7 @@ Ensure every acceptance criterion has at least one **unit test** proving it work
 
 ```yaml
 Task:
-  subagent_type: "qa-analyst"
+  subagent_type: "ring:qa-analyst"
   description: "Write unit tests for [unit_id]"
   prompt: |
     WRITE UNIT TESTS for All Acceptance Criteria

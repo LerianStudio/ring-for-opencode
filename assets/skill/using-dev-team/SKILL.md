@@ -28,22 +28,22 @@ The dev-team skills provide specialist developer agents for structured software 
 
 | Agent | Specialization |
 |-------|----------------|
-| `backend-engineer-golang` | Go backend services, APIs |
-| `backend-engineer-typescript` | TypeScript backend services |
-| `frontend-engineer` | React/Next.js frontend |
-| `frontend-designer` | UI/UX design, styling |
-| `devops-engineer` | Docker, CI/CD, infrastructure |
-| `sre` | Observability validation |
-| `qa-analyst` | Testing, coverage validation |
+| `ring:backend-engineer-golang` | Go backend services, APIs |
+| `ring:backend-engineer-typescript` | TypeScript backend services |
+| `ring:frontend-engineer` | React/Next.js frontend |
+| `ring:frontend-designer` | UI/UX design, styling |
+| `ring:devops-engineer` | Docker, CI/CD, infrastructure |
+| `ring:sre` | Observability validation |
+| `ring:qa-analyst` | Testing, coverage validation |
 
 ## 6-Gate Development Cycle
 
 | Gate | Name | Skill | Agent |
 |------|------|-------|-------|
 | 0 | Implementation | ring:dev-implementation | backend-engineer-* / frontend-* |
-| 1 | DevOps Setup | ring:dev-devops | devops-engineer |
-| 2 | SRE Validation | ring:dev-sre | sre |
-| 3 | Testing | ring:dev-testing | qa-analyst |
+| 1 | DevOps Setup | ring:dev-devops | ring:devops-engineer |
+| 2 | SRE Validation | ring:dev-ring:sre | ring:sre |
+| 3 | Testing | ring:dev-testing | ring:qa-analyst |
 | 4 | Code Review | ring:requesting-code-review | ring:code-reviewer, ring:security-reviewer, ring:business-logic-reviewer |
 | 5 | Validation | ring:dev-validation | User approval |
 
@@ -51,11 +51,11 @@ The dev-team skills provide specialist developer agents for structured software 
 
 | Command | Description |
 |---------|-------------|
-| `/dev-cycle` | Execute full 6-gate development cycle |
-| `/dev-refactor` | Analyze codebase and generate refactoring tasks |
-| `/dev-status` | Check current cycle status |
-| `/dev-cancel` | Cancel current cycle |
-| `/dev-report` | View feedback report from last cycle |
+| `/ring:dev-cycle` | Execute full 6-gate development cycle |
+| `/ring:dev-refactor` | Analyze codebase and generate refactoring tasks |
+| `/ring:dev-status` | Check current cycle status |
+| `/ring:dev-cancel` | Cancel current cycle |
+| `/ring:dev-report` | View feedback report from last cycle |
 
 ## Standards
 
@@ -79,11 +79,11 @@ Gate 0 MUST produce test failure output before implementation.
 
 ```
 1. User provides task requirements
-2. /dev-cycle invokes ring:dev-cycle skill
+2. /ring:dev-cycle invokes ring:dev-cycle skill
 3. ring:dev-implementation dispatches appropriate specialist agent
 4. Agent writes tests (RED) then implementation (GREEN)
 5. ring:dev-devops creates Docker/compose setup
-6. ring:dev-sre validates observability
+6. ring:dev-ring:sre validates observability
 7. ring:dev-testing ensures coverage threshold
 8. ring:requesting-code-review dispatches 3 parallel reviewers
 9. ring:dev-validation requests user approval

@@ -38,7 +38,7 @@ Include:
 Handoff created: docs/handoffs/{session-name}/{timestamp}_{desc}.md
 
 Resume in a new session with:
-/resume-handoff docs/handoffs/{session-name}/{timestamp}_{desc}.md
+/ring:resume-handoff docs/handoffs/{session-name}/{timestamp}_{desc}.md
 ```
 
 $ARGUMENTS

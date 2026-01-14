@@ -32,7 +32,7 @@ This file defines the specific standards for Go development at Lerian Studio.
 | 20 | [RabbitMQ Worker Pattern](#rabbitmq-worker-pattern) | Async message processing |
 
 **Meta-sections (not checked by agents):**
-- [Standards Compliance Output Format](#standards-compliance-output-format) - Report format for dev-refactor
+- [Standards Compliance Output Format](#standards-compliance-output-format) - Report format for ring:dev-refactor
 - [Checklist](#checklist) - Self-verification before submitting code
 
 ---
@@ -1875,7 +1875,7 @@ func applyDiscount(total float64, couponCode string) float64 {
 
 Lerian Studio supports multiple pagination patterns. This section provides **implementation details** for each pattern.
 
-> **Note**: The pagination strategy should be decided during the **TRD (Technical Requirements Document)** phase, not during implementation. See the `pre-dev-trd-creation` skill for the decision workflow. If no TRD exists, consult with the user before implementing.
+> **Note**: The pagination strategy should be decided during the **TRD (Technical Requirements Document)** phase, not during implementation. See the `ring:pre-dev-trd-creation` skill for the decision workflow. If no TRD exists, consult with the user before implementing.
 
 ### Quick Reference
 
@@ -2747,7 +2747,7 @@ func (s *Service) Run() {
 
 ## Standards Compliance Output Format
 
-When producing a Standards Compliance report (used by dev-refactor workflow), follow these output formats:
+When producing a Standards Compliance report (used by ring:dev-refactor workflow), follow these output formats:
 
 ### If all Categories Are Compliant
 

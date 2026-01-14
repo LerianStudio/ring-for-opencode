@@ -6,7 +6,7 @@ description: |
 license: MIT
 compatibility: opencode
 metadata:
-  trigger: "User runs /lint command, codebase has lint issues, multiple lint errors"
+  trigger: "User runs /ring:lint command, codebase has lint issues, multiple lint errors"
   skip_when: "Single lint error (fix directly), lint already passes, user only wants output"
 ---
 
@@ -117,7 +117,7 @@ After all agents complete, run `<lint_command> 2>&1`.
 | Issue Type | Agent Type |
 |------------|------------|
 | TypeScript/JavaScript | `general-purpose` |
-| Go | `general-purpose` or `backend-engineer-golang` |
+| Go | `general-purpose` or `ring:backend-engineer-golang` |
 | Security lints | `ring:security-reviewer` for analysis first |
 | Style/formatting | `general-purpose` |
 
@@ -143,4 +143,4 @@ After all agents complete, run `<lint_command> 2>&1`.
 
 ## Example Session
 
-`/lint` -> Run lint -> 16 issues in 3 areas -> Analyze streams (API: 5, Services: 8, Utils: 3) -> Dispatch 3 parallel agents -> All complete -> Re-run lint -> All pass.
+`/ring:lint` -> Run lint -> 16 issues in 3 areas -> Analyze streams (API: 5, Services: 8, Utils: 3) -> Dispatch 3 parallel agents -> All complete -> Re-run lint -> All pass.

@@ -49,7 +49,7 @@ All reviewers MUST use consistent severity classification:
 
 Each reviewer applies these levels to their domain:
 
-### Code Quality (code-reviewer)
+### Code Quality (ring:code-reviewer)
 | Severity | Examples |
 |----------|----------|
 | CRITICAL | Memory leaks, infinite loops, broken core functionality, incorrect state sequencing |
@@ -57,7 +57,7 @@ Each reviewer applies these levels to their domain:
 | MEDIUM | Code duplication, unclear naming, missing documentation, complex logic |
 | LOW | Style deviations, minor refactoring opportunities |
 
-### Business Logic (business-logic-reviewer)
+### Business Logic (ring:business-logic-reviewer)
 | Severity | Examples |
 |----------|----------|
 | CRITICAL | Financial calculation errors, data corruption risks, regulatory violations, invalid state transitions |
@@ -65,7 +65,7 @@ Each reviewer applies these levels to their domain:
 | MEDIUM | Suboptimal user experience, missing error context, non-critical validation gaps |
 | LOW | Code organization, additional test coverage, documentation improvements |
 
-### Security (security-reviewer)
+### Security (ring:security-reviewer)
 | Severity | Examples |
 |----------|----------|
 | CRITICAL | SQL injection, RCE, auth bypass, hardcoded secrets, insecure deserialization |
@@ -73,7 +73,7 @@ Each reviewer applies these levels to their domain:
 | MEDIUM | Weak cryptography, missing security headers, verbose error messages |
 | LOW | Missing optional security features, suboptimal configurations |
 
-### Test Quality (test-reviewer)
+### Test Quality (ring:test-reviewer)
 | Severity | Examples |
 |----------|----------|
 | CRITICAL | Core business logic untested, happy path missing tests |
@@ -81,7 +81,7 @@ Each reviewer applies these levels to their domain:
 | MEDIUM | Test isolation issues, unclear test names, missing assertions |
 | LOW | Test organization, naming conventions, minor duplication |
 
-### Nil Safety (nil-safety-reviewer)
+### Nil Safety (ring:nil-safety-reviewer)
 | Severity | Examples |
 |----------|----------|
 | CRITICAL | Direct path to panic/crash, unguarded nil dereference |

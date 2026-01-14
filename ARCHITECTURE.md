@@ -491,7 +491,7 @@ RingUnifiedPlugin.event() called
 ### Command Execution
 
 ```
-User types /commit
+User types /ring:commit
          │
          ▼
 OpenCode loads .opencode/command/commit.md

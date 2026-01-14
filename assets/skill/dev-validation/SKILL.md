@@ -17,7 +17,7 @@ metadata:
     - Implementation and tests complete
     - Need user sign-off on acceptance criteria
   sequence:
-    after: [requesting-code-review]
+    after: [ring:requesting-code-review]
 ---
 
 # Dev Validation (Gate 5)

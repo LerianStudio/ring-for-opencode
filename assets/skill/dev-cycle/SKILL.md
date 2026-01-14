@@ -13,9 +13,9 @@ metadata:
   author: "Lerian Studio"
   category: workflow
   trigger:
-    - Tasks file provided (from pre-dev or dev-refactor)
+    - Tasks file provided (from pre-dev or ring:dev-refactor)
     - User wants to implement development task
-    - /dev-cycle command invoked
+    - /ring:dev-cycle command invoked
 ---
 
 # Dev Cycle Skill
@@ -32,12 +32,12 @@ Orchestrates the 6-gate development workflow:
 
 ## State Management
 
-State file: `docs/dev-cycle/current-cycle.json`
+State file: `docs/ring:dev-cycle/current-cycle.json`
 
 ```json
 {
   "version": "1.0",
-  "state_path": "docs/dev-cycle/current-cycle.json",
+  "state_path": "docs/ring:dev-cycle/current-cycle.json",
   "current_task_index": 0,
   "current_gate": 0,
   "status": "running",
@@ -49,7 +49,7 @@ State file: `docs/dev-cycle/current-cycle.json`
       "gate_progress": {
         "implementation": {"status": "pending"},
         "devops": {"status": "pending"},
-        "sre": {"status": "pending"},
+        "ring:sre": {"status": "pending"},
         "testing": {"status": "pending"},
         "review": {"status": "pending"},
         "validation": {"status": "pending"}
@@ -79,7 +79,7 @@ If docs/PROJECT_RULES.md does NOT exist:
            Continue to Step 1
     - NO:  Ask if this is a legacy project that needs analysis
            If legacy: Generate PROJECT_RULES.md from codebase analysis
-           If greenfield: Recommend running /pre-dev-full first
+           If greenfield: Recommend running /ring:pre-dev-full first
 ```
 
 ### Step 1: Initialize or Resume State
@@ -87,13 +87,13 @@ If docs/PROJECT_RULES.md does NOT exist:
 **New Cycle:**
 ```yaml
 Read: tasks.md from input
-Create: docs/dev-cycle/current-cycle.json
+Create: docs/ring:dev-cycle/current-cycle.json
 Set: current_task_index = 0, current_gate = 0
 ```
 
 **Resume:**
 ```yaml
-Read: docs/dev-cycle/current-cycle.json
+Read: docs/ring:dev-cycle/current-cycle.json
 Resume: from last checkpoint (current_task_index, current_gate)
 ```
 
@@ -130,7 +130,7 @@ Input:
 ### Step 5: Execute Gate 2 (SRE)
 
 ```yaml
-Skill: ring:dev-sre
+Skill: ring:dev-ring:sre
 Input:
   unit_id: task.id
   language: detected_language
@@ -194,7 +194,7 @@ Skill: ring:dev-feedback-loop
 
 ```yaml
 Write tool:
-  file_path: docs/dev-cycle/current-cycle.json
+  file_path: docs/ring:dev-cycle/current-cycle.json
   content: [full JSON state]
 ```
 
@@ -205,7 +205,7 @@ Write tool:
 | Gate 0.1 (TDD-RED) | tdd_red.status | YES |
 | Gate 0.2 (TDD-GREEN) | implementation.status | YES |
 | Gate 1 (DevOps) | devops.status | YES |
-| Gate 2 (SRE) | sre.status | YES |
+| Gate 2 (SRE) | ring:sre.status | YES |
 | Gate 3 (Testing) | testing.status | YES |
 | Gate 4 (Review) | review.status | YES |
 | Gate 5 (Validation) | validation.status | YES |

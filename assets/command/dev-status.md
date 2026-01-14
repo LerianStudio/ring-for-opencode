@@ -9,7 +9,7 @@ Check the status of the current development cycle.
 ## Usage
 
 ```
-/dev-status
+/ring:dev-status
 ```
 
 ## Output
@@ -44,7 +44,7 @@ Metrics (completed tasks):
   Average Assertiveness: 89%
   Total Duration: 1h 45m
 
-State file: docs/dev-cycle/current-cycle.json
+State file: docs/ring:dev-cycle/current-cycle.json
 ```
 
 ## When No Cycle is Running
@@ -53,22 +53,22 @@ State file: docs/dev-cycle/current-cycle.json
 No development cycle in progress.
 
 Start a new cycle with:
-  /dev-cycle docs/tasks/your-tasks.md
+  /ring:dev-cycle docs/tasks/your-tasks.md
 
 Or resume an interrupted cycle:
-  /dev-cycle --resume
+  /ring:dev-cycle --resume
 ```
 
 ## Related Commands
 
 | Command | Description |
 |---------|-------------|
-| `/dev-cycle` | Start or resume cycle |
-| `/dev-cancel` | Cancel running cycle |
-| `/dev-report` | View feedback report |
+| `/ring:dev-cycle` | Start or resume cycle |
+| `/ring:dev-cancel` | Cancel running cycle |
+| `/ring:dev-report` | View feedback report |
 
 ---
 
 **Now checking cycle status...**
 
-Read state from: `docs/dev-cycle/current-cycle.json` or `docs/dev-refactor/current-cycle.json`
+Read state from: `docs/ring:dev-cycle/current-cycle.json` or `docs/ring:dev-refactor/current-cycle.json`

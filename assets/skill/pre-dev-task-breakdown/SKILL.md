@@ -17,8 +17,8 @@ metadata:
     - Trivial change → direct implementation
 
 sequence:
-  after: [pre-dev-trd-creation, pre-dev-dependency-map]
-  before: [pre-dev-subtask-creation, executing-plans]
+  after: [ring:pre-dev-trd-creation, ring:pre-dev-dependency-map]
+  before: [ring:pre-dev-subtask-creation, ring:executing-plans]
 ---
 
 # Task Breakdown - Value-Driven Decomposition
@@ -155,7 +155,7 @@ Optimize task order by sprint/phase with goals, critical path identification, an
 **Output to:** `docs/pre-dev/{feature-name}/tasks.md`
 
 1. ✅ Tasks become sprint backlog
-2. 🎯 Use as input for subtasks (`pre-dev-subtask-creation`)
+2. 🎯 Use as input for subtasks (`ring:pre-dev-subtask-creation`)
 3. 📊 Track progress per task (not per subtask)
 4. 🚫 No implementation yet - that's in subtasks
 

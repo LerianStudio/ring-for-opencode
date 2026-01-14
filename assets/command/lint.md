@@ -38,8 +38,8 @@ Run linting tools, analyze results, and dispatch parallel agents to fix all issu
 ## Examples
 
 ```
-/lint                    # Lint entire codebase
-/lint src/services/      # Lint specific path
+/ring:lint                    # Lint entire codebase
+/ring:lint src/services/      # Lint specific path
 ```
 
 $ARGUMENTS

@@ -52,7 +52,7 @@ color: "#F4D03F"
 
 **N/A for exploration agents.**
 
-**Rationale:** The codebase-explorer agent does not enforce coding standards or compliance requirements. Its role is discovery and analysis, not validation. It explores codebases as-is without applying normative rules.
+**Rationale:** The ring:codebase-explorer agent does not enforce coding standards or compliance requirements. Its role is discovery and analysis, not validation. It explores codebases as-is without applying normative rules.
 
 **Exception:** When exploring to prepare for standards enforcement (e.g., "Analyze codebase before applying Lerian standards"), the agent MUST note current state patterns that may conflict with standards in the RECOMMENDATIONS section.
 

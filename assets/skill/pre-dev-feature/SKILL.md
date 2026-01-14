@@ -17,7 +17,7 @@ I'm running the **Small Track** pre-development workflow (4 gates) for your feat
 - ✅ Don't require multi-service integration
 - ✅ Can be completed by a single developer
 
-**If any of the above are false, use `/pre-dev-full` instead.**
+**If any of the above are false, use `/ring:pre-dev-full` instead.**
 
 ## Document Organization
 
@@ -65,7 +65,7 @@ mkdir -p docs/pre-dev/<feature-name>
 
 ## Gate 0: Research Phase (Lightweight)
 
-**Skill:** pre-dev-research
+**Skill:** ring:pre-dev-research
 
 Even small features benefit from quick research:
 
@@ -83,7 +83,7 @@ Even small features benefit from quick research:
 
 ## Gate 1: PRD Creation
 
-**Skill:** pre-dev-prd-creation
+**Skill:** ring:pre-dev-prd-creation
 
 1. Ask user to describe the feature (what problem does it solve, who are the users, what's the business value)
 2. Create PRD document with:
@@ -104,7 +104,7 @@ Even small features benefit from quick research:
 
 ## Gate 2: TRD Creation (Skipping Feature Map)
 
-**Skill:** pre-dev-trd-creation
+**Skill:** ring:pre-dev-trd-creation
 
 1. Load PRD from `docs/pre-dev/<feature-name>/prd.md`
 2. Note: No Feature Map exists (small track) - map PRD features directly to components
@@ -127,7 +127,7 @@ Even small features benefit from quick research:
 
 ## Gate 3: Task Breakdown (Skipping API/Data/Deps)
 
-**Skill:** pre-dev-task-breakdown
+**Skill:** ring:pre-dev-task-breakdown
 
 1. Load PRD from `docs/pre-dev/<feature-name>/prd.md`
 2. Load TRD from `docs/pre-dev/<feature-name>/trd.md`
@@ -170,8 +170,8 @@ Skipped from full workflow:
 
 Next steps:
 1. Review artifacts in docs/pre-dev/<feature-name>/
-2. Use /worktree to create isolated workspace
-3. Use /write-plan to create implementation plan
+2. Use /ring:worktree to create isolated workspace
+3. Use /ring:write-plan to create implementation plan
 4. Execute the plan
 ```
 
@@ -179,7 +179,7 @@ Next steps:
 
 - This is the **Small Track** - lightweight and fast
 - **Gate 0 (Research) checks for existing patterns** even for small features
-- If feature grows during planning, switch to `/pre-dev-full`
+- If feature grows during planning, switch to `/ring:pre-dev-full`
 - All documents saved to `docs/pre-dev/<feature-name>/`
 - Get human approval at each gate
 - Technology decisions happen later in Dependency Map (not in this track)
@@ -194,10 +194,10 @@ Next steps:
 
 | Gate | Skill | Purpose |
 |------|-------|---------|
-| 0 | `pre-dev-research` | Domain and technical research |
-| 1 | `pre-dev-prd-creation` | Product requirements |
-| 2 | `pre-dev-trd-creation` | Technical requirements |
-| 3 | `pre-dev-task-breakdown` | Task decomposition |
+| 0 | `ring:pre-dev-research` | Domain and technical research |
+| 1 | `ring:pre-dev-prd-creation` | Product requirements |
+| 2 | `ring:pre-dev-trd-creation` | Technical requirements |
+| 3 | `ring:pre-dev-task-breakdown` | Task decomposition |
 
 ### Execution Pattern
 

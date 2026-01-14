@@ -17,8 +17,8 @@ metadata:
     - TRD not validated → complete Gate 3 first
 
 sequence:
-  after: [pre-dev-trd-creation]
-  before: [pre-dev-data-model]
+  after: [ring:pre-dev-trd-creation]
+  before: [ring:pre-dev-data-model]
 ---
 
 # API/Contract Design - Defining Component Interfaces
@@ -174,7 +174,7 @@ Output to `docs/pre-dev/{feature-name}/api-design.md` with these sections:
 ## After Approval
 
 1. ✅ Lock contracts - interfaces are now implementation reference
-2. 🎯 Use contracts as input for Data Modeling (`pre-dev-data-model`)
+2. 🎯 Use contracts as input for Data Modeling (`ring:pre-dev-data-model`)
 3. 🚫 Never add protocol specifics retroactively
 4. 📋 Keep technology-agnostic until Dependency Map
 

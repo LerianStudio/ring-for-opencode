@@ -17,8 +17,8 @@ metadata:
     - Tasks not validated → complete Gate 7 first
 
 sequence:
-  after: [pre-dev-task-breakdown]
-  before: [executing-plans, subagent-driven-development]
+  after: [ring:pre-dev-task-breakdown]
+  before: [ring:executing-plans, subagent-driven-development]
 ---
 
 # Subtask Creation - Bite-Sized, Zero-Context Steps
@@ -54,7 +54,7 @@ Requiring context creates bottlenecks, onboarding friction, and integration fail
 | Field | Content |
 |-------|---------|
 | Title | `# ST-[task-id]-[number]: [Subtask Name]` |
-| Agent Note | `> **For Agents:** REQUIRED SUB-SKILL: Use executing-plans` |
+| Agent Note | `> **For Agents:** REQUIRED SUB-SKILL: Use ring:executing-plans` |
 | Goal | One sentence describing what this builds |
 | Prerequisites | Verification commands with expected output |
 | Files | Create: `exact/path`, Modify: `exact/path:lines`, Test: `tests/path` |
@@ -140,7 +140,7 @@ After creating subtasks, offer execution choice:
 
 **"Subtasks complete. Two execution options:**
 1. **Subagent-Driven** - Fresh subagent per subtask, review between, fast iteration → Use `subagent-driven-development`
-2. **Parallel Session** - New session with executing-plans, batch with checkpoints → Use `executing-plans`
+2. **Parallel Session** - New session with ring:executing-plans, batch with checkpoints → Use `ring:executing-plans`
 
 **Which approach?"**
 

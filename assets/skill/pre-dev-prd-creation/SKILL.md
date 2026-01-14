@@ -17,7 +17,7 @@ metadata:
     - Bug fix → systematic-debugging
 
 sequence:
-  before: [pre-dev-feature-map, pre-dev-trd-creation]
+  before: [ring:pre-dev-feature-map, ring:pre-dev-trd-creation]
 ---
 
 # PRD Creation - Business Before Technical
@@ -157,7 +157,7 @@ If you catch yourself writing or thinking any of these in a PRD, **STOP**:
 **Output to:** `docs/pre-dev/{feature-name}/prd.md`
 
 1. ✅ Lock the PRD - no changes without formal amendment
-2. 🎯 Use as input for Feature Map (`pre-dev-feature-map`)
+2. 🎯 Use as input for Feature Map (`ring:pre-dev-feature-map`)
 3. 🚫 Never add technical details retroactively
 4. 📋 Keep business/technical strictly separated
 

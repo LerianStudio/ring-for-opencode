@@ -18,7 +18,7 @@ metadata:
     - Tasks loaded at initialization
     - Ready to write code
   sequence:
-    before: [dev-devops]
+    before: [ring:dev-devops]
 ---
 
 # Code Implementation (Gate 0)
@@ -53,10 +53,10 @@ This skill executes the implementation phase of the development cycle:
 
 | Language | Service Type | Agent |
 |----------|--------------|-------|
-| Go | API, Worker, Batch, CLI | `backend-engineer-golang` |
-| TypeScript | API, Worker | `backend-engineer-typescript` |
-| TypeScript | Frontend | `frontend-engineer` |
-| React/CSS | Design, Styling | `frontend-designer` |
+| Go | API, Worker, Batch, CLI | `ring:backend-engineer-golang` |
+| TypeScript | API, Worker | `ring:backend-engineer-typescript` |
+| TypeScript | Frontend | `ring:frontend-engineer` |
+| React/CSS | Design, Styling | `ring:frontend-designer` |
 
 ## Gate 0.1: TDD-RED (Write Failing Test)
 

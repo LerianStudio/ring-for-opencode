@@ -26,7 +26,7 @@ Proactively surface and resolve ambiguities by systematically interviewing the u
 
 **Core principle:** It's better to ask 5 questions upfront than to rewrite code 3 times.
 
-**Announce at start:** "I'm using the interviewing-user skill to gather requirements before we begin."
+**Announce at start:** "I'm using the ring:interviewing-user skill to gather requirements before we begin."
 
 ## Quick Reference
 

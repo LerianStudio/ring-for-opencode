@@ -2,7 +2,7 @@
 name: "ring:dev-devops"
 description: |
   Gate 1 of the development cycle. Creates containerization, local development setup,
-  and CI/CD configuration using the devops-engineer agent.
+  and CI/CD configuration using the ring:devops-engineer agent.
 license: MIT
 compatibility:
   platforms:
@@ -17,8 +17,8 @@ metadata:
     - After implementation complete (Gate 0)
     - Service needs containerization or local dev setup
   sequence:
-    after: [dev-implementation]
-    before: [dev-sre]
+    after: [ring:dev-implementation]
+    before: [ring:dev-ring:sre]
 ---
 
 # DevOps Setup (Gate 1)
@@ -52,7 +52,7 @@ This skill creates containerization and local development infrastructure:
 
 ```yaml
 Task:
-  subagent_type: "devops-engineer"
+  subagent_type: "ring:devops-engineer"
   description: "Create DevOps setup for [unit_id]"
   prompt: |
     Create containerization and local dev setup for this service.

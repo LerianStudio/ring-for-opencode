@@ -19,7 +19,7 @@ BLOCKED: [any blockers]
 
 Example:
 ```
-SKILL: test-driven-development
+SKILL: ring:test-driven-development
 PHASE: 2 - GREEN (Implementation)
 COMPLETED: ✓ Test written ✓ Test failure verified
 NEXT: → Write minimal implementation

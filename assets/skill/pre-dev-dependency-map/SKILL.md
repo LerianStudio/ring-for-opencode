@@ -18,8 +18,8 @@ metadata:
     - Data Model not validated → complete Gate 5 first
 
 sequence:
-  after: [pre-dev-data-model]
-  before: [pre-dev-task-breakdown]
+  after: [ring:pre-dev-data-model]
+  before: [ring:pre-dev-task-breakdown]
 ---
 
 # Dependency Map - Explicit Technology Choices

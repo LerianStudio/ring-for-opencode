@@ -28,8 +28,8 @@ metadata:
 | implementation_summary | string | optional | Summary of what was implemented (auto-generated from git log if not provided) |
 | requirements | string | optional | Requirements or acceptance criteria (reviewers will infer from code if not provided) |
 | implementation_files | array | optional | List of files changed (auto-detected via git diff if not provided) |
-| gate0_handoff | object | optional | Full handoff from Gate 0 (only when called from dev-cycle) |
-| skip_reviewers | array | optional | Reviewers to skip: code-reviewer, business-logic-reviewer, security-reviewer, test-reviewer, nil-safety-reviewer (use sparingly) |
+| gate0_handoff | object | optional | Full handoff from Gate 0 (only when called from ring:dev-cycle) |
+| skip_reviewers | array | optional | Reviewers to skip: ring:code-reviewer, ring:business-logic-reviewer, ring:security-reviewer, ring:test-reviewer, ring:nil-safety-reviewer (use sparingly) |
 
 ## Output Schema
 
@@ -53,11 +53,11 @@ metadata:
 
 Dispatch all five reviewer subagents in **parallel** for fast, comprehensive feedback:
 
-1. **code-reviewer** - Architecture, design patterns, code quality
-2. **business-logic-reviewer** - Domain correctness, business rules, edge cases
-3. **security-reviewer** - Vulnerabilities, authentication, OWASP risks
-4. **test-reviewer** - Test quality, coverage, edge cases, anti-patterns
-5. **nil-safety-reviewer** - Nil/null pointer safety for Go and TypeScript
+1. **ring:code-reviewer** - Architecture, design patterns, code quality
+2. **ring:business-logic-reviewer** - Domain correctness, business rules, edge cases
+3. **ring:security-reviewer** - Vulnerabilities, authentication, OWASP risks
+4. **ring:test-reviewer** - Test quality, coverage, edge cases, anti-patterns
+5. **ring:nil-safety-reviewer** - Nil/null pointer safety for Go and TypeScript
 
 **Core principle:** All 5 reviewers run simultaneously in a single message with 5 Task tool calls.
 
@@ -156,7 +156,7 @@ review_state = {
 ```yaml
 # Task 1: Code Reviewer
 Task:
-  subagent_type: "code-reviewer"
+  subagent_type: "ring:code-reviewer"
   description: "Code review for [unit_id]"
   prompt: |
     ## Code Review Request
@@ -194,7 +194,7 @@ Task:
 
 # Task 2: Business Logic Reviewer
 Task:
-  subagent_type: "business-logic-reviewer"
+  subagent_type: "ring:business-logic-reviewer"
   description: "Business logic review for [unit_id]"
   prompt: |
     ## Business Logic Review Request
@@ -231,7 +231,7 @@ Task:
 
 # Task 3: Security Reviewer
 Task:
-  subagent_type: "security-reviewer"
+  subagent_type: "ring:security-reviewer"
   description: "Security review for [unit_id]"
   prompt: |
     ## Security Review Request
@@ -270,7 +270,7 @@ Task:
 
 # Task 4: Test Reviewer
 Task:
-  subagent_type: "test-reviewer"
+  subagent_type: "ring:test-reviewer"
   description: "Test quality review for [unit_id]"
   prompt: |
     ## Test Quality Review Request
@@ -310,7 +310,7 @@ Task:
 
 # Task 5: Nil-Safety Reviewer
 Task:
-  subagent_type: "nil-safety-reviewer"
+  subagent_type: "ring:nil-safety-reviewer"
   description: "Nil/null safety review for [unit_id]"
   prompt: |
     ## Nil-Safety Review Request
@@ -450,11 +450,11 @@ Generate skill output:
 ## Reviewer Verdicts
 | Reviewer | Verdict | Issues |
 |----------|---------|--------|
-| code-reviewer | ✅ PASS | [count] |
-| business-logic-reviewer | ✅ PASS | [count] |
-| security-reviewer | ✅ PASS | [count] |
-| test-reviewer | ✅ PASS | [count] |
-| nil-safety-reviewer | ✅ PASS | [count] |
+| ring:code-reviewer | ✅ PASS | [count] |
+| ring:business-logic-reviewer | ✅ PASS | [count] |
+| ring:security-reviewer | ✅ PASS | [count] |
+| ring:test-reviewer | ✅ PASS | [count] |
+| ring:nil-safety-reviewer | ✅ PASS | [count] |
 
 ## Low/Cosmetic Issues (TODO/FIXME added)
 [list with file locations]
@@ -489,11 +489,11 @@ Generate skill output:
 ## Reviewer Verdicts
 | Reviewer | Verdict |
 |----------|---------|
-| code-reviewer | [PASS/FAIL] |
-| business-logic-reviewer | [PASS/FAIL] |
-| security-reviewer | [PASS/FAIL] |
-| test-reviewer | [PASS/FAIL] |
-| nil-safety-reviewer | [PASS/FAIL] |
+| ring:code-reviewer | [PASS/FAIL] |
+| ring:business-logic-reviewer | [PASS/FAIL] |
+| ring:security-reviewer | [PASS/FAIL] |
+| ring:test-reviewer | [PASS/FAIL] |
+| ring:nil-safety-reviewer | [PASS/FAIL] |
 
 ## Handoff to Next Gate
 - Review status: FAILED
@@ -513,7 +513,7 @@ See [shared-patterns/reviewer-pressure-resistance.md](../shared-patterns/reviewe
 | User Says | Your Response |
 |-----------|---------------|
 | "Skip review, code is simple" | "Simple code can have security issues. Dispatching all 5 reviewers." |
-| "Just run code-reviewer" | "All 5 reviewers run in parallel. No time saved by skipping." |
+| "Just run ring:code-reviewer" | "All 5 reviewers run in parallel. No time saved by skipping." |
 | "Fix later, merge now" | "Blocking issues (Critical/High/Medium) MUST be fixed before Gate 5." |
 
 ## Anti-Rationalization Table
@@ -525,7 +525,7 @@ See [shared-patterns/reviewer-anti-rationalization.md](../shared-patterns/review
 | Rationalization | Why It's WRONG | Required Action |
 |-----------------|----------------|-----------------|
 | "Run reviewers one at a time" | Sequential = slow. Parallel = 5x faster. | **Dispatch all 5 in single message** |
-| "Skip security for internal code" | Internal code can have vulnerabilities. | **Include security-reviewer** |
+| "Skip security for internal code" | Internal code can have vulnerabilities. | **Include ring:security-reviewer** |
 | "Critical issue is false positive" | Prove it with evidence, don't assume. | **Fix or provide evidence** |
 | "Low issues don't need TODO" | TODOs ensure issues aren't forgotten. | **Add TODO comments** |
 | "4 of 5 reviewers passed" | Gate 4 requires ALL 5. 4/5 = 0/5. | **Re-run ALL 5 reviewers** |
@@ -553,11 +553,11 @@ See [shared-patterns/reviewer-anti-rationalization.md](../shared-patterns/review
 ## Reviewer Verdicts
 | Reviewer | Verdict |
 |----------|---------|
-| code-reviewer | ✅/❌ |
-| business-logic-reviewer | ✅/❌ |
-| security-reviewer | ✅/❌ |
-| test-reviewer | ✅/❌ |
-| nil-safety-reviewer | ✅/❌ |
+| ring:code-reviewer | ✅/❌ |
+| ring:business-logic-reviewer | ✅/❌ |
+| ring:security-reviewer | ✅/❌ |
+| ring:test-reviewer | ✅/❌ |
+| ring:nil-safety-reviewer | ✅/❌ |
 
 ## Handoff to Next Gate
 - Review status: [COMPLETE|FAILED]

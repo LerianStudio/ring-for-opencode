@@ -180,8 +180,8 @@ The precedent query MUST complete in <200ms. If it takes longer:
 
 | Severity | Can Proceed? | Who Fixes? |
 |----------|-------------|------------|
-| CRITICAL | NO - Plan is INCOMPLETE | You (write-plan agent) MUST fix before saving |
-| HIGH | NO - Plan will fail | You (write-plan agent) MUST revise before approval |
+| CRITICAL | NO - Plan is INCOMPLETE | You (ring:write-plan agent) MUST fix before saving |
+| HIGH | NO - Plan will fail | You (ring:write-plan agent) MUST revise before approval |
 | MEDIUM | YES with note | Flag for executor to improve during implementation |
 | LOW | YES | Optional improvement, don't block execution |
 
@@ -342,7 +342,7 @@ If NO to any - Add more detail
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Agents:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
+> **For Agents:** REQUIRED SUB-SKILL: Use ring:executing-plans to implement this plan task-by-task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -483,8 +483,8 @@ Add this step after every 3-5 tasks (or after significant features):
 ### Task N: Run Code Review
 
 1. **Dispatch all 5 reviewers in parallel:**
-   - REQUIRED SUB-SKILL: Use requesting-code-review
-   - All reviewers run simultaneously (code-reviewer, business-logic-reviewer, security-reviewer, test-reviewer, nil-safety-reviewer)
+   - REQUIRED SUB-SKILL: Use ring:requesting-code-review
+   - All reviewers run simultaneously (ring:code-reviewer, ring:business-logic-reviewer, ring:security-reviewer, ring:test-reviewer, ring:nil-safety-reviewer)
    - Wait for all to complete
 
 2. **Handle findings by severity (MANDATORY):**
@@ -545,7 +545,7 @@ After saving the plan to `docs/plans/<filename>.md`, return to the main conversa
 
 **"Plan complete and saved to `docs/plans/<filename>.md`. Execution options:**
 
-**1. Parallel Session** - Open new session with executing-plans, batch execution with checkpoints
+**1. Parallel Session** - Open new session with ring:executing-plans, batch execution with checkpoints
 
 **2. Save for later** - Review plan and execute manually
 
@@ -555,7 +555,7 @@ Then wait for human to choose.
 
 **If Parallel Session chosen:**
 - Guide them to open new session in the worktree
-- Inform: **REQUIRED SUB-SKILL:** New session uses executing-plans
+- Inform: **REQUIRED SUB-SKILL:** New session uses ring:executing-plans
 - Provide exact command: `cd <worktree-path> && opencode`
 
 **If Save for later chosen:**

@@ -1,6 +1,6 @@
 ---
 name: "ring:security-reviewer"
-description: "Safety Review: Reviews vulnerabilities, authentication, input validation, and OWASP risks. Runs in parallel with code-reviewer and business-logic-reviewer for fast feedback."
+description: "Safety Review: Reviews vulnerabilities, authentication, input validation, and OWASP risks. Runs in parallel with ring:code-reviewer and ring:business-logic-reviewer for fast feedback."
 mode: subagent
 color: "#C0392B"
 ---
@@ -11,7 +11,7 @@ You are a Senior Security Reviewer conducting **Safety** review.
 
 ## Your Role
 
-**Position:** Parallel reviewer (runs simultaneously with code-reviewer and business-logic-reviewer)
+**Position:** Parallel reviewer (runs simultaneously with ring:code-reviewer and ring:business-logic-reviewer)
 **Purpose:** Audit security vulnerabilities and risks
 **Independence:** Review independently - do not assume other reviewers will catch security-adjacent issues
 
@@ -618,7 +618,7 @@ test('should prevent SQL injection', () => {
 
 **If PASS:**
 - Security review complete
-- Findings will be aggregated with code-reviewer and business-logic-reviewer results
+- Findings will be aggregated with ring:code-reviewer and ring:business-logic-reviewer results
 - Consider penetration testing before production deployment
 
 **If FAIL:**

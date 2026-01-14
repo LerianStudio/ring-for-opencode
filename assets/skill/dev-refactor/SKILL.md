@@ -1,6 +1,6 @@
 ---
 name: "ring:dev-refactor"
-description: Analyzes codebase against standards and generates refactoring tasks for dev-cycle.
+description: Analyzes codebase against standards and generates refactoring tasks for ring:dev-cycle.
 license: MIT
 compatibility:
   platforms:
@@ -16,12 +16,12 @@ metadata:
     - Project audit requested
   skip_when:
     - Greenfield project - Use /pre-dev-* instead
-    - Single file fix - Use dev-cycle directly
+    - Single file fix - Use ring:dev-cycle directly
 ---
 
 # Dev Refactor Skill
 
-Analyzes existing codebase against Ring/Lerian standards and generates refactoring tasks compatible with dev-cycle.
+Analyzes existing codebase against Ring/Lerian standards and generates refactoring tasks compatible with ring:dev-cycle.
 
 ## Mandatory Gap Principle
 
@@ -52,17 +52,17 @@ If docs/PROJECT_RULES.md does NOT exist:
            Continue to Step 1
     - NO:  STOP with message:
            "Cannot proceed without PROJECT_RULES.md. Either:
-           1. Create from template with /dev-refactor --init
-           2. Run /pre-dev-full to generate project standards
+           1. Create from template with /ring:dev-refactor --init
+           2. Run /ring:pre-dev-full to generate project standards
            3. Create manually at docs/PROJECT_RULES.md"
 ```
 
 ### Step 1: Detect Project Stack
 | File/Pattern | Stack | Agent |
 |--------------|-------|-------|
-| `go.mod` | Go Backend | backend-engineer-golang |
-| `package.json` + React | Frontend | frontend-engineer |
-| `package.json` + Express | TypeScript Backend | backend-engineer-typescript |
+| `go.mod` | Go Backend | ring:backend-engineer-golang |
+| `package.json` + React | Frontend | ring:frontend-engineer |
+| `package.json` + Express | TypeScript Backend | ring:backend-engineer-typescript |
 
 ### Step 2: Read PROJECT_RULES.md
 Extract project-specific conventions for agent context.
@@ -70,7 +70,7 @@ Extract project-specific conventions for agent context.
 ### Step 3: Generate Codebase Report
 ```yaml
 Task:
-  subagent_type: "codebase-explorer"
+  subagent_type: "ring:codebase-explorer"
   description: "Generate codebase architecture report"
   prompt: |
     Generate comprehensive codebase report:
@@ -83,10 +83,10 @@ Task:
 ### Step 4: Dispatch Specialist Agents (Parallel)
 
 For Go projects:
-- `backend-engineer-golang` - Go standards analysis
-- `qa-analyst` - Test coverage analysis
-- `devops-engineer` - DevOps analysis
-- `sre` - Observability analysis
+- `ring:backend-engineer-golang` - Go standards analysis
+- `ring:qa-analyst` - Test coverage analysis
+- `ring:devops-engineer` - DevOps analysis
+- `ring:sre` - Observability analysis
 
 ### Step 5: Generate findings.md
 Every issue from agents becomes FINDING-XXX entry with:
@@ -116,7 +116,7 @@ Create REFACTOR-XXX tasks grouping related findings.
 ### Step 8: User Approval
 Present plan for approval before execution.
 
-### Step 9: Handoff to dev-cycle
+### Step 9: Handoff to ring:dev-cycle
 ```yaml
 Skill tool:
   skill: "ring:dev-cycle"
@@ -129,10 +129,10 @@ Pass tasks file: `docs/refactor/{timestamp}/tasks.md`
 docs/refactor/{timestamp}/
 ├── codebase-report.md  (Step 3)
 ├── reports/            (Step 4)
-│   ├── backend-engineer-golang-report.md
-│   ├── qa-analyst-report.md
-│   ├── devops-engineer-report.md
-│   └── sre-report.md
+│   ├── ring:backend-engineer-golang-report.md
+│   ├── ring:qa-analyst-report.md
+│   ├── ring:devops-engineer-report.md
+│   └── ring:sre-report.md
 ├── findings.md         (Step 5)
 └── tasks.md            (Step 7)
 ```

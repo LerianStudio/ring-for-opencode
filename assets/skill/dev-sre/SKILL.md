@@ -1,5 +1,5 @@
 ---
-name: "ring:dev-sre"
+name: "ring:dev-ring:sre"
 description: |
   Gate 2 of the development cycle. VALIDATES that observability was correctly implemented
   by developers. Does NOT implement observability code - only validates it.
@@ -18,8 +18,8 @@ metadata:
     - Gate 1 (DevOps) setup complete
     - Service needs observability validation (logging, tracing)
   sequence:
-    after: [dev-devops]
-    before: [dev-testing]
+    after: [ring:dev-devops]
+    before: [ring:dev-testing]
 ---
 
 # SRE Validation (Gate 2)
@@ -60,7 +60,7 @@ This skill VALIDATES that observability was correctly implemented by developers:
 
 ```yaml
 Task:
-  subagent_type: "sre"
+  subagent_type: "ring:sre"
   description: "Validate observability for [unit_id]"
   prompt: |
     VALIDATE Observability Implementation

@@ -10,31 +10,31 @@ metadata:
   trigger: |
     - Before any pre-dev workflow (Gate 0)
     - When planning new features or modifications
-    - Invoked by /pre-dev-full and /pre-dev-feature
+    - Invoked by /ring:pre-dev-full and /ring:pre-dev-feature
   skip_when: |
     - Trivial changes that don't need planning
     - Research already completed (research.md exists and is recent)
 
 sequence:
-  before: [pre-dev-prd-creation, pre-dev-feature-map]
+  before: [ring:pre-dev-prd-creation, ring:pre-dev-feature-map]
 
 related:
-  complementary: [pre-dev-prd-creation, pre-dev-trd-creation]
+  complementary: [ring:pre-dev-prd-creation, ring:pre-dev-trd-creation]
 
 research_modes:
   greenfield:
     description: "New feature with no existing patterns to follow"
-    primary_agents: [best-practices-researcher, framework-docs-researcher]
+    primary_agents: [ring:best-practices-researcher, ring:framework-docs-researcher]
     focus: "External best practices and framework patterns"
 
   modification:
     description: "Changing or extending existing functionality"
-    primary_agents: [repo-research-analyst]
+    primary_agents: [ring:repo-research-analyst]
     focus: "Existing codebase patterns and conventions"
 
   integration:
     description: "Connecting systems or adding external dependencies"
-    primary_agents: [framework-docs-researcher, best-practices-researcher, repo-research-analyst]
+    primary_agents: [ring:framework-docs-researcher, ring:best-practices-researcher, ring:repo-research-analyst]
     focus: "API documentation and integration patterns"
 ---
 
@@ -75,9 +75,9 @@ Research prevents: Reinventing existing patterns, ignoring conventions, missing 
 
 | Agent | Prompt Focus |
 |-------|--------------|
-| `repo-research-analyst` | Codebase patterns for [feature]. Search docs/solutions/ knowledge base. Return file:line references. If modification mode: PRIMARY focus. |
-| `best-practices-researcher` | External best practices for [feature]. Use Context7 + WebSearch. Return URLs. If greenfield mode: PRIMARY focus. |
-| `framework-docs-researcher` | Tech stack docs for [feature]. Detect versions from manifests. Use Context7. Return version constraints. If integration mode: focus on SDK/API docs. |
+| `ring:repo-research-analyst` | Codebase patterns for [feature]. Search docs/solutions/ knowledge base. Return file:line references. If modification mode: PRIMARY focus. |
+| `ring:best-practices-researcher` | External best practices for [feature]. Use Context7 + WebSearch. Return URLs. If greenfield mode: PRIMARY focus. |
+| `ring:framework-docs-researcher` | Tech stack docs for [feature]. Detect versions from manifests. Use Context7. Return version constraints. If integration mode: focus on SDK/API docs. |
 
 ## Step 3: Aggregate Research Findings
 
@@ -115,9 +115,9 @@ Research prevents: Reinventing existing patterns, ignoring conventions, missing 
 
 ## Integration with Pre-Dev Workflow
 
-**pre-dev-full (9-gate):** Gate 0 Research → Gate 1 PRD (reads research.md) → ... → Gate 3 TRD (reads research.md)
+**ring:pre-dev-full (9-gate):** Gate 0 Research → Gate 1 PRD (reads research.md) → ... → Gate 3 TRD (reads research.md)
 
-**pre-dev-feature (4-gate):** Gate 0 Research → Gate 1 PRD → Gate 2 TRD → Gate 3 Tasks
+**ring:pre-dev-feature (4-gate):** Gate 0 Research → Gate 1 PRD → Gate 2 TRD → Gate 3 Tasks
 
 ## Research Document Usage
 

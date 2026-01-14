@@ -232,7 +232,7 @@ You are breaking ORCHESTRATOR. Use an agent instead.
 | Plan implementation, break down features | **Plan** |
 | Multi-step research, complex investigation | **general-purpose** |
 | Code review | ALL THREE in parallel (code, business-logic, security reviewers) |
-| Implementation plan document | write-plan |
+| Implementation plan document | ring:write-plan |
 | User explicitly said "read [file]" | Direct (ONLY exception) |
 
 **WRONG -> RIGHT:** "Let me read files" -> Explore. "I'll grep" -> Explore. "Already read 3 files" -> STOP, dispatch now.
@@ -265,7 +265,7 @@ WRONG: Three separate messages (sequential, 3x slower)
 
 ## Announcing Skill Usage
 
-- **Always announce meta-skills:** brainstorming, writing-plans (methodology change)
+- **Always announce meta-skills:** brainstorming, ring:writing-plans (methodology change)
 - **Skip when obvious:** User says "write tests first" -> no need to announce TDD
 
 ## Required Patterns

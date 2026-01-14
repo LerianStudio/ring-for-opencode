@@ -28,7 +28,7 @@ Traditional exploration assumes structure upfront or explores sequentially. This
 
 **MANDATORY ANNOUNCEMENT at start:**
 
-"I'm using the exploring-codebase skill to autonomously discover and explore the codebase structure.
+"I'm using the ring:exploring-codebase skill to autonomously discover and explore the codebase structure.
 
 Before proceeding, I've checked the Red Flags table and confirmed:
 - [X] Production pressure makes me WANT to skip discovery -> Using skill anyway

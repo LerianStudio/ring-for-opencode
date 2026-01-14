@@ -17,8 +17,8 @@ metadata:
     - Pure business requirement change → update PRD
 
 sequence:
-  after: [pre-dev-prd-creation, pre-dev-feature-map]
-  before: [pre-dev-api-design, pre-dev-task-breakdown]
+  after: [ring:pre-dev-prd-creation, ring:pre-dev-feature-map]
+  before: [ring:pre-dev-api-design, ring:pre-dev-task-breakdown]
 ---
 
 # TRD Creation - Architecture Before Implementation
@@ -267,7 +267,7 @@ If feature is a licensed product/plugin (as determined in Question 3 of pre-dev 
 **Output to:** `docs/pre-dev/{feature-name}/trd.md`
 
 1. ✅ Lock TRD - architecture patterns are now reference
-2. 🎯 Use as input for API Design (`pre-dev-api-design`)
+2. 🎯 Use as input for API Design (`ring:pre-dev-api-design`)
 3. 🚫 Never add technologies retroactively
 4. 📋 Keep architecture/implementation strictly separated
 
