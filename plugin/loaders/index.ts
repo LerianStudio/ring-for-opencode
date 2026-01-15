@@ -24,3 +24,9 @@ export {
   loadRingSkills,
   type SkillConfig,
 } from "./skill-loader.js"
+// Placeholder utilities
+export {
+  expandPlaceholders,
+  getOpenCodeConfigDir,
+  OPENCODE_CONFIG_PLACEHOLDER,
+} from "./placeholder-utils.js"

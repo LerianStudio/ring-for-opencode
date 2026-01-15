@@ -10,6 +10,7 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { basename, join } from "node:path"
+import { expandPlaceholders } from "./placeholder-utils.js"
 
 /**
  * Agent configuration compatible with OpenCode SDK.
@@ -203,7 +204,7 @@ function loadAgentsFromDir(
             ? `(ring) ${data.description}`
             : `(ring) ${agentName} agent`,
           mode,
-          prompt: body.trim(),
+          prompt: expandPlaceholders(body.trim()),
         }
 
         if (data.model) {

@@ -23,6 +23,13 @@ SOURCE_ASSETS="$SCRIPT_DIR/assets"
 SOURCE_PLUGIN="$SCRIPT_DIR/plugin"
 TARGET_ROOT="${OPENCODE_CONFIG_DIR:-"$HOME/.config/opencode"}"
 
+# Validate TARGET_ROOT is an absolute path (security check)
+if [[ -z "$TARGET_ROOT" || "$TARGET_ROOT" == ".config/opencode" || "$TARGET_ROOT" != /* ]]; then
+  echo "ERROR: Cannot determine config directory. HOME is not set or TARGET_ROOT is not absolute." >&2
+  echo "Set OPENCODE_CONFIG_DIR or HOME environment variable." >&2
+  exit 1
+fi
+
 # Node version check - require 18-24, warn if 25+
 check_node_version() {
   if ! command -v node >/dev/null 2>&1; then
@@ -96,6 +103,55 @@ copy_tree_no_delete() {
   rsync -a --checksum "$source_base/$rel_dir/" "$TARGET_ROOT/$rel_dir/"
 }
 
+# Expand {OPENCODE_CONFIG} placeholder in file content
+expand_placeholders() {
+  local file="$1"
+  local config_dir
+
+  # Match TypeScript logic: OPENCODE_CONFIG_DIR -> XDG_CONFIG_HOME -> default
+  # This ensures consistency between install-time and runtime expansion
+  if [[ -n "${OPENCODE_CONFIG_DIR:-}" ]]; then
+    config_dir="$OPENCODE_CONFIG_DIR"
+  elif [[ -n "${XDG_CONFIG_HOME:-}" ]]; then
+    config_dir="$XDG_CONFIG_HOME/opencode"
+  else
+    config_dir="$HOME/.config/opencode"
+  fi
+
+  # Escape sed special characters in replacement: & \ |
+  # This prevents sed injection when config_dir contains special characters
+  local escaped_config_dir
+  escaped_config_dir=$(printf '%s\n' "$config_dir" | sed 's/[&/\|]/\\&/g')
+
+  # Use sed to replace {OPENCODE_CONFIG} with the actual config directory
+  # -i '' for macOS, -i for Linux (detect based on sed behavior)
+  if sed --version >/dev/null 2>&1; then
+    # GNU sed (Linux)
+    sed -i "s|{OPENCODE_CONFIG}|$escaped_config_dir|g" "$file"
+  else
+    # BSD sed (macOS)
+    sed -i '' "s|{OPENCODE_CONFIG}|$escaped_config_dir|g" "$file"
+  fi
+}
+
+# Copy tree and expand placeholders in markdown files
+copy_tree_with_expansion() {
+  local rel_dir="$1"
+  local source_base="${2:-$SOURCE_ASSETS}"
+
+  # First, use regular copy to get all files
+  copy_tree_no_delete "$rel_dir" "$source_base"
+
+  # Then, expand placeholders in all markdown files
+  echo "Expanding placeholders in $rel_dir markdown files..."
+  find "$TARGET_ROOT/$rel_dir" -type f -name "*.md" | while read -r md_file; do
+    if grep -q "{OPENCODE_CONFIG}" "$md_file" 2>/dev/null; then
+      expand_placeholders "$md_file"
+      echo "  Expanded: ${md_file#$TARGET_ROOT/}"
+    fi
+  done
+}
+
 copy_file() {
   local rel="$1"
   local source_base="${2:-$SOURCE_ASSETS}"
@@ -156,11 +212,11 @@ fi
 echo "Copying plugin directory..."
 copy_tree_no_delete "plugin" "$SCRIPT_DIR"
 
-# Copy skill/command/agent/standards/templates from assets
+# Copy skill/command/agent/standards/templates from assets with placeholder expansion
 echo "Copying skill/command/agent/standards/templates directories..."
 for d in skill command agent standards templates; do
   if [[ -d "$SOURCE_ASSETS/$d" ]]; then
-    copy_tree_no_delete "$d" "$SOURCE_ASSETS"
+    copy_tree_with_expansion "$d" "$SOURCE_ASSETS"
   fi
 done
 
@@ -197,9 +253,16 @@ REQUIRED_DEPS_JSON='{
 
 REQUIRED_DEPS_JSON="$REQUIRED_DEPS_JSON" node - <<'NODE'
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
-const targetRoot = process.env.OPENCODE_CONFIG_DIR || path.join(process.env.HOME, '.config/opencode');
+// Handle HOME undefined gracefully - matches TypeScript behavior
+const home = process.env.HOME || os.homedir() || '';
+if (!home && !process.env.OPENCODE_CONFIG_DIR) {
+  console.error('ERROR: Cannot determine home directory. Set HOME or OPENCODE_CONFIG_DIR environment variable.');
+  process.exit(1);
+}
+const targetRoot = process.env.OPENCODE_CONFIG_DIR || path.join(home, '.config/opencode');
 const pkgPath = path.join(targetRoot, 'package.json');
 const required = JSON.parse(process.env.REQUIRED_DEPS_JSON);
 
