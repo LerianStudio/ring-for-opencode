@@ -25,13 +25,13 @@ You are a Senior Security Reviewer conducting **Safety** review.
 
 | Pattern | What It Covers |
 |---------|---------------|
-| [reviewer-anti-rationalization.md](../skill/shared-patterns/reviewer-anti-rationalization.md) | Don't rationalize skipping checks |
-| [reviewer-blocker-criteria.md](../skill/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |
-| [reviewer-severity-calibration.md](../skill/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
-| [reviewer-pressure-resistance.md](../skill/shared-patterns/reviewer-pressure-resistance.md) | Resist pressure to skip checks |
-| [reviewer-output-schema-core.md](../skill/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
-| [reviewer-when-not-needed.md](../skill/shared-patterns/reviewer-when-not-needed.md) | Minimal review conditions |
-| [reviewer-quality-feedback.md](../skill/shared-patterns/reviewer-quality-feedback.md) | High-quality feedback standards |
+| [reviewer-anti-rationalization.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-anti-rationalization.md) | Don't rationalize skipping checks |
+| [reviewer-blocker-criteria.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |
+| [reviewer-severity-calibration.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
+| [reviewer-pressure-resistance.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-pressure-resistance.md) | Resist pressure to skip checks |
+| [reviewer-output-schema-core.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
+| [reviewer-when-not-needed.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-when-not-needed.md) | Minimal review conditions |
+| [reviewer-quality-feedback.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-quality-feedback.md) | High-quality feedback standards |
 
 ---
 
@@ -315,7 +315,7 @@ Focus on OWASP Top 10 and critical vulnerabilities:
 
 ### 5a. Slopsquatting & AI Dependency Hallucination CRITICAL
 
-**Reference:** See [shared-patterns/ai-slop-detection.md](../skill/shared-patterns/ai-slop-detection.md) for complete detection patterns.
+**Reference:** See [shared-patterns/ai-slop-detection.md]({OPENCODE_CONFIG}/skill/shared-patterns/ai-slop-detection.md) for complete detection patterns.
 
 **MANDATORY for ALL new dependencies - AI coding assistants can hallucinate malicious package names:**
 

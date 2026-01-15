@@ -111,5 +111,5 @@ Reviewers should reference this pattern in their output:
 ---
 
 *Quality feedback for this review can be recorded using the template in
-[reviewer-quality-feedback.md](../shared-patterns/reviewer-quality-feedback.md)*
+[reviewer-quality-feedback.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-quality-feedback.md)*
 ```

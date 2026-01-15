@@ -508,7 +508,7 @@ ESCALATION: Max iterations (3) reached. Blocking issues remain.
 
 ## Pressure Resistance
 
-See [shared-patterns/reviewer-pressure-resistance.md](../shared-patterns/reviewer-pressure-resistance.md) for universal pressure scenarios.
+See [shared-patterns/reviewer-pressure-resistance.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-pressure-resistance.md) for universal pressure scenarios.
 
 | User Says | Your Response |
 |-----------|---------------|
@@ -518,7 +518,7 @@ See [shared-patterns/reviewer-pressure-resistance.md](../shared-patterns/reviewe
 
 ## Anti-Rationalization Table
 
-See [shared-patterns/reviewer-anti-rationalization.md](../shared-patterns/reviewer-anti-rationalization.md) for universal anti-rationalizations.
+See [shared-patterns/reviewer-anti-rationalization.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-anti-rationalization.md) for universal anti-rationalizations.
 
 ### Gate 4-Specific Anti-Rationalizations
 

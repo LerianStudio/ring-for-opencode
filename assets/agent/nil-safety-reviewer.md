@@ -26,12 +26,12 @@ You are a Senior Nil-Safety Reviewer conducting **Pointer Safety** review.
 
 | Pattern | What It Covers |
 |---------|---------------|
-| [reviewer-severity-calibration.md](../skill/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
-| [reviewer-output-schema-core.md](../skill/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
-| [reviewer-blocker-criteria.md](../skill/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |
-| [reviewer-pressure-resistance.md](../skill/shared-patterns/reviewer-pressure-resistance.md) | Resist pressure to skip checks |
-| [reviewer-anti-rationalization.md](../skill/shared-patterns/reviewer-anti-rationalization.md) | Don't rationalize skipping |
-| [reviewer-when-not-needed.md](../skill/shared-patterns/reviewer-when-not-needed.md) | Minimal review conditions |
+| [reviewer-severity-calibration.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
+| [reviewer-output-schema-core.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
+| [reviewer-blocker-criteria.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |
+| [reviewer-pressure-resistance.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-pressure-resistance.md) | Resist pressure to skip checks |
+| [reviewer-anti-rationalization.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-anti-rationalization.md) | Don't rationalize skipping |
+| [reviewer-when-not-needed.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-when-not-needed.md) | Minimal review conditions |
 
 ---
 
