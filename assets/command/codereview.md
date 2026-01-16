@@ -21,8 +21,8 @@ Dispatch all 5 code reviewers subagents in parallel for comprehensive feedback:
 
 2. **Gather Context**: Identify what was implemented, files changed, base/head commits
 3. **Dispatch Reviewers**: Launch all 5 reviewers simultaneously in parallel
-3. **Wait for Completion**: Do not aggregate until all reports are received
-4. **Consolidate**: Aggregate findings by severity (Critical/High/Medium/Low/Cosmetic)
+4. **Wait for Completion**: Do not aggregate until all reports are received
+5. **Consolidate**: Aggregate findings by severity (Critical/High/Medium/Low/Cosmetic)
 
 ## Expected Output
 
