@@ -30,55 +30,14 @@ This skill dispatches a specialized agent to write comprehensive implementation 
 
 ## The Process
 
-**Step 1: Query Historical Precedent (MANDATORY)**
-
-Before planning, query the artifact index for historical context:
-
-```bash
-# Keywords MUST be alphanumeric with spaces only (sanitize before use)
-python3 default/lib/artifact-index/artifact_query.py --mode planning "keywords" --json
-```
-
-**Keyword Extraction (MANDATORY):**
-1. Extract topic keywords from the planning request
-2. Sanitize keywords: Keep only alphanumeric characters, hyphens, and spaces
-3. Example: "Implement OAuth2 authentication!" -> keywords: "oauth2 authentication"
-
-**Safety:** Never include shell metacharacters (`;`, `$`, `` ` ``, `|`, `&`) in keywords.
-
-Results inform the plan:
-- `successful_handoffs` -> Reference patterns that worked
-- `failed_handoffs` -> WARN in plan, design to avoid
-- `relevant_plans` -> Review for approach ideas
-
-If `is_empty_index: true` -> Proceed without precedent (normal for new projects).
-
-**Step 2: Dispatch Write-Plan Agent**
+**Step 1: Dispatch Write-Plan Agent**
 
 Dispatch via `Task(subagent_type: "ring:write-plan")` with:
 - Instructions to create bite-sized tasks (2-5 min each)
 - Include exact file paths, complete code, verification steps
-- **Include Historical Precedent section** in plan with query results
 - Save to `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
-**Step 3: Validate Plan Against Failure Patterns**
-
-After the plan is saved, validate it against known failures:
-
-```bash
-python3 default/lib/validate-plan-precedent.py docs/plans/YYYY-MM-DD-<feature>.md
-```
-
-**Interpretation:**
-- `PASS` -> Plan is safe to execute
-- `WARNING` -> Plan has >30% keyword overlap with past failures
-  - Review the warnings in the output
-  - Update plan to address the failure patterns
-  - Re-run validation until PASS
-
-**Note:** If artifact index is unavailable, validation passes automatically (nothing to check against).
-
-**Step 4: Ask User About Execution**
+**Step 2: Ask User About Execution**
 
 Ask via `question tool`: "Execute now?" Options:
 1. Parallel session -> user opens new session with `ring:executing-plans`
@@ -90,11 +49,11 @@ Ask via `question tool`: "Execute now?" Options:
 
 ## What the Agent Does
 
-**Query precedent** -> Explore codebase -> identify files -> break into bite-sized tasks (2-5 min) -> write complete code -> include exact commands -> add review checkpoints -> **include Historical Precedent section** -> verify Zero-Context Test -> save to `docs/plans/YYYY-MM-DD-<feature>.md` -> report back
+**Explore codebase -> identify files -> break into bite-sized tasks (2-5 min) -> write complete code -> include exact commands -> add review checkpoints -> verify Zero-Context Test -> save to `docs/plans/YYYY-MM-DD-<feature>.md` -> report back
 
 ## Requirements for Plans
 
-Every plan: **Historical Precedent section** | Header (goal, architecture, tech stack) | Verification commands with expected output | Exact file paths (never "somewhere in src") | Complete code (never "add validation here") | Bite-sized steps with verification | Failure recovery | Review checkpoints | Zero-Context Test | **Recommended agents per task** | **Avoids known failure patterns**
+Every plan: Header (goal, architecture, tech stack) | Verification commands with expected output | Exact file paths (never "somewhere in src") | Complete code (never "add validation here") | Bite-sized steps with verification | Failure recovery | Review checkpoints | Zero-Context Test | **Recommended agents per task**
 
 ## Agent Selection
 

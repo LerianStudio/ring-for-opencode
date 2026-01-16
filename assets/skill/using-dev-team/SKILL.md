@@ -42,7 +42,7 @@ The dev-team skills provide specialist developer agents for structured software 
 |------|------|-------|-------|
 | 0 | Implementation | ring:dev-implementation | backend-engineer-* / frontend-* |
 | 1 | DevOps Setup | ring:dev-devops | ring:devops-engineer |
-| 2 | SRE Validation | ring:dev-ring:sre | ring:sre |
+| 2 | SRE Validation | ring:dev-sre | ring:sre |
 | 3 | Testing | ring:dev-testing | ring:qa-analyst |
 | 4 | Code Review | ring:requesting-code-review | ring:code-reviewer, ring:security-reviewer, ring:business-logic-reviewer |
 | 5 | Validation | ring:dev-validation | User approval |
@@ -83,7 +83,7 @@ Gate 0 MUST produce test failure output before implementation.
 3. ring:dev-implementation dispatches appropriate specialist agent
 4. Agent writes tests (RED) then implementation (GREEN)
 5. ring:dev-devops creates Docker/compose setup
-6. ring:dev-ring:sre validates observability
+6. ring:dev-sre validates observability
 7. ring:dev-testing ensures coverage threshold
 8. ring:requesting-code-review dispatches 3 parallel reviewers
 9. ring:dev-validation requests user approval

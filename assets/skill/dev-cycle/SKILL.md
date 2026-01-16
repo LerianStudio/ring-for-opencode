@@ -130,7 +130,7 @@ Input:
 ### Step 5: Execute Gate 2 (SRE)
 
 ```yaml
-Skill: ring:dev-ring:sre
+Skill: ring:dev-sre
 Input:
   unit_id: task.id
   language: detected_language

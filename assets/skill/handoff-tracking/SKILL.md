@@ -2,15 +2,13 @@
 name: "ring:handoff-tracking"
 description: |
   Create detailed handoff documents for session transitions. Captures task status,
-  learnings, decisions, and next steps in a structured format that gets indexed
-  for future retrieval.
+  learnings, decisions, and next steps in a structured format.
 license: MIT
 compatibility: opencode
 metadata:
   trigger: "Session ending, user runs ring:create-handoff, context pressure, completing milestone"
   skip_when: "Quick Q&A with no implementation, no meaningful work, exploratory session"
   sequence_before: "ring:executing-plans"
-  sequence_after: "ring:artifact-query"
 ---
 
 # Handoff Tracking
@@ -19,7 +17,7 @@ metadata:
 
 Create structured handoff documents that preserve session context for future sessions. Handoffs capture what was done, what worked, what failed, key decisions, and next steps.
 
-**Core principle:** Handoffs are indexed immediately on creation, making them searchable before the session ends.
+**Core principle:** Handoffs preserve session context, making them available for future reference.
 
 **Announce at start:** "I'm creating a handoff document to preserve this session's context."
 
@@ -138,11 +136,7 @@ Check for active work context:
 1. Create handoff directory if needed: `mkdir -p docs/handoffs/{session-name}/`
 2. Write handoff file with template structure
 3. Fill in all sections with session details
-4. Be thorough in learnings - these feed compound learning
-
-### Step 4: Verify Indexing
-
-After writing the handoff, verify it was indexed (if database exists).
+4. Be thorough in learnings.
 
 ## Outcome Tracking
 
@@ -162,8 +156,7 @@ Handoffs start with `outcome: UNKNOWN` and get updated when marked.
 
 ## Remember
 
-- **Be thorough in Learnings** - These feed the compound learning system
+- **Be thorough in Learnings** - These help future sessions avoid same mistakes
 - **Include file:line references** - Makes resumption faster
 - **Document WHY not just WHAT** - Decisions without rationale are useless
-- **Index happens automatically** - PostToolUse hook handles it
 - **Outcome is separate** - Don't try to guess outcome, leave as UNKNOWN

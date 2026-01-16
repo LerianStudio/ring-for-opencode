@@ -21,9 +21,9 @@ cp -r assets/ /your/project/.opencode/
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Agents | 15 | `assets/agent/` |
-| Skills | 23 | `assets/skill/` |
-| Commands | 15 | `assets/command/` |
+| Agents | 17 | `assets/agent/` |
+| Skills | 34 | `assets/skill/` |
+| Commands | 17 | `assets/command/` |
 | Plugin | 1 (unified) | `plugin/` |
 
 ## Architecture
@@ -68,11 +68,18 @@ Ring uses a unified plugin architecture with four core components:
 | `@ring:backend-engineer-golang` | Go backend development |
 | `@ring:backend-engineer-typescript` | TypeScript backend development |
 | `@ring:frontend-engineer` | Frontend development |
-| `@ring:frontend-bff-engineer-typescript` | BFF/API layer development |
 | `@ring:frontend-designer` | UI/UX implementation |
 | `@ring:devops-engineer` | Infrastructure and CI/CD |
 | `@ring:qa-analyst` | Testing and quality assurance |
 | `@ring:sre` | Site reliability engineering |
+
+### Researchers
+
+| Agent | Focus |
+|-------|-------|
+| `@ring:repo-research-analyst` | Codebase patterns and conventions |
+| `@ring:best-practices-researcher` | External best practices |
+| `@ring:framework-docs-researcher` | Tech stack documentation |
 
 ## Commands
 
@@ -89,6 +96,10 @@ Ring uses a unified plugin architecture with four core components:
 | `/ring:resume-handoff` | Resume from handoff |
 | `/ring:dev-cycle` | Full development cycle |
 | `/ring:dev-refactor` | Codebase refactoring |
+| `/ring:dev-status` | Check development cycle status |
+| `/ring:dev-report` | Generate development report |
+| `/ring:dev-cancel` | Cancel development cycle |
+| `/ring:worktree` | Manage git worktrees |
 
 > **Note**: Ring commands use a flat structure - nested commands (e.g., `/category/command`) are not supported. Commands must be placed directly in `assets/command/` or `.opencode/command/`. If you need hierarchical command organization, use OpenCode's native `.opencode/command/` directory which supports subdirectories.
 

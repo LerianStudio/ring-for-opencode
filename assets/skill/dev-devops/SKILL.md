@@ -18,7 +18,7 @@ metadata:
     - Service needs containerization or local dev setup
   sequence:
     after: [ring:dev-implementation]
-    before: [ring:dev-ring:sre]
+    before: [ring:dev-sre]
 ---
 
 # DevOps Setup (Gate 1)

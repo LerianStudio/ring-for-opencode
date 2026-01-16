@@ -17,7 +17,7 @@ metadata:
     - Task has acceptance criteria requiring test coverage
     - Need to verify implementation meets requirements
   sequence:
-    after: [ring:dev-implementation, ring:dev-devops, ring:dev-ring:sre]
+    after: [ring:dev-implementation, ring:dev-devops, ring:dev-sre]
     before: [ring:requesting-code-review]
 ---
 

@@ -156,8 +156,8 @@ docs/pre-dev/{feature}/
 | using-tw-team | Documentation for features |
 
 **Combined with:**
-- `ring:execute-plan` – Run tasks in batches
-- `ring:write-plan` – Generate plan from scratch
+- `ring:executing-plans` – Run tasks in batches
+- `ring:writing-plans` – Generate plan from scratch
 - `*-engineer` – Specialist review of design
 - `ring:requesting-code-review` – Post-implementation review
 

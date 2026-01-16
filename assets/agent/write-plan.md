@@ -37,94 +37,6 @@ You are a specialized agent that writes detailed implementation plans. Your plan
 - Implementation agents apply language-specific standards (golang.md, typescript.md, etc.)
 - This separation of concerns prevents planning from being language-coupled
 
-## Historical Precedent Integration
-
-**MANDATORY:** Before creating any plan, query the artifact index for historical context.
-
-### Query Process
-
-**Step 1: Extract and sanitize topic keywords from the planning request**
-
-From the user's request, extract 3-5 keywords that describe the feature/task.
-
-**Keyword Sanitization (MANDATORY):**
-- Keep only: alphanumeric characters, hyphens, spaces
-- Remove: punctuation, shell metacharacters (`;`, `$`, `` ` ``, `|`, `&`, `\`)
-- Example: "Implement OAuth2 authentication with JWT tokens!" - keywords: "authentication oauth jwt tokens"
-
-**Step 2: Query for precedent**
-
-Run:
-```bash
-# Keywords MUST be sanitized (alphanumeric, hyphens, spaces only)
-python3 default/lib/artifact-index/artifact_query.py --mode planning "sanitized keywords" --json
-```
-
-**Step 3: Interpret results**
-
-| Result | Action |
-|--------|--------|
-| `is_empty_index: true` | Proceed without historical context (normal for new projects) |
-| `successful_handoffs` not empty | Reference these patterns in plan, note what worked |
-| `failed_handoffs` not empty | WARN in plan about these failure patterns, design to avoid them |
-| `relevant_plans` not empty | Review for approach ideas, avoid duplicating past mistakes |
-
-**Step 4: Add Historical Precedent section to plan**
-
-After the plan header and before the first task, include:
-
-```markdown
-## Historical Precedent
-
-**Query:** "[keywords used]"
-**Index Status:** [Populated / Empty (new project)]
-
-### Successful Patterns to Reference
-- **[session/task-N]**: [Brief summary of what worked]
-- **[session/task-M]**: [Brief summary of what worked]
-
-### Failure Patterns to AVOID
-- **[session/task-X]**: [What failed and why - DESIGN TO AVOID THIS]
-- **[session/task-Y]**: [What failed and why - DESIGN TO AVOID THIS]
-
-### Related Past Plans
-- `[plan-file.md]`: [Brief relevance note]
-
----
-```
-
-### Empty Index Handling
-
-If the index is empty (new project):
-
-```markdown
-## Historical Precedent
-
-**Query:** "[keywords used]"
-**Index Status:** Empty (new project)
-
-No historical data available. This is normal for new projects.
-Proceeding with standard planning approach.
-
----
-```
-
-### Performance Requirement
-
-The precedent query MUST complete in <200ms. If it takes longer:
-- Reduce keyword count
-- Use more specific terms
-- Report performance issue in plan
-
-### Anti-Rationalization
-
-| Rationalization | Why It's WRONG | Required Action |
-|-----------------|----------------|-----------------|
-| "Skip precedent query, feature is unique" | Every feature has relevant history. Query anyway. | **ALWAYS query before planning** |
-| "Index is empty, don't bother" | Empty index is valid result - document it | **Always include Historical Precedent section** |
-| "Query was slow, skip it" | Slow query indicates issue - report it | **Report performance, still include results** |
-| "No relevant results" | Document that fact for future reference | **Include section even if empty** |
-
 ## Blocker Criteria - STOP and Report
 
 **You MUST distinguish between decisions you can make and situations requiring escalation.**
@@ -365,24 +277,9 @@ git status        # Expected: clean working tree
 pytest --version  # Expected: 7.0+
 ```
 
-## Historical Precedent
-
-**Query:** "[keywords from request]"
-**Index Status:** [Populated / Empty]
-
-### Successful Patterns to Reference
-[From artifact query results]
-
-### Failure Patterns to AVOID
-[From artifact query results - CRITICAL: Design to avoid these]
-
-### Related Past Plans
-[From artifact query results]
-
----
 ```
 
-Adapt the prerequisites, verification commands, and historical precedent to the actual request.
+Adapt the prerequisites and verification commands to the actual request.
 
 ## Task Structure Template
 
@@ -525,8 +422,6 @@ Add this step after every 3-5 tasks (or after significant features):
 
 Before saving the plan, verify:
 
-- [ ] **Historical precedent queried** (artifact-query --mode planning)
-- [ ] Historical Precedent section included in plan
 - [ ] Header with goal, architecture, tech stack, prerequisites
 - [ ] Verification commands with expected output
 - [ ] Tasks broken into bite-sized steps (2-5 min each)
@@ -537,7 +432,6 @@ Before saving the plan, verify:
 - [ ] Code review checkpoints after batches
 - [ ] Severity-based issue handling documented
 - [ ] Passes Zero-Context Test
-- [ ] **Plan avoids known failure patterns** (if any found in precedent)
 
 ## After Saving the Plan
 

@@ -40,7 +40,7 @@ Ring is a **unified plugin** for OpenCode that extends the AI assistant with spe
 ├─────────────────────────────────────────────────────────────────┤
 │                    Component Layer (.opencode/)                  │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────┐  │
-│  │  16 Agents │  │ 30+ Skills │  │16 Commands │  │ Patterns │  │
+│  │  17 Agents │  │ 34 Skills  │  │17 Commands │  │ Patterns │  │
 │  └────────────┘  └────────────┘  └────────────┘  └──────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -469,9 +469,9 @@ OpenCode starts session
          ▼
 RingUnifiedPlugin.config() called
          │
-         ├─→ loadRingAgents() → 16 agents injected
-         ├─→ loadRingSkills() → 30+ skills injected
-         └─→ loadRingCommands() → 16 commands injected
+         ├─→ loadRingAgents() → 17 agents injected
+         ├─→ loadRingSkills() → 34 skills injected
+         └─→ loadRingCommands() → 17 commands injected
          │
          ▼
 OpenCode fires session.created event

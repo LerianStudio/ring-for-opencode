@@ -44,6 +44,15 @@ Agents are invoked via @ mention or automatically by primary agents.
 - `@ring:codebase-explorer` - Codebase exploration and analysis
 - `@ring:write-plan` - Implementation planning
 
+### Engineering Agents (subagents)
+- `@ring:backend-engineer-golang` - Go backend development
+- `@ring:backend-engineer-typescript` - TypeScript backend development
+- `@ring:frontend-engineer` - Frontend development
+- `@ring:frontend-designer` - UI/UX implementation
+- `@ring:devops-engineer` - Infrastructure and CI/CD
+- `@ring:qa-analyst` - Testing and quality assurance
+- `@ring:sre` - Site reliability engineering
+
 ## Available Commands
 
 Commands are invoked via `/ring:command-name`.
@@ -53,6 +62,18 @@ Commands are invoked via `/ring:command-name`.
 - `/ring:brainstorm` - Start design refinement session
 - `/ring:pre-dev-feature` - Plan small feature (<2 days, 4 gates)
 - `/ring:pre-dev-full` - Plan large feature (≥2 days, 9 gates)
+- `/ring:execute-plan` - Batch task execution
+- `/ring:write-plan` - Create implementation plans
+- `/ring:lint` - Run lint checks with auto-fix
+- `/ring:explore-codebase` - Deep codebase analysis
+- `/ring:create-handoff` - Session state handoff
+- `/ring:resume-handoff` - Resume from handoff
+- `/ring:dev-cycle` - Full development cycle
+- `/ring:dev-refactor` - Codebase refactoring
+- `/ring:dev-status` - Check development cycle status
+- `/ring:dev-report` - Generate development report
+- `/ring:dev-cancel` - Cancel development cycle
+- `/ring:worktree` - Manage git worktrees
 
 ## Compliance Rules
 
