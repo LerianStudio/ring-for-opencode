@@ -79,6 +79,7 @@ Dispatch all five reviewer subagents in **parallel** for fast, comprehensive fee
 1. **Determine Git References:**
    - **Base SHA:** Use input `base_sha`. If missing, default to `main`.
    - **Head SHA:** Use input `head_sha`. If missing, default to `HEAD`.
+   - **Note:** To review uncommitted changes (staged + unstaged), set both to empty string (`""`).
 
 2. **Run Pre-Analysis Script (Preferred):**
    - Check for script: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all`
