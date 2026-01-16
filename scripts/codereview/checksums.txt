@@ -1,0 +1,22 @@
+# Checksums for codereview tool dependencies
+# Format: tool_name: sha256_checksum
+#
+# IMPORTANT: These are PLACEHOLDER values. You must generate real checksums
+# after installing tools from a trusted source.
+#
+# To generate real checksums:
+#   1. Install tools on a trusted, clean system
+#   2. Verify the tools work correctly
+#   3. Run: ./install.sh generate-checksums
+#
+# The checksums below are architecture and OS-specific.
+# You may need separate checksum files for different platforms.
+#
+# Note: Go binaries are compiled locally by 'go install', so checksums
+# will vary based on Go version, OS, and architecture. Consider using
+# official pre-built binaries for reproducible checksums.
+
+# Go tools (architecture-dependent, update after trusted install)
+staticcheck: PLACEHOLDER
+gosec: PLACEHOLDER
+golangci-lint: PLACEHOLDER

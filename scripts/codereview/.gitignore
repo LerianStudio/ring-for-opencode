@@ -1,0 +1,16 @@
+# Compiled binaries
+bin/
+
+# Test artifacts
+coverage.out
+*.test
+
+# IDE/Editor files
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

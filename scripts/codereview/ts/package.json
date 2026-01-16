@@ -1,0 +1,17 @@
+{
+  "name": "ast-extractor-ts",
+  "version": "1.0.0",
+  "description": "TypeScript AST extraction for semantic diffs and call graph analysis",
+  "main": "dist/ast-extractor.js",
+  "scripts": {
+    "build": "tsc",
+    "extract": "node dist/ast-extractor.js",
+    "call-graph": "node dist/call-graph.js"
+  },
+  "dependencies": {
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
+}

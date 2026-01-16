@@ -73,14 +73,23 @@ Dispatch all five reviewer subagents in **parallel** for fast, comprehensive fee
 
 ---
 
-## Step 1: Gather Context (Auto-Detect if Not Provided)
+## Step 1: Gather Context (Auto-Detect or Pre-Calculate)
 
 ```text
-This skill supports TWO modes:
-1. WITH INPUTS: Called by any skill/user that provides structured inputs (unit_id, base_sha, etc.)
-2. STANDALONE: Called directly without inputs - auto-detects everything from git
+1. **Try Pre-Analysis Script (Preferred):**
+   Check for script: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all`
+   IF exists:
+     Execute: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --base [base_sha] --head [head_sha] --output .ring/codereview`
+     On Success:
+       - Load context files from `.ring/codereview/context-*.md`
+       - Use these contexts in reviewer prompts
 
-FOR EACH INPUT, check if provided OR auto-detect:
+2. **Fallback to Git Auto-Detect (If Script Missing/Fails):**
+   This skill supports TWO modes:
+   1. WITH INPUTS: Called by any skill/user that provides structured inputs (unit_id, base_sha, etc.)
+   2. STANDALONE: Called directly without inputs - auto-detects everything from git
+
+   FOR EACH INPUT, check if provided OR auto-detect:
 
 1. unit_id:
    IF provided → use it
@@ -174,6 +183,9 @@ Task:
     ## Files Changed
     [implementation_files or "Use git diff"]
 
+    ## Deep Analysis Context
+    [Include content of .ring/codereview/context-code-reviewer.md if available]
+
     ## Your Focus
     - Architecture and design patterns
     - Code quality and maintainability
@@ -208,6 +220,9 @@ Task:
 
     ## Requirements
     [requirements]
+
+    ## Deep Analysis Context
+    [Include content of .ring/codereview/context-business-logic-reviewer.md if available]
 
     ## Your Focus
     - Domain correctness
@@ -245,6 +260,9 @@ Task:
 
     ## Requirements
     [requirements]
+
+    ## Deep Analysis Context
+    [Include content of .ring/codereview/context-security-reviewer.md if available]
 
     ## Your Focus
     - Authentication and authorization
@@ -284,6 +302,9 @@ Task:
 
     ## Requirements
     [requirements]
+
+    ## Deep Analysis Context
+    [Include content of .ring/codereview/context-test-reviewer.md if available]
 
     ## Your Focus
     - Test coverage for business logic
@@ -325,6 +346,9 @@ Task:
 
     ## Requirements
     [requirements]
+
+    ## Deep Analysis Context
+    [Include content of .ring/codereview/context-nil-safety-reviewer.md if available]
 
     ## Your Focus
     - Nil/null pointer risks in changed code

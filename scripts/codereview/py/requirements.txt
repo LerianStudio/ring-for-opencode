@@ -1,0 +1,7 @@
+# Python call graph analysis dependencies
+#
+# Note: The 'ast' module used by call_graph.py is part of Python's stdlib
+# and does not require installation.
+#
+# pyan3 is used as a fallback when the custom script fails
+pyan3>=1.2.0

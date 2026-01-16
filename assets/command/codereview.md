@@ -15,8 +15,12 @@ Dispatch all 5 code reviewers subagents in parallel for comprehensive feedback:
 
 ## Review Process
 
-1. **Gather Context**: Identify what was implemented, files changed, base/head commits
-2. **Dispatch Reviewers**: Launch all 5 reviewers simultaneously in parallel
+1. **Pre-Analysis (Automated)**:
+   - Run `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all` to generate deep analysis
+   - Output: `context-*.md` files in `.ring/codereview/`
+
+2. **Gather Context**: Identify what was implemented, files changed, base/head commits
+3. **Dispatch Reviewers**: Launch all 5 reviewers simultaneously in parallel
 3. **Wait for Completion**: Do not aggregate until all reports are received
 4. **Consolidate**: Aggregate findings by severity (Critical/High/Medium/Low/Cosmetic)
 

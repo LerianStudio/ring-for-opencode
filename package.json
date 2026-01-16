@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun --format esm && tsc --emitDeclarationOnly && bun build src/cli/index.ts --outdir dist/cli --target bun --format esm && bun run build:schema",
-    "build:schema": "bun run script/build-schema.ts",
+    "build:schema": "bun run scripts/build-schema.ts",
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run clean && bun run build",
     "typecheck": "tsc --noEmit && tsc -p plugin/tsconfig.json --noEmit",

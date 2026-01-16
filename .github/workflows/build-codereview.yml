@@ -1,0 +1,212 @@
+name: Build Codereview Binaries
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/codereview/**'
+      - '!scripts/codereview/**_test.go'
+      - '!scripts/codereview/**/*.md'
+  pull_request:
+    paths:
+      - 'scripts/codereview/**'
+      - '!scripts/codereview/**_test.go'
+      - '!scripts/codereview/**/*.md'
+  workflow_dispatch:
+    inputs:
+      clean_build:
+        description: 'Clean build (remove existing binaries first)'
+        required: false
+        default: true
+        type: boolean
+
+# Prevent concurrent builds - use queue mode (don't cancel) to avoid race conditions
+concurrency:
+  group: build-codereview-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: scripts/codereview/go.sum
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Build binaries
+        id: build
+        run: |
+          set -e
+
+          # Determine if clean build
+          CLEAN_FLAG=""
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.clean_build }}" == "true" ]]; then
+            CLEAN_FLAG="--clean"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # Always clean on push to main for consistent builds
+            CLEAN_FLAG="--clean"
+          fi
+
+          echo "Building codereview binaries..."
+          ./scripts/codereview/build-release.sh $CLEAN_FLAG
+
+          # Verify binary count (7 binaries x 4 platforms = 28)
+          EXPECTED_BINARIES=28
+          ACTUAL_BINARIES=$(find scripts/codereview/bin/releases -type f -executable 2>/dev/null | wc -l | tr -d ' ')
+
+          echo "Expected binaries: $EXPECTED_BINARIES"
+          echo "Actual binaries: $ACTUAL_BINARIES"
+
+          if [[ "$ACTUAL_BINARIES" -ne "$EXPECTED_BINARIES" ]]; then
+            echo "ERROR: Binary count mismatch!"
+            echo "Expected $EXPECTED_BINARIES but found $ACTUAL_BINARIES"
+            find scripts/codereview/bin/releases -type f -executable 2>/dev/null || true
+            exit 1
+          fi
+
+          # Verify checksum files (4 platform checksums + 1 root checksum = 5)
+          EXPECTED_CHECKSUMS=5
+          ACTUAL_CHECKSUMS=$(find scripts/codereview/bin/releases -name "CHECKSUMS.sha256" -type f 2>/dev/null | wc -l | tr -d ' ')
+
+          echo "Expected checksum files: $EXPECTED_CHECKSUMS"
+          echo "Actual checksum files: $ACTUAL_CHECKSUMS"
+
+          if [[ "$ACTUAL_CHECKSUMS" -ne "$EXPECTED_CHECKSUMS" ]]; then
+            echo "ERROR: Checksum file count mismatch!"
+            echo "Expected $EXPECTED_CHECKSUMS but found $ACTUAL_CHECKSUMS"
+            find scripts/codereview/bin/releases -name "CHECKSUMS.sha256" -type f 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "binary_count=$ACTUAL_BINARIES" >> $GITHUB_OUTPUT
+          echo "checksum_count=$ACTUAL_CHECKSUMS" >> $GITHUB_OUTPUT
+          echo "All $EXPECTED_BINARIES binaries and $EXPECTED_CHECKSUMS checksum files built successfully"
+
+      - name: List built binaries
+        run: |
+          echo "Built binaries:"
+          for platform in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
+            echo ""
+            echo "=== $platform ==="
+            ls -la scripts/codereview/bin/releases/$platform/ 2>/dev/null || echo "  (not found)"
+          done
+
+      - name: Verify checksums generated
+        run: |
+          echo "Verifying checksum files..."
+          for platform in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
+            checksum_file="scripts/codereview/bin/releases/${platform}/CHECKSUMS.sha256"
+            if [[ -f "$checksum_file" ]]; then
+              echo "✓ $platform checksums: $(wc -l < "$checksum_file") entries"
+            else
+              echo "✗ Missing checksums for $platform"
+              exit 1
+            fi
+          done
+
+          # Verify root checksums
+          root_checksums="scripts/codereview/bin/releases/CHECKSUMS.sha256"
+          if [[ -f "$root_checksums" ]]; then
+            echo "✓ Root checksums: $(wc -l < "$root_checksums") entries"
+          else
+            echo "✗ Missing root checksums"
+            exit 1
+          fi
+
+          # Verify checksums are actually correct (not just that files exist)
+          echo ""
+          echo "Verifying checksum integrity..."
+          for platform in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
+            platform_dir="scripts/codereview/bin/releases/${platform}"
+            echo "Verifying $platform..."
+            (cd "$platform_dir" && sha256sum --check CHECKSUMS.sha256) || {
+              echo "✗ Checksum verification FAILED for $platform"
+              exit 1
+            }
+            echo "✓ $platform checksums verified"
+          done
+
+      - name: Check for changes
+        id: check_changes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          # Check if there are any changes to commit
+          git add scripts/codereview/bin/releases/
+
+          if git diff --staged --quiet; then
+            echo "No changes to binaries"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Binaries have changed"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+
+            # Show what changed
+            echo ""
+            echo "Changed files:"
+            git diff --staged --name-only
+          fi
+
+      - name: Commit binaries
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git commit -m "chore(codereview): rebuild binaries with checksums [skip-version-bump]
+
+          Automated rebuild triggered by changes to scripts/codereview/
+
+          Built ${{ steps.build.outputs.binary_count }} binaries and ${{ steps.build.outputs.checksum_count }} checksum files for 4 platforms:
+            - darwin/amd64 (macOS Intel)
+            - darwin/arm64 (macOS Apple Silicon)
+            - linux/amd64 (Linux x64)
+            - linux/arm64 (Linux ARM)
+
+          Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+          # Push with retry logic to handle race conditions when remote has advanced
+          for i in 1 2 3; do
+            echo "Push attempt $i..."
+            git pull --rebase origin main && git push origin main && break
+            if [ $i -lt 3 ]; then
+              echo "Push failed, retrying in 5 seconds..."
+              sleep 5
+            else
+              echo "Push failed after 3 attempts"
+              exit 1
+            fi
+          done
+
+      - name: Summary
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Binaries built:** ${{ steps.build.outputs.binary_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Checksum files:** ${{ steps.build.outputs.checksum_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** darwin/amd64, darwin/arm64, linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            if [[ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]]; then
+              echo "- **Commit:** Yes (binaries changed)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- **Commit:** No (binaries unchanged)" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "- **Commit:** Skipped (not a push to main)" >> $GITHUB_STEP_SUMMARY
+          fi

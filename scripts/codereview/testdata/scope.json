@@ -1,0 +1,16 @@
+{
+  "base_ref": "main",
+  "head_ref": "HEAD",
+  "language": "go",
+  "files": {
+    "modified": ["internal/handler/user.go"],
+    "added": ["internal/service/notification.go"],
+    "deleted": []
+  },
+  "stats": {
+    "total_files": 2,
+    "total_additions": 100,
+    "total_deletions": 10
+  },
+  "packages_affected": ["./internal/handler", "./internal/service"]
+}

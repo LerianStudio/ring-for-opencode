@@ -212,6 +212,12 @@ fi
 echo "Copying plugin directory..."
 copy_tree_no_delete "plugin" "$SCRIPT_DIR"
 
+# Copy scripts directory from root level
+echo "Copying scripts directory..."
+if [[ -d "$SCRIPT_DIR/scripts" ]]; then
+  copy_tree_no_delete "scripts" "$SCRIPT_DIR"
+fi
+
 # Copy skill/command/agent/standards/templates from assets with placeholder expansion
 echo "Copying skill/command/agent/standards/templates directories..."
 for d in skill command agent standards templates; do
@@ -315,6 +321,51 @@ if command -v bun >/dev/null 2>&1; then
 
 else
   echo "WARN: bun not found; skipping dependency install." >&2
+fi
+
+# Detect platform for pre-built binaries
+detect_platform() {
+  local os arch
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  arch=$(uname -m)
+
+  if [[ "$arch" == "x86_64" ]]; then
+    arch="amd64"
+  elif [[ "$arch" == "aarch64" || "$arch" == "arm64" ]]; then
+    arch="arm64"
+  fi
+
+  echo "${os}_${arch}"
+}
+
+PLATFORM=$(detect_platform)
+# Path where pre-built binaries would be if copied from source/release
+RELEASE_BIN_DIR="$TARGET_ROOT/scripts/codereview/bin/releases/$PLATFORM"
+# Target path where tools expect binaries to be
+TARGET_BIN_DIR="$TARGET_ROOT/scripts/codereview/bin"
+
+if [[ -d "$RELEASE_BIN_DIR" ]]; then
+  echo "Found pre-built binaries for $PLATFORM..."
+  mkdir -p "$TARGET_BIN_DIR"
+  # Copy binaries, ignoring CHECKSUMS files
+  find "$RELEASE_BIN_DIR" -maxdepth 1 -type f -not -name "CHECKSUMS*" -exec cp {} "$TARGET_BIN_DIR/" \;
+  chmod +x "$TARGET_BIN_DIR"/*
+  echo "Installed pre-built binaries to $TARGET_BIN_DIR"
+elif command -v go >/dev/null 2>&1; then
+  echo "Pre-built binaries not found for $PLATFORM. Attempting to build from source..."
+  if [[ -d "$TARGET_ROOT/scripts/codereview" ]]; then
+    echo "Building codereview tools..."
+    # Build context tools specifically
+    if (cd "$TARGET_ROOT/scripts/codereview" && make build-context); then
+      echo "Codereview tools built successfully."
+    else
+      echo "WARN: Failed to build codereview tools. 'go' command failed." >&2
+    fi
+  fi
+else
+  echo "WARN: Pre-built binaries not found and 'go' is missing." >&2
+  echo "Codereview tools source installed but not built." >&2
+  echo "To enable deep code review analysis, install Go and run: cd ~/.config/opencode/scripts/codereview && make build-context" >&2
 fi
 
 echo ""
