@@ -16,7 +16,8 @@ Dispatch all 5 code reviewers subagents in parallel for comprehensive feedback:
 ## Review Process
 
 1. **Pre-Analysis (Automated)**:
-   - Run `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all` to generate deep analysis
+   - Run: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --base [base] --head [head]`
+   - Defaults: base=`main`, head=`HEAD`
    - Output: `context-*.md` files in `.ring/codereview/`
 
 2. **Gather Context**: Identify what was implemented, files changed, base/head commits

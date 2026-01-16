@@ -73,61 +73,35 @@ Dispatch all five reviewer subagents in **parallel** for fast, comprehensive fee
 
 ---
 
-## Step 1: Gather Context (Auto-Detect or Pre-Calculate)
+## Step 1: Gather Context & Run Pre-Analysis
 
 ```text
-1. **Try Pre-Analysis Script (Preferred):**
-   Check for script: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all`
-   IF exists:
-     Execute: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --base [base_sha] --head [head_sha] --output .ring/codereview`
-     On Success:
-       - Load context files from `.ring/codereview/context-*.md`
-       - Use these contexts in reviewer prompts
+1. **Determine Git References:**
+   - **Base SHA:** Use input `base_sha`. If missing, default to `main`.
+   - **Head SHA:** Use input `head_sha`. If missing, default to `HEAD`.
 
-2. **Fallback to Git Auto-Detect (If Script Missing/Fails):**
-   This skill supports TWO modes:
-   1. WITH INPUTS: Called by any skill/user that provides structured inputs (unit_id, base_sha, etc.)
-   2. STANDALONE: Called directly without inputs - auto-detects everything from git
+2. **Run Pre-Analysis Script (Preferred):**
+   - Check for script: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all`
+   - IF exists, Execute:
+     `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --base [Base SHA] --head [Head SHA] --output .ring/codereview`
+   - On Success:
+     - Load context files from `.ring/codereview/context-*.md`
+     - Use these contexts in reviewer prompts
 
-   FOR EACH INPUT, check if provided OR auto-detect:
+3. **Complete Context Gathering:**
+   - **Unit ID:** Input `unit_id` OR generate "review-" + timestamp
+   - **Files Changed:** Input `implementation_files` OR `git diff --name-only [Base SHA] [Head SHA]`
+   - **Summary:** Input `implementation_summary` OR `git log --oneline [Base SHA]..[Head SHA]`
+   - **Requirements:** Input `requirements` OR "Infer from code"
 
-1. unit_id:
-   IF provided → use it
-   ELSE → generate: "review-" + timestamp (e.g., "review-20241222-143052")
-
-2. base_sha:
-   IF provided → use it
-   ELSE → Execute: git merge-base HEAD main
-   IF git fails → Execute: git rev-parse HEAD~10 (fallback to last 10 commits)
-
-3. head_sha:
-   IF provided → use it
-   ELSE → Execute: git rev-parse HEAD
-
-4. implementation_files:
-   IF provided → use it
-   ELSE → Execute: git diff --name-only [base_sha] [head_sha]
-
-5. implementation_summary:
-   IF provided → use it
-   ELSE → Execute: git log --oneline [base_sha]..[head_sha]
-   Format as: "Changes: [list of commit messages]"
-
-6. requirements:
-   IF provided → use it
-   ELSE → Set to: "Infer requirements from code changes and commit messages"
-   (Reviewers will analyze code to understand intent)
-
-AFTER AUTO-DETECTION, display context:
+AFTER GATHERING, display context:
 ┌─────────────────────────────────────────────────────────────────┐
 │ CODE REVIEW CONTEXT                                             │
 ├─────────────────────────────────────────────────────────────────┤
 │ Unit ID: [unit_id]                                              │
-│ Base SHA: [base_sha]                                            │
-│ Head SHA: [head_sha]                                            │
+│ Base: [Base SHA]  Head: [Head SHA]                              │
+│ Pre-Analysis: [Success/Failed/Skipped]                          │
 │ Files Changed: [count] files                                    │
-│ Commits: [count] commits                                        │
-│                                                                 │
 │ Dispatching 5 reviewers in parallel...                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
