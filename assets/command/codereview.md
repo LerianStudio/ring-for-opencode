@@ -17,7 +17,7 @@ Dispatch all 5 code reviewers subagents in parallel for comprehensive feedback:
 
 1. **Gather Context**: Identify what was implemented, files changed, base/head commits, what the user asks
 2. **Pre-Analysis (Automated)**:
-   - Run: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --help` to understand how to use the CLI
+   - Run MANDATORILY: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --help` to understand how to use the CLI
    - **Scope:** Reviews what the user desires and run the 'run-all' CLI with proper options to achieve it
    - Output: `context-*.md` files in `.ring/codereview/`
 3. **Dispatch Reviewers**: Launch all 5 reviewers simultaneously in parallel
