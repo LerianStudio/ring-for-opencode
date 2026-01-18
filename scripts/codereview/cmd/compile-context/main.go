@@ -55,7 +55,10 @@ func run() error {
 	}
 
 	// Create compiler and execute
-	compiler := context.NewCompiler(*inputDir, outDir)
+	compiler, err := context.NewCompilerWithValidation(*inputDir, outDir)
+	if err != nil {
+		return fmt.Errorf("compiler initialization failed: %w", err)
+	}
 
 	if err := compiler.Compile(); err != nil {
 		return fmt.Errorf("compilation failed: %w", err)

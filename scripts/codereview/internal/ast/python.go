@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -40,7 +41,8 @@ func (p *PythonExtractor) ExtractDiff(ctx context.Context, beforePath, afterPath
 		after = `""`
 	}
 
-	cmd := exec.CommandContext(ctx, p.pythonExecutable, p.scriptPath, "--before", before, "--after", after)
+	cmd := exec.CommandContext(ctx, p.pythonExecutable, p.scriptPath, "--before", before, "--after", after) // #nosec G204 - args are controlled
+	cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 	output, err := cmd.Output()
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {

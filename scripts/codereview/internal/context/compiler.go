@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 )
 
 // highImpactCallerThreshold is the minimum number of callers for a function
@@ -37,30 +38,21 @@ type Compiler struct {
 // validatePath validates a directory path for security.
 // It prevents path traversal attacks and optionally verifies the directory exists.
 func validatePath(path string, mustExist bool) error {
-	// Check for traversal attempts in the ORIGINAL path before normalization
-	if strings.Contains(path, "..") {
-		return fmt.Errorf("path contains traversal sequences: %s", path)
-	}
-
-	// Get absolute path
-	absPath, err := filepath.Abs(path)
+	validated, err := fileutil.ValidatePath(path, ".")
 	if err != nil {
 		return fmt.Errorf("invalid path: %w", err)
 	}
 
 	if mustExist {
-		// Verify path exists
-		info, err := os.Stat(absPath)
+		info, err := os.Stat(validated)
 		if err != nil {
 			if os.IsNotExist(err) {
-				return fmt.Errorf("path does not exist: %s", absPath)
+				return fmt.Errorf("path does not exist: %s", validated)
 			}
 			return fmt.Errorf("failed to stat path: %w", err)
 		}
-
-		// Verify it's a directory
 		if !info.IsDir() {
-			return fmt.Errorf("path is not a directory: %s", absPath)
+			return fmt.Errorf("path is not a directory: %s", validated)
 		}
 	}
 
@@ -69,16 +61,7 @@ func validatePath(path string, mustExist bool) error {
 
 // readJSONFileWithLimit reads a JSON file with a size limit to prevent resource exhaustion.
 func readJSONFileWithLimit(path string) ([]byte, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if info.Size() > maxJSONFileSize {
-		return nil, fmt.Errorf("file %s exceeds maximum allowed size of %d bytes (actual: %d bytes)", path, maxJSONFileSize, info.Size())
-	}
-
-	return os.ReadFile(path)
+	return fileutil.ReadJSONFileWithLimit(path)
 }
 
 // NewCompiler creates a new context compiler.
@@ -146,10 +129,13 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 	if data, err := readJSONFileWithLimit(scopePath); err == nil {
 		var scope ScopeData
 		if err := json.Unmarshal(data, &scope); err == nil {
+			applyScopeDerivedFields(&scope)
 			outputs.Scope = &scope
 		} else {
 			outputs.Errors = append(outputs.Errors, fmt.Sprintf("scope.json parse error: %v", err))
 		}
+	} else if !os.IsNotExist(err) {
+		outputs.Errors = append(outputs.Errors, fmt.Sprintf("scope.json read error: %v", err))
 	}
 
 	// Read static-analysis.json (Phase 1)
@@ -161,11 +147,13 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 		} else {
 			outputs.Errors = append(outputs.Errors, fmt.Sprintf("static-analysis.json parse error: %v", err))
 		}
+	} else if !os.IsNotExist(err) {
+		outputs.Errors = append(outputs.Errors, fmt.Sprintf("static-analysis.json read error: %v", err))
 	}
 
 	// Read language-specific AST (Phase 2) - support multi-language projects
 	outputs.ASTByLanguage = make(map[string]*ASTData)
-	for _, lang := range []string{"go", "ts", "py"} {
+	for _, lang := range []string{"go", "typescript", "python"} {
 		astPath := filepath.Join(c.inputDir, fmt.Sprintf("%s-ast.json", lang))
 		if data, err := readJSONFileWithLimit(astPath); err == nil {
 			var ast ASTData
@@ -178,12 +166,14 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 			} else {
 				outputs.Errors = append(outputs.Errors, fmt.Sprintf("%s-ast.json parse error: %v", lang, err))
 			}
+		} else if !os.IsNotExist(err) {
+			outputs.Errors = append(outputs.Errors, fmt.Sprintf("%s-ast.json read error: %v", lang, err))
 		}
 	}
 
 	// Read language-specific call graph (Phase 3) - support multi-language projects
 	outputs.CallGraphByLanguage = make(map[string]*CallGraphData)
-	for _, lang := range []string{"go", "ts", "py"} {
+	for _, lang := range []string{"go", "typescript", "python"} {
 		callsPath := filepath.Join(c.inputDir, fmt.Sprintf("%s-calls.json", lang))
 		if data, err := readJSONFileWithLimit(callsPath); err == nil {
 			var calls CallGraphData
@@ -196,12 +186,14 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 			} else {
 				outputs.Errors = append(outputs.Errors, fmt.Sprintf("%s-calls.json parse error: %v", lang, err))
 			}
+		} else if !os.IsNotExist(err) {
+			outputs.Errors = append(outputs.Errors, fmt.Sprintf("%s-calls.json read error: %v", lang, err))
 		}
 	}
 
 	// Read language-specific data flow (Phase 4) - support multi-language projects
 	outputs.DataFlowByLanguage = make(map[string]*DataFlowData)
-	for _, lang := range []string{"go", "ts", "py"} {
+	for _, lang := range []string{"go", "typescript", "python"} {
 		flowPath := filepath.Join(c.inputDir, fmt.Sprintf("%s-flow.json", lang))
 		if data, err := readJSONFileWithLimit(flowPath); err == nil {
 			var flow DataFlowData
@@ -214,10 +206,27 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 			} else {
 				outputs.Errors = append(outputs.Errors, fmt.Sprintf("%s-flow.json parse error: %v", lang, err))
 			}
+		} else if !os.IsNotExist(err) {
+			outputs.Errors = append(outputs.Errors, fmt.Sprintf("%s-flow.json read error: %v", lang, err))
 		}
 	}
 
 	return outputs, nil
+}
+
+func applyScopeDerivedFields(scope *ScopeData) {
+	if scope == nil {
+		return
+	}
+	scope.ModifiedFiles = scope.Files.Modified
+	scope.AddedFiles = scope.Files.Added
+	scope.DeletedFiles = scope.Files.Deleted
+	scope.TotalFiles = scope.Stats.TotalFiles
+	scope.TotalAdditions = scope.Stats.TotalAdditions
+	scope.TotalDeletions = scope.Stats.TotalDeletions
+	if scope.Languages == nil {
+		scope.Languages = []string{}
+	}
 }
 
 // generateReviewerContext generates the context file for a specific reviewer.
@@ -238,7 +247,7 @@ func (c *Compiler) generateReviewerContext(reviewer string, outputs *PhaseOutput
 
 	// Write context file
 	outputPath := filepath.Join(c.outputDir, fmt.Sprintf("context-%s.md", reviewer))
-	if err := os.MkdirAll(c.outputDir, 0755); err != nil {
+	if err := os.MkdirAll(c.outputDir, 0o700); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -252,9 +261,16 @@ func (c *Compiler) generateReviewerContext(reviewer string, outputs *PhaseOutput
 // buildTemplateData constructs the template data for a specific reviewer.
 func (c *Compiler) buildTemplateData(reviewer string, outputs *PhaseOutputs) *TemplateData {
 	data := &TemplateData{}
-	if builder, ok := reviewerDataBuilders[reviewer]; ok {
-		builder(c, data, outputs)
+	builder, ok := reviewerDataBuilders[reviewer]
+	if !ok {
+		data.Findings = []Finding{}
+		data.FocusAreas = []FocusArea{{
+			Title:       "Unknown reviewer",
+			Description: fmt.Sprintf("No template data builder registered for reviewer %s", reviewer),
+		}}
+		return data
 	}
+	builder(c, data, outputs)
 	return data
 }
 

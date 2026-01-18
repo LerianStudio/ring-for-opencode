@@ -4,22 +4,43 @@ package scope
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/lint"
 )
 
 // ScopeJSON represents the scope.json structure from Phase 0.
 type ScopeJSON struct {
-	BaseRef  string        `json:"base_ref"`
-	HeadRef  string        `json:"head_ref"`
-	Language string        `json:"language"` // Primary detected language
-	Files    FilesByStatus `json:"files"`
-	Stats    StatsJSON     `json:"stats"`
-	Packages []string      `json:"packages_affected"`
+	BaseRef   string        `json:"base_ref"`
+	HeadRef   string        `json:"head_ref"`
+	Language  string        `json:"language"` // Primary detected language
+	Languages []string      `json:"languages,omitempty"`
+	Files     FilesByStatus `json:"files"`
+	Stats     StatsJSON     `json:"stats"`
+	Packages  []string      `json:"packages_affected"`
+}
+
+func normalizeScopeJSON(scope *ScopeJSON) {
+	if scope == nil {
+		return
+	}
+	if scope.Files.Modified == nil {
+		scope.Files.Modified = []string{}
+	}
+	if scope.Files.Added == nil {
+		scope.Files.Added = []string{}
+	}
+	if scope.Files.Deleted == nil {
+		scope.Files.Deleted = []string{}
+	}
+	if scope.Languages == nil {
+		scope.Languages = []string{}
+	}
+	if scope.Packages == nil {
+		scope.Packages = []string{}
+	}
 }
 
 // FilesByStatus holds categorized file lists.
@@ -38,7 +59,7 @@ type StatsJSON struct {
 
 // ReadScopeJSON reads and parses scope.json from the given path.
 func ReadScopeJSON(scopePath string) (*ScopeJSON, error) {
-	data, err := os.ReadFile(scopePath)
+	data, err := fileutil.ReadJSONFileWithLimit(scopePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read scope.json: %w", err)
 	}
@@ -48,6 +69,7 @@ func ReadScopeJSON(scopePath string) (*ScopeJSON, error) {
 		return nil, fmt.Errorf("failed to parse scope.json: %w", err)
 	}
 
+	normalizeScopeJSON(&scope)
 	return &scope, nil
 }
 
@@ -60,10 +82,11 @@ func (s *ScopeJSON) GetLanguage() lint.Language {
 		return lint.LanguageTypeScript
 	case "python", "py":
 		return lint.LanguagePython
+	case "mixed":
+		return lint.LanguageMixed
+
 	default:
-		fallback := lint.Language(s.Language)
-		log.Printf("Warning: Unrecognized language %q; falling back to %s (no registered linter may exist)", s.Language, fallback)
-		return fallback
+		return lint.Language("")
 	}
 }
 
@@ -91,8 +114,24 @@ func (s *ScopeJSON) GetAllFilesMap() map[string]bool {
 	return fileMap
 }
 
+// NormalizeLanguage maps supported language aliases to canonical identifiers.
+func NormalizeLanguage(lang string) lint.Language {
+	switch strings.ToLower(lang) {
+	case "go", "golang":
+		return lint.LanguageGo
+	case "typescript", "ts", "javascript", "js":
+		return lint.LanguageTypeScript
+	case "python", "py":
+		return lint.LanguagePython
+	case "mixed":
+		return lint.LanguageMixed
+	default:
+		return lint.Language("")
+	}
+}
+
 // normalizeScopePath normalizes file paths for consistent matching.
-// Strips leading "./" or ".\" and cleans path separators.
+// Strips leading "./" or ".\\" and cleans path separators.
 func normalizeScopePath(path string) string {
 	path = filepath.Clean(path)
 	path = strings.TrimPrefix(path, "./")

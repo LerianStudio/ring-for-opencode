@@ -83,7 +83,7 @@ func (r *Registry) ExtractAll(ctx context.Context, pairs []FilePair) ([]Semantic
 }
 
 // ComputeSummary calculates the change summary from diffs
-func ComputeSummary(funcs []FunctionDiff, types []TypeDiff, imports []ImportDiff) ChangeSummary {
+func ComputeSummary(funcs []FunctionDiff, types []TypeDiff, vars []VarDiff, imports []ImportDiff) ChangeSummary {
 	summary := ChangeSummary{}
 
 	for _, f := range funcs {
@@ -105,6 +105,17 @@ func ComputeSummary(funcs []FunctionDiff, types []TypeDiff, imports []ImportDiff
 			summary.TypesRemoved++
 		case ChangeModified, ChangeRenamed:
 			summary.TypesModified++
+		}
+	}
+
+	for _, v := range vars {
+		switch v.ChangeType {
+		case ChangeAdded:
+			summary.VariablesAdded++
+		case ChangeRemoved:
+			summary.VariablesRemoved++
+		case ChangeModified, ChangeRenamed:
+			summary.VariablesModified++
 		}
 	}
 

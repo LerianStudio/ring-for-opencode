@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 )
 
 // Resource protection limits for TypeScript analysis.
@@ -99,6 +102,7 @@ func (t *TypeScriptAnalyzer) Analyze(modifiedFuncs []ModifiedFunction, timeBudge
 	result := &CallGraphResult{
 		Language:          "typescript",
 		ModifiedFunctions: make([]FunctionCallGraph, 0, len(modifiedFuncs)),
+		Warnings:          []string{},
 		ImpactAnalysis: ImpactAnalysis{
 			AffectedPackages: t.getAffectedPackages(modifiedFuncs),
 		},
@@ -133,6 +137,11 @@ func (t *TypeScriptAnalyzer) Analyze(modifiedFuncs []ModifiedFunction, timeBudge
 	if helperErr != nil {
 		result.Warnings = append(result.Warnings, fmt.Sprintf("TypeScript helper unavailable: %v", helperErr))
 		// Fall back to dependency-cruiser based analysis
+		return t.analyzeWithDepCruiser(ctx, modifiedFuncs, result)
+	}
+
+	if helperResult != nil && helperResult.Error == "Type checker unavailable" {
+		result.Warnings = append(result.Warnings, "TypeScript helper returned type checker error")
 		return t.analyzeWithDepCruiser(ctx, modifiedFuncs, result)
 	}
 
@@ -194,11 +203,16 @@ func (t *TypeScriptAnalyzer) analyzeWithTSHelper(ctx context.Context, files []st
 		funcNames = append(funcNames, fn.Name)
 	}
 
-	// Locate the helper script - try relative to workDir first, then common locations
+	// Locate the helper script from installed tooling only
 	helperPath := t.findHelperScript()
 	if helperPath == "" {
 		return nil, fmt.Errorf("call-graph.ts helper script not found")
 	}
+	validatedHelper, err := fileutil.ValidatePath(helperPath, ".")
+	if err != nil {
+		return nil, fmt.Errorf("helper script path invalid: %w", err)
+	}
+	helperPath = validatedHelper
 
 	// Build command arguments
 	args := []string{helperPath}
@@ -210,11 +224,12 @@ func (t *TypeScriptAnalyzer) analyzeWithTSHelper(ctx context.Context, files []st
 	// Try npx ts-node first, then node with compiled JS
 	var cmd *exec.Cmd
 	if strings.HasSuffix(helperPath, ".ts") {
-		cmd = exec.CommandContext(ctx, "npx", append([]string{"ts-node"}, args...)...)
+		cmd = exec.CommandContext(ctx, "npx", append([]string{"ts-node"}, args...)...) // #nosec G204 - args sanitized
 	} else {
-		cmd = exec.CommandContext(ctx, "node", args...)
+		cmd = exec.CommandContext(ctx, "node", args...) // #nosec G204 - args sanitized
 	}
 	cmd.Dir = t.workDir
+	cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -228,8 +243,9 @@ func (t *TypeScriptAnalyzer) analyzeWithTSHelper(ctx context.Context, files []st
 			if len(funcNames) > 0 {
 				altArgs = append(altArgs, "--functions", strings.Join(funcNames, ","))
 			}
-			cmd = exec.CommandContext(ctx, "node", altArgs...)
+			cmd = exec.CommandContext(ctx, "node", altArgs...) // #nosec G204 - args sanitized
 			cmd.Dir = t.workDir
+			cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 			output, err = cmd.Output()
 			if err == nil {
 				break
@@ -250,6 +266,9 @@ func (t *TypeScriptAnalyzer) analyzeWithTSHelper(ctx context.Context, files []st
 	if err := json.Unmarshal(output, &helperOutput); err != nil {
 		return nil, fmt.Errorf("failed to parse helper output: %w", err)
 	}
+	if helperOutput.Functions == nil {
+		helperOutput.Functions = []tsHelperFunction{}
+	}
 
 	if helperOutput.Error != "" {
 		return nil, fmt.Errorf("helper error: %s", helperOutput.Error)
@@ -260,19 +279,26 @@ func (t *TypeScriptAnalyzer) analyzeWithTSHelper(ctx context.Context, files []st
 
 // findHelperScript locates the call-graph.ts helper script.
 func (t *TypeScriptAnalyzer) findHelperScript() string {
-	// Search paths relative to workDir and common locations
+	execPath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	binDir := filepath.Dir(execPath)
+	rootDir := filepath.Dir(binDir)
 	searchPaths := []string{
-		filepath.Join(t.workDir, "ts", "call-graph.ts"),
-		filepath.Join(t.workDir, "ts", "dist", "call-graph.js"),
-		filepath.Join(t.workDir, "scripts", "codereview", "ts", "call-graph.ts"),
-		filepath.Join(t.workDir, "scripts", "codereview", "ts", "dist", "call-graph.js"),
-		filepath.Join(t.workDir, "..", "ts", "call-graph.ts"),
-		filepath.Join(t.workDir, "..", "ts", "dist", "call-graph.js"),
+		filepath.Join(rootDir, "ts", "call-graph.ts"),
+		filepath.Join(rootDir, "ts", "dist", "call-graph.js"),
+		filepath.Join(rootDir, "scripts", "codereview", "ts", "call-graph.ts"),
+		filepath.Join(rootDir, "scripts", "codereview", "ts", "dist", "call-graph.js"),
 	}
 
 	for _, path := range searchPaths {
-		if fileExists(path) {
-			return path
+		cleaned := filepath.Clean(path)
+		if !strings.HasPrefix(cleaned, rootDir+string(filepath.Separator)) && cleaned != rootDir {
+			continue
+		}
+		if fileExists(cleaned) {
+			return cleaned
 		}
 	}
 
@@ -455,13 +481,15 @@ func (t *TypeScriptAnalyzer) runDepCruiser(ctx context.Context, files []string) 
 	args := []string{"depcruise", "--output-type", "json"}
 	args = append(args, sanitizedFiles...)
 
-	cmd := exec.CommandContext(ctx, "npx", args...)
+	cmd := exec.CommandContext(ctx, "npx", args...) // #nosec G204 - args sanitized
+	cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 	cmd.Dir = t.workDir
 
 	output, err := cmd.Output()
 	if err != nil {
 		// Try global installation
-		cmd = exec.CommandContext(ctx, "depcruise", append([]string{"--output-type", "json"}, sanitizedFiles...)...)
+		cmd = exec.CommandContext(ctx, "depcruise", append([]string{"--output-type", "json"}, sanitizedFiles...)...) // #nosec G204 - args sanitized
+		cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 		cmd.Dir = t.workDir
 		output, err = cmd.Output()
 		if err != nil {
@@ -472,6 +500,9 @@ func (t *TypeScriptAnalyzer) runDepCruiser(ctx context.Context, files []string) 
 	var result depCruiserOutput
 	if err := json.Unmarshal(output, &result); err != nil {
 		return nil, fmt.Errorf("failed to parse depcruise output: %w", err)
+	}
+	if result.Modules == nil {
+		result.Modules = []depCruiserModule{}
 	}
 
 	return &result, nil

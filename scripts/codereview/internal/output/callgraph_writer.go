@@ -24,7 +24,7 @@ func NewCallGraphWriter(outputDir string) *CallGraphWriter {
 
 // EnsureDir creates the output directory if it doesn't exist.
 func (w *CallGraphWriter) EnsureDir() error {
-	return os.MkdirAll(w.outputDir, 0o755)
+	return os.MkdirAll(w.outputDir, 0o700)
 }
 
 // WriteJSON writes the call graph result as a JSON file.
@@ -35,7 +35,7 @@ func WriteJSON(result *callgraph.CallGraphResult, outputDir string) error {
 	}
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o700); err != nil {
 		return fmt.Errorf("failed to create output directory %s: %w", outputDir, err)
 	}
 
@@ -51,7 +51,7 @@ func WriteJSON(result *callgraph.CallGraphResult, outputDir string) error {
 
 	// Write to file with trailing newline for better file handling.
 	// Avoids an extra allocation vs append(jsonData, '\n').
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open %s: %w", path, err)
 	}
@@ -87,7 +87,7 @@ func WriteImpactSummary(result *callgraph.CallGraphResult, outputDir string) err
 	}
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o700); err != nil {
 		return fmt.Errorf("failed to create output directory %s: %w", outputDir, err)
 	}
 
@@ -96,7 +96,7 @@ func WriteImpactSummary(result *callgraph.CallGraphResult, outputDir string) err
 
 	// Write to file
 	path := filepath.Join(outputDir, "impact-summary.md")
-	if err := os.WriteFile(path, []byte(markdown), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(markdown), 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", path, err)
 	}
 

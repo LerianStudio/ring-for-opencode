@@ -7,11 +7,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 )
 
 // Resource protection limits for Python analysis.
@@ -133,6 +136,7 @@ func (p *PythonAnalyzer) Analyze(modifiedFuncs []ModifiedFunction, timeBudgetSec
 	result := &CallGraphResult{
 		Language:          "python",
 		ModifiedFunctions: make([]FunctionCallGraph, 0, len(modifiedFuncs)),
+		Warnings:          []string{},
 		ImpactAnalysis: ImpactAnalysis{
 			AffectedPackages: p.getAffectedPackages(modifiedFuncs),
 		},
@@ -219,8 +223,9 @@ func (e *pyHelperOutputTooLargeError) Error() string {
 }
 
 func (p *PythonAnalyzer) runPythonHelperCommand(ctx context.Context, pythonBinary string, args []string) ([]byte, error) {
-	cmd := exec.CommandContext(ctx, pythonBinary, args...)
+	cmd := exec.CommandContext(ctx, pythonBinary, args...) // #nosec G204 - args sanitized
 	cmd.Dir = p.workDir
+	cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -298,6 +303,11 @@ func (p *PythonAnalyzer) runCallGraphPy(ctx context.Context, files []string, mod
 	if helperPath == "" {
 		return nil, fmt.Errorf("call_graph.py helper script not found")
 	}
+	validatedHelper, err := fileutil.ValidatePath(helperPath, ".")
+	if err != nil {
+		return nil, fmt.Errorf("helper script path invalid: %w", err)
+	}
+	helperPath = validatedHelper
 
 	// Build command arguments
 	args := []string{helperPath}
@@ -332,6 +342,9 @@ func (p *PythonAnalyzer) runCallGraphPy(ctx context.Context, files []string, mod
 	if err := json.Unmarshal(output, &helperOutput); err != nil {
 		return nil, fmt.Errorf("failed to parse helper output: %w", err)
 	}
+	if helperOutput.Functions == nil {
+		helperOutput.Functions = []pyHelperFunction{}
+	}
 
 	if helperOutput.Error != "" {
 		return nil, fmt.Errorf("helper error: %s", helperOutput.Error)
@@ -342,16 +355,24 @@ func (p *PythonAnalyzer) runCallGraphPy(ctx context.Context, files []string, mod
 
 // findHelperScript locates the call_graph.py helper script.
 func (p *PythonAnalyzer) findHelperScript() string {
-	// Search paths relative to workDir and common locations
+	execPath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	binDir := filepath.Dir(execPath)
+	rootDir := filepath.Dir(binDir)
 	searchPaths := []string{
-		filepath.Join(p.workDir, "py", "call_graph.py"),
-		filepath.Join(p.workDir, "scripts", "codereview", "py", "call_graph.py"),
-		filepath.Join(p.workDir, "..", "py", "call_graph.py"),
+		filepath.Join(rootDir, "py", "call_graph.py"),
+		filepath.Join(rootDir, "scripts", "codereview", "py", "call_graph.py"),
 	}
 
 	for _, path := range searchPaths {
-		if fileExists(path) {
-			return path
+		cleaned := filepath.Clean(path)
+		if !strings.HasPrefix(cleaned, rootDir+string(filepath.Separator)) && cleaned != rootDir {
+			continue
+		}
+		if fileExists(cleaned) {
+			return cleaned
 		}
 	}
 
@@ -446,15 +467,17 @@ func (p *PythonAnalyzer) runPyan3(ctx context.Context, modifiedFuncs []ModifiedF
 	args := []string{"-e", "from pyan import main; main()", "--dot"}
 	args = append(args, sanitizedFiles...)
 
-	cmd := exec.CommandContext(ctx, "python3", args...)
+	cmd := exec.CommandContext(ctx, "python3", args...) // #nosec G204 - args sanitized
 	cmd.Dir = p.workDir
+	cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 
 	output, err := cmd.Output()
 	if err != nil {
 		// Try with pip-installed pyan3
 		pyanArgs := append([]string{"--dot"}, sanitizedFiles...)
-		cmd = exec.CommandContext(ctx, "pyan3", pyanArgs...)
+		cmd = exec.CommandContext(ctx, "pyan3", pyanArgs...) // #nosec G204 - args sanitized
 		cmd.Dir = p.workDir
+		cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 		output, err = cmd.Output()
 		if err != nil {
 			result.Warnings = append(result.Warnings, fmt.Sprintf("pyan3 not available: %v", err))

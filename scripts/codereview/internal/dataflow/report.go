@@ -100,17 +100,17 @@ func GenerateSecuritySummary(analyses map[string]*FlowAnalysis) string {
 	sb.WriteString("## Risk Assessment\n\n")
 
 	if totalStats.CriticalFlows > 0 {
-		sb.WriteString(fmt.Sprintf("### :rotating_light: CRITICAL (%d issues)\n\n", totalStats.CriticalFlows))
+		sb.WriteString(fmt.Sprintf("### CRITICAL (%d issues)\n\n", totalStats.CriticalFlows))
 		sb.WriteString("Critical security vulnerabilities detected that require immediate attention.\n\n")
 	}
 
 	if totalStats.HighRiskFlows > 0 {
-		sb.WriteString(fmt.Sprintf("### :warning: HIGH (%d issues)\n\n", totalStats.HighRiskFlows))
+		sb.WriteString(fmt.Sprintf("### HIGH (%d issues)\n\n", totalStats.HighRiskFlows))
 		sb.WriteString("High-risk security issues that should be addressed promptly.\n\n")
 	}
 
 	if totalStats.UncheckedNilRisks > 0 {
-		sb.WriteString(fmt.Sprintf("### :exclamation: NIL SAFETY (%d issues)\n\n", totalStats.UncheckedNilRisks))
+		sb.WriteString(fmt.Sprintf("### NIL SAFETY (%d issues)\n\n", totalStats.UncheckedNilRisks))
 		sb.WriteString("Unchecked nil/null values that may cause runtime panics or crashes.\n\n")
 	}
 
@@ -129,12 +129,12 @@ func GenerateSecuritySummary(analyses map[string]*FlowAnalysis) string {
 			}
 			flowNum++
 
-			icon := ":warning:"
+			riskLabel := "HIGH"
 			if flow.Risk == RiskCritical {
-				icon = ":rotating_light:"
+				riskLabel = "CRITICAL"
 			}
 
-			sb.WriteString(fmt.Sprintf("### %s Flow %d: %s\n\n", icon, flowNum, escapeMarkdownInline(flow.Description)))
+			sb.WriteString(fmt.Sprintf("### %s Flow %d: %s\n\n", riskLabel, flowNum, escapeMarkdownInline(flow.Description)))
 
 			sb.WriteString(fmt.Sprintf("**Risk Level:** %s\n\n", capitalizeFirst(string(flow.Risk))))
 

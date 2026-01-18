@@ -25,6 +25,10 @@ func RenderMarkdown(diff *SemanticDiff) string {
 		diff.Summary.TypesAdded,
 		diff.Summary.TypesRemoved,
 		diff.Summary.TypesModified))
+	sb.WriteString(fmt.Sprintf("| Variables | %d | %d | %d |\n",
+		diff.Summary.VariablesAdded,
+		diff.Summary.VariablesRemoved,
+		diff.Summary.VariablesModified))
 	sb.WriteString(fmt.Sprintf("| Imports | %d | %d | - |\n\n",
 		diff.Summary.ImportsAdded,
 		diff.Summary.ImportsRemoved))
@@ -191,6 +195,7 @@ func RenderMultipleMarkdown(diffs []SemanticDiff) string {
 	// Global summary
 	var totalFuncsAdded, totalFuncsRemoved, totalFuncsModified int
 	var totalTypesAdded, totalTypesRemoved, totalTypesModified int
+	var totalVarsAdded, totalVarsRemoved, totalVarsModified int
 	var totalImportsAdded, totalImportsRemoved int
 
 	for _, diff := range diffs {
@@ -200,6 +205,9 @@ func RenderMultipleMarkdown(diffs []SemanticDiff) string {
 		totalTypesAdded += diff.Summary.TypesAdded
 		totalTypesRemoved += diff.Summary.TypesRemoved
 		totalTypesModified += diff.Summary.TypesModified
+		totalVarsAdded += diff.Summary.VariablesAdded
+		totalVarsRemoved += diff.Summary.VariablesRemoved
+		totalVarsModified += diff.Summary.VariablesModified
 		totalImportsAdded += diff.Summary.ImportsAdded
 		totalImportsRemoved += diff.Summary.ImportsRemoved
 	}
@@ -212,6 +220,8 @@ func RenderMultipleMarkdown(diffs []SemanticDiff) string {
 		totalFuncsAdded, totalFuncsRemoved, totalFuncsModified))
 	sb.WriteString(fmt.Sprintf("| Types | %d | %d | %d |\n",
 		totalTypesAdded, totalTypesRemoved, totalTypesModified))
+	sb.WriteString(fmt.Sprintf("| Variables | %d | %d | %d |\n",
+		totalVarsAdded, totalVarsRemoved, totalVarsModified))
 	sb.WriteString(fmt.Sprintf("| Imports | %d | %d | - |\n\n",
 		totalImportsAdded, totalImportsRemoved))
 

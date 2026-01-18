@@ -23,9 +23,8 @@ func NewLintWriter(outputDir string) *LintWriter {
 }
 
 // EnsureDir creates the output directory if it doesn't exist.
-// TODO(review): Consider using named constants for file permissions 0755/0644 (code-reviewer, 2026-01-13, Low)
 func (w *LintWriter) EnsureDir() error {
-	return os.MkdirAll(w.outputDir, 0o755)
+	return os.MkdirAll(w.outputDir, 0o700)
 }
 
 // WriteResult writes the analysis result to static-analysis.json.
@@ -50,7 +49,7 @@ func (w *LintWriter) writeJSON(filename string, data interface{}) error {
 
 	dataWithNewline := append(jsonData, '\n')
 
-	if err := os.WriteFile(path, dataWithNewline, 0o644); err != nil {
+	if err := os.WriteFile(path, dataWithNewline, 0o600); err != nil {
 		return fmt.Errorf("failed to write %s: %w", path, err)
 	}
 

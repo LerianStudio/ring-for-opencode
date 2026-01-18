@@ -5,13 +5,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
 
 // PythonAnalyzer implements data flow analysis for Python and TypeScript
-// by delegating to the data_flow.py script.
+// by delegating to the py/data_flow.py script.
 type PythonAnalyzer struct {
 	scriptPath string
 	language   string
@@ -20,17 +21,19 @@ type PythonAnalyzer struct {
 // NewPythonAnalyzer creates a new analyzer for Python files.
 func NewPythonAnalyzer(scriptDir string) *PythonAnalyzer {
 	return &PythonAnalyzer{
-		scriptPath: filepath.Join(scriptDir, "data_flow.py"),
+		scriptPath: filepath.Join(scriptDir, "py", "data_flow.py"),
 		language:   "python",
 	}
+
 }
 
 // NewTypeScriptAnalyzer creates a new analyzer for TypeScript/JavaScript files.
 func NewTypeScriptAnalyzer(scriptDir string) *PythonAnalyzer {
 	return &PythonAnalyzer{
-		scriptPath: filepath.Join(scriptDir, "data_flow.py"),
+		scriptPath: filepath.Join(scriptDir, "py", "data_flow.py"),
 		language:   "typescript",
 	}
+
 }
 
 // Language returns the analyzer's target language.
@@ -77,7 +80,8 @@ func (p *PythonAnalyzer) runScript(files []string) (*FlowAnalysis, error) {
 	args := []string{p.scriptPath, p.language}
 	args = append(args, filteredFiles...)
 
-	cmd := exec.Command("python3", args...)
+	cmd := exec.Command("python3", args...) // #nosec G204 - args are controlled
+	cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

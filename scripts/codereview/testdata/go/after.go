@@ -25,6 +25,10 @@ type Config struct {
 	Timeout int
 }
 
+const DefaultTimeout = 30
+
+var greetingPrefix = "Hello"
+
 // Hello returns a greeting message (signature changed)
 func Hello(ctx context.Context, name string) (string, error) {
 	if name == "" {

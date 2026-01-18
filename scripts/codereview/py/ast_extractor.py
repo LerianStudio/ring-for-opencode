@@ -7,6 +7,7 @@ and compares before/after versions to generate semantic diffs.
 """
 
 import ast
+import hashlib
 import json
 import sys
 from dataclasses import dataclass, field, asdict
@@ -73,6 +74,9 @@ class ChangeSummary:
     types_added: int = 0
     types_removed: int = 0
     types_modified: int = 0
+    variables_added: int = 0
+    variables_removed: int = 0
+    variables_modified: int = 0
     imports_added: int = 0
     imports_removed: int = 0
 
@@ -173,14 +177,13 @@ def parse_file(file_path: str) -> ParsedFile:
     return result
 
 
-def _parse_function(node: ast.FunctionDef | ast.AsyncFunctionDef, content: str) -> ParsedFunc:
+def _parse_function(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, content: str
+) -> ParsedFunc:
     """Parse a function definition."""
     params = []
     for arg in node.args.args:
-        params.append(Param(
-            name=arg.arg,
-            type=get_annotation_str(arg.annotation)
-        ))
+        params.append(Param(name=arg.arg, type=get_annotation_str(arg.annotation)))
 
     returns = []
     if node.returns:
@@ -197,8 +200,8 @@ def _parse_function(node: ast.FunctionDef | ast.AsyncFunctionDef, content: str) 
 
     # Hash the body for change detection
     end_line = node.end_lineno if node.end_lineno else node.lineno
-    body_lines = content.split('\n')[node.lineno - 1:end_line]
-    body_hash = str(hash('\n'.join(body_lines)))
+    body_lines = content.split("\n")[node.lineno - 1 : end_line]
+    body_hash = hashlib.sha256("\n".join(body_lines).encode("utf-8")).hexdigest()
 
     return ParsedFunc(
         name=node.name,
@@ -206,7 +209,7 @@ def _parse_function(node: ast.FunctionDef | ast.AsyncFunctionDef, content: str) 
         returns=returns,
         is_async=isinstance(node, ast.AsyncFunctionDef),
         decorators=decorators,
-        is_exported=not node.name.startswith('_'),
+        is_exported=not node.name.startswith("_"),
         start_line=node.lineno,
         end_line=node.end_lineno or node.lineno,
         body_hash=body_hash,
@@ -216,8 +219,12 @@ def _parse_function(node: ast.FunctionDef | ast.AsyncFunctionDef, content: str) 
 def _parse_class(node: ast.ClassDef, content: str) -> ParsedClass:
     """Parse a class definition."""
     is_dataclass = any(
-        (isinstance(d, ast.Name) and d.id == 'dataclass') or
-        (isinstance(d, ast.Call) and isinstance(d.func, ast.Name) and d.func.id == 'dataclass')
+        (isinstance(d, ast.Name) and d.id == "dataclass")
+        or (
+            isinstance(d, ast.Call)
+            and isinstance(d.func, ast.Name)
+            and d.func.id == "dataclass"
+        )
         for d in node.decorator_list
     )
 
@@ -235,15 +242,14 @@ def _parse_class(node: ast.ClassDef, content: str) -> ParsedClass:
         is_dataclass=is_dataclass,
         fields=fields,
         methods=methods,
-        is_exported=not node.name.startswith('_'),
+        is_exported=not node.name.startswith("_"),
         start_line=node.lineno,
         end_line=node.end_lineno or node.lineno,
     )
 
 
 def compare_functions(
-    before: dict[str, ParsedFunc],
-    after: dict[str, ParsedFunc]
+    before: dict[str, ParsedFunc], after: dict[str, ParsedFunc]
 ) -> list[FunctionDiff]:
     """Compare functions between before and after versions."""
     diffs = []
@@ -252,19 +258,21 @@ def compare_functions(
     for name, before_func in before.items():
         after_func = after.get(name)
         if after_func is None:
-            diffs.append(FunctionDiff(
-                name=name,
-                change_type="removed",
-                before=FuncSig(
-                    params=before_func.params,
-                    returns=before_func.returns,
-                    is_async=before_func.is_async,
-                    decorators=before_func.decorators,
-                    is_exported=before_func.is_exported,
-                    start_line=before_func.start_line,
-                    end_line=before_func.end_line,
-                ),
-            ))
+            diffs.append(
+                FunctionDiff(
+                    name=name,
+                    change_type="removed",
+                    before=FuncSig(
+                        params=before_func.params,
+                        returns=before_func.returns,
+                        is_async=before_func.is_async,
+                        decorators=before_func.decorators,
+                        is_exported=before_func.is_exported,
+                        start_line=before_func.start_line,
+                        end_line=before_func.end_line,
+                    ),
+                )
+            )
             continue
 
         # Check for modifications
@@ -281,53 +289,56 @@ def compare_functions(
             changes.append("implementation changed")
 
         if changes:
-            diffs.append(FunctionDiff(
-                name=name,
-                change_type="modified",
-                before=FuncSig(
-                    params=before_func.params,
-                    returns=before_func.returns,
-                    is_async=before_func.is_async,
-                    decorators=before_func.decorators,
-                    is_exported=before_func.is_exported,
-                    start_line=before_func.start_line,
-                    end_line=before_func.end_line,
-                ),
-                after=FuncSig(
-                    params=after_func.params,
-                    returns=after_func.returns,
-                    is_async=after_func.is_async,
-                    decorators=after_func.decorators,
-                    is_exported=after_func.is_exported,
-                    start_line=after_func.start_line,
-                    end_line=after_func.end_line,
-                ),
-                body_diff=", ".join(changes),
-            ))
+            diffs.append(
+                FunctionDiff(
+                    name=name,
+                    change_type="modified",
+                    before=FuncSig(
+                        params=before_func.params,
+                        returns=before_func.returns,
+                        is_async=before_func.is_async,
+                        decorators=before_func.decorators,
+                        is_exported=before_func.is_exported,
+                        start_line=before_func.start_line,
+                        end_line=before_func.end_line,
+                    ),
+                    after=FuncSig(
+                        params=after_func.params,
+                        returns=after_func.returns,
+                        is_async=after_func.is_async,
+                        decorators=after_func.decorators,
+                        is_exported=after_func.is_exported,
+                        start_line=after_func.start_line,
+                        end_line=after_func.end_line,
+                    ),
+                    body_diff=", ".join(changes),
+                )
+            )
 
     # Find added
     for name, after_func in after.items():
         if name not in before:
-            diffs.append(FunctionDiff(
-                name=name,
-                change_type="added",
-                after=FuncSig(
-                    params=after_func.params,
-                    returns=after_func.returns,
-                    is_async=after_func.is_async,
-                    decorators=after_func.decorators,
-                    is_exported=after_func.is_exported,
-                    start_line=after_func.start_line,
-                    end_line=after_func.end_line,
-                ),
-            ))
+            diffs.append(
+                FunctionDiff(
+                    name=name,
+                    change_type="added",
+                    after=FuncSig(
+                        params=after_func.params,
+                        returns=after_func.returns,
+                        is_async=after_func.is_async,
+                        decorators=after_func.decorators,
+                        is_exported=after_func.is_exported,
+                        start_line=after_func.start_line,
+                        end_line=after_func.end_line,
+                    ),
+                )
+            )
 
     return diffs
 
 
 def compare_classes(
-    before: dict[str, ParsedClass],
-    after: dict[str, ParsedClass]
+    before: dict[str, ParsedClass], after: dict[str, ParsedClass]
 ) -> list[TypeDiff]:
     """Compare classes between before and after versions."""
     diffs = []
@@ -335,13 +346,15 @@ def compare_classes(
     for name, before_cls in before.items():
         after_cls = after.get(name)
         if after_cls is None:
-            diffs.append(TypeDiff(
-                name=name,
-                kind="dataclass" if before_cls.is_dataclass else "class",
-                change_type="removed",
-                start_line=before_cls.start_line,
-                end_line=before_cls.end_line,
-            ))
+            diffs.append(
+                TypeDiff(
+                    name=name,
+                    kind="dataclass" if before_cls.is_dataclass else "class",
+                    change_type="removed",
+                    start_line=before_cls.start_line,
+                    end_line=before_cls.end_line,
+                )
+            )
             continue
 
         # Compare fields
@@ -349,54 +362,61 @@ def compare_classes(
         for field_name, field_type in before_cls.fields.items():
             after_type = after_cls.fields.get(field_name)
             if after_type is None:
-                field_diffs.append(FieldDiff(
-                    name=field_name,
-                    change_type="removed",
-                    old_type=field_type,
-                ))
+                field_diffs.append(
+                    FieldDiff(
+                        name=field_name,
+                        change_type="removed",
+                        old_type=field_type,
+                    )
+                )
             elif after_type != field_type:
-                field_diffs.append(FieldDiff(
-                    name=field_name,
-                    change_type="modified",
-                    old_type=field_type,
-                    new_type=after_type,
-                ))
+                field_diffs.append(
+                    FieldDiff(
+                        name=field_name,
+                        change_type="modified",
+                        old_type=field_type,
+                        new_type=after_type,
+                    )
+                )
 
         for field_name, field_type in after_cls.fields.items():
             if field_name not in before_cls.fields:
-                field_diffs.append(FieldDiff(
-                    name=field_name,
-                    change_type="added",
-                    new_type=field_type,
-                ))
+                field_diffs.append(
+                    FieldDiff(
+                        name=field_name,
+                        change_type="added",
+                        new_type=field_type,
+                    )
+                )
 
         if field_diffs or before_cls.is_dataclass != after_cls.is_dataclass:
-            diffs.append(TypeDiff(
-                name=name,
-                kind="dataclass" if after_cls.is_dataclass else "class",
-                change_type="modified",
-                fields=field_diffs,
-                start_line=after_cls.start_line,
-                end_line=after_cls.end_line,
-            ))
+            diffs.append(
+                TypeDiff(
+                    name=name,
+                    kind="dataclass" if after_cls.is_dataclass else "class",
+                    change_type="modified",
+                    fields=field_diffs,
+                    start_line=after_cls.start_line,
+                    end_line=after_cls.end_line,
+                )
+            )
 
     for name, after_cls in after.items():
         if name not in before:
-            diffs.append(TypeDiff(
-                name=name,
-                kind="dataclass" if after_cls.is_dataclass else "class",
-                change_type="added",
-                start_line=after_cls.start_line,
-                end_line=after_cls.end_line,
-            ))
+            diffs.append(
+                TypeDiff(
+                    name=name,
+                    kind="dataclass" if after_cls.is_dataclass else "class",
+                    change_type="added",
+                    start_line=after_cls.start_line,
+                    end_line=after_cls.end_line,
+                )
+            )
 
     return diffs
 
 
-def compare_imports(
-    before: dict[str, str],
-    after: dict[str, str]
-) -> list[ImportDiff]:
+def compare_imports(before: dict[str, str], after: dict[str, str]) -> list[ImportDiff]:
     """Compare imports between before and after versions."""
     diffs = []
 
@@ -443,7 +463,7 @@ def extract_diff(before_path: str, after_path: str) -> SemanticDiff:
 
 def dataclass_to_dict(obj):
     """Recursively convert dataclass to dict, omitting empty values."""
-    if hasattr(obj, '__dataclass_fields__'):
+    if hasattr(obj, "__dataclass_fields__"):
         result = {}
         for key, value in asdict(obj).items():
             if value is None:

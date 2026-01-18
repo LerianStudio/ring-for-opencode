@@ -168,14 +168,14 @@ func renderFunctionImpact(fcg callgraph.FunctionCallGraph, language, riskLevel s
 // renderTestCoverage adds test coverage information.
 func renderTestCoverage(sb *strings.Builder, tests []callgraph.TestCoverage) {
 	if len(tests) > 0 {
-		sb.WriteString("**Test Coverage:** :white_check_mark: Has tests\n\n")
+		sb.WriteString("**Test Coverage:** Has tests\n\n")
 		sb.WriteString("<details>\n<summary>Tests covering this function</summary>\n\n")
 		for _, test := range tests {
 			sb.WriteString(fmt.Sprintf("- `%s` (%s:%d)\n", test.TestFunction, test.File, test.Line))
 		}
 		sb.WriteString("\n</details>\n\n")
 	} else {
-		sb.WriteString("**Test Coverage:** :warning: No tests found\n\n")
+		sb.WriteString("**Test Coverage:** No tests found\n\n")
 	}
 }
 

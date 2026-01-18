@@ -45,6 +45,19 @@ type FunctionDiff struct {
 	BodyDiff   string     `json:"body_diff,omitempty"`
 }
 
+// VarDiff represents a change in a variable or constant.
+type VarDiff struct {
+	Name       string     `json:"name"`
+	Kind       string     `json:"kind"`
+	ChangeType ChangeType `json:"change_type"`
+	OldType    string     `json:"old_type,omitempty"`
+	NewType    string     `json:"new_type,omitempty"`
+	OldValue   string     `json:"old_value,omitempty"`
+	NewValue   string     `json:"new_value,omitempty"`
+	StartLine  int        `json:"start_line,omitempty"`
+	EndLine    int        `json:"end_line,omitempty"`
+}
+
 // TypeDiff represents a change in a type definition
 type TypeDiff struct {
 	Name       string      `json:"name"`
@@ -70,6 +83,9 @@ type ChangeSummary struct {
 	TypesAdded        int `json:"types_added"`
 	TypesRemoved      int `json:"types_removed"`
 	TypesModified     int `json:"types_modified"`
+	VariablesAdded    int `json:"variables_added"`
+	VariablesRemoved  int `json:"variables_removed"`
+	VariablesModified int `json:"variables_modified"`
 	ImportsAdded      int `json:"imports_added"`
 	ImportsRemoved    int `json:"imports_removed"`
 }
@@ -80,6 +96,7 @@ type SemanticDiff struct {
 	FilePath  string         `json:"file_path"`
 	Functions []FunctionDiff `json:"functions"`
 	Types     []TypeDiff     `json:"types"`
+	Variables []VarDiff      `json:"variables,omitempty"`
 	Imports   []ImportDiff   `json:"imports"`
 	Summary   ChangeSummary  `json:"summary"`
 	Error     string         `json:"error,omitempty"`

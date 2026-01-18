@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/lerianstudio/ring/scripts/codereview/internal/ast"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/dataflow"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 )
 
 // ScopeFile represents the scope.json structure from Phase 0.
@@ -192,7 +194,7 @@ func run() error {
 		// Generate security summary markdown
 		summary := dataflow.GenerateSecuritySummary(results)
 		summaryPath := filepath.Join(*outputDir, "security-summary.md")
-		if err := os.WriteFile(summaryPath, []byte(summary), 0644); err != nil {
+		if err := os.WriteFile(summaryPath, []byte(summary), 0o600); err != nil {
 			return fmt.Errorf("failed to write security summary: %w", err)
 		}
 
@@ -209,33 +211,21 @@ func run() error {
 
 // validateFilePath ensures a file path is within the working directory to prevent path traversal.
 func validateFilePath(basePath, filePath string) (string, error) {
-	// Get absolute paths
-	absBase, err := filepath.Abs(basePath)
+	validator, err := ast.NewPathValidator(basePath)
 	if err != nil {
 		return "", fmt.Errorf("invalid base path: %w", err)
 	}
-
-	absPath, err := filepath.Abs(filePath)
+	validated, err := validator.ValidatePath(filePath)
 	if err != nil {
-		return "", fmt.Errorf("invalid file path: %w", err)
+		return "", fmt.Errorf("path traversal detected: %w", err)
 	}
-
-	// Clean paths to resolve .. and symlinks
-	cleanBase := filepath.Clean(absBase)
-	cleanPath := filepath.Clean(absPath)
-
-	// Ensure path is within base directory
-	if !strings.HasPrefix(cleanPath, cleanBase) {
-		return "", fmt.Errorf("path traversal detected: %s is outside %s", filePath, basePath)
-	}
-
-	return cleanPath, nil
+	return validated, nil
 }
 
 // loadScope reads and parses scope.json, populating the Languages map if empty.
 // workDir is used to validate that all file paths are within the working directory.
 func loadScope(path string, workDir string) (*ScopeFile, error) {
-	data, err := os.ReadFile(path)
+	data, err := fileutil.ReadJSONFileWithLimit(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading scope file: %w", err)
 	}
@@ -266,6 +256,9 @@ func loadScope(path string, workDir string) (*ScopeFile, error) {
 			}
 		}
 	}
+	if rawFiles == nil {
+		rawFiles = []string{}
+	}
 
 	// Check file count limit before processing
 	if len(rawFiles) > MaxFiles {
@@ -291,6 +284,9 @@ func loadScope(path string, workDir string) (*ScopeFile, error) {
 			// Ignore language parsing errors, will populate from files
 			scope.Languages = make(map[string][]string)
 		}
+	}
+	if scope.Languages == nil {
+		scope.Languages = make(map[string][]string)
 	}
 
 	// Validate language file paths as well
@@ -378,7 +374,7 @@ func filterFilesByLanguage(files []string, lang string) []string {
 func writeJSON(path string, data interface{}) error {
 	// Create parent directories if needed
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
@@ -387,7 +383,7 @@ func writeJSON(path string, data interface{}) error {
 		return fmt.Errorf("marshaling JSON: %w", err)
 	}
 
-	if err := os.WriteFile(path, jsonBytes, 0644); err != nil {
+	if err := os.WriteFile(path, jsonBytes, 0o600); err != nil {
 		return fmt.Errorf("writing file: %w", err)
 	}
 

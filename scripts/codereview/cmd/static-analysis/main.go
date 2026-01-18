@@ -60,8 +60,8 @@ func main() {
 	registry := lint.NewRegistry()
 	registerLinters(registry)
 
-	// Get available linters for detected language
-	linters := registry.GetAvailableLinters(ctx, lang)
+	// Get available linters based on detected language
+	linters := selectAvailableLinters(ctx, registry, lang, s)
 	if len(linters) == 0 {
 		log.Printf("Warning: No linters available for language: %s", lang)
 	}
@@ -124,6 +124,22 @@ func main() {
 		log.Fatalf("Failed to write language result: %v", err)
 	}
 
+	if lang == lint.LanguageMixed {
+		languages := s.Languages
+		if len(languages) == 0 {
+			languages = []string{"go", "typescript", "python"}
+		}
+		for _, language := range languages {
+			normalized := scope.NormalizeLanguage(language)
+			if normalized == "" {
+				continue
+			}
+			if err := writer.WriteLanguageResult(normalized, aggregateResult); err != nil {
+				log.Printf("Warning: Failed to write %s language result: %v", normalized, err)
+			}
+		}
+	}
+
 	// Print summary
 	fmt.Printf("Static analysis complete:\n")
 	fmt.Printf("  Files analyzed: %d\n", len(changedFiles))
@@ -175,6 +191,37 @@ func selectTargets(linter lint.Linter, lang lint.Language, s *scope.ScopeJSON) [
 	}
 
 	return nil
+}
+
+// selectAvailableLinters chooses available linters based on scope metadata.
+func selectAvailableLinters(ctx context.Context, registry *lint.Registry, lang lint.Language, s *scope.ScopeJSON) []lint.Linter {
+	if lang != lint.LanguageMixed {
+		return registry.GetAvailableLinters(ctx, lang)
+	}
+
+	languageSet := s.Languages
+	if len(languageSet) == 0 {
+		return registry.GetAvailableLinters(ctx, lang)
+	}
+
+	var linters []lint.Linter
+	seen := make(map[string]bool)
+	for _, language := range languageSet {
+		normalized := scope.NormalizeLanguage(language)
+		if normalized == "" {
+			continue
+		}
+		for _, linter := range registry.GetAvailableLinters(ctx, normalized) {
+
+			name := linter.Name()
+			if !seen[name] {
+				linters = append(linters, linter)
+				seen[name] = true
+			}
+		}
+	}
+
+	return linters
 }
 
 // registerLinters adds all linters to the registry.

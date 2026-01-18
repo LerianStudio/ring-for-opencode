@@ -13,12 +13,13 @@ import (
 // scopeJSON is the JSON output structure for scope results.
 // Uses nested format for files and stats as required by the macro plan spec.
 type scopeJSON struct {
-	BaseRef  string    `json:"base_ref"`
-	HeadRef  string    `json:"head_ref"`
-	Language string    `json:"language"`
-	Files    filesJSON `json:"files"`
-	Stats    statsJSON `json:"stats"`
-	Packages []string  `json:"packages_affected"`
+	BaseRef   string    `json:"base_ref"`
+	HeadRef   string    `json:"head_ref"`
+	Language  string    `json:"language"`
+	Languages []string  `json:"languages"`
+	Files     filesJSON `json:"files"`
+	Stats     statsJSON `json:"stats"`
+	Packages  []string  `json:"packages_affected"`
 }
 
 // filesJSON groups file changes by status.
@@ -61,7 +62,8 @@ func (s *ScopeOutput) toScopeJSON() scopeJSON {
 				Added:    []string{},
 				Deleted:  []string{},
 			},
-			Packages: []string{},
+			Languages: []string{},
+			Packages:  []string{},
 		}
 	}
 
@@ -86,10 +88,16 @@ func (s *ScopeOutput) toScopeJSON() scopeJSON {
 		packages = []string{}
 	}
 
+	languages := s.result.Languages
+	if languages == nil {
+		languages = []string{}
+	}
+
 	return scopeJSON{
-		BaseRef:  s.result.BaseRef,
-		HeadRef:  s.result.HeadRef,
-		Language: s.result.Language,
+		BaseRef:   s.result.BaseRef,
+		HeadRef:   s.result.HeadRef,
+		Language:  s.result.Language,
+		Languages: languages,
 		Files: filesJSON{
 			Modified: modified,
 			Added:    added,
@@ -131,16 +139,23 @@ func (s *ScopeOutput) ToPrettyJSON() ([]byte, error) {
 // Security note: This function trusts the caller to provide safe paths.
 // When accepting paths from untrusted input (e.g., CLI flags), the caller
 // should validate the path is within an allowed directory.
-// TODO(review): Consider adding path sanitization for untrusted inputs (security-reviewer, 2026-01-13, Low)
-// TODO(review): Consider symlink protection via os.Lstat check (security-reviewer, 2026-01-13, Low)
 func (s *ScopeOutput) WriteToFile(path string) error {
 	if s == nil || s.result == nil {
 		return fmt.Errorf("cannot write nil ScopeOutput to file")
 	}
 
+	// Ensure we don't follow symlinks for the output file.
+	if info, err := os.Lstat(path); err == nil {
+		if info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("refusing to write to symlink path: %s", path)
+		}
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to stat output path %s: %w", path, err)
+	}
+
 	// Create parent directories if needed
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -151,7 +166,7 @@ func (s *ScopeOutput) WriteToFile(path string) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(path, jsonBytes, 0644); err != nil {
+	if err := os.WriteFile(path, jsonBytes, 0o600); err != nil {
 		return fmt.Errorf("failed to write file %s: %w", path, err)
 	}
 
