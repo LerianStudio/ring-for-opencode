@@ -15,15 +15,11 @@ Dispatch all 5 code reviewers subagents in parallel for comprehensive feedback:
 
 ## Review Process
 
-1. **Pre-Analysis (Automated)**:
-   - Run: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --base [base] --head [head]`
-   - Defaults: base=`main`, head=`HEAD`
-   - **Scope:** Reviews all files changed between [base] and [head].
-   - **Unstaged Changes:** To review uncommitted changes (staged + unstaged), run:
-     `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --base="" --head=""`
+1. **Gather Context**: Identify what was implemented, files changed, base/head commits, what the user asks
+2. **Pre-Analysis (Automated)**:
+   - Run: `{OPENCODE_CONFIG}/scripts/codereview/bin/run-all --help` to understand how to use the CLI
+   - **Scope:** Reviews what the user desires and run the 'run-all' CLI with proper options to achieve it
    - Output: `context-*.md` files in `.ring/codereview/`
-
-2. **Gather Context**: Identify what was implemented, files changed, base/head commits
 3. **Dispatch Reviewers**: Launch all 5 reviewers simultaneously in parallel
 4. **Wait for Completion**: Do not aggregate until all reports are received
 5. **Consolidate**: Aggregate findings by severity (Critical/High/Medium/Low/Cosmetic)
