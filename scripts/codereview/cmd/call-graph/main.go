@@ -44,11 +44,13 @@ const (
 )
 
 var (
-	astFile   = flag.String("ast", "", "Path to {lang}-ast.json from Phase 2 (required)")
-	outputDir = flag.String("output", ".ring/codereview", "Output directory")
-	timeout   = flag.Int("timeout", 30, "Time budget in seconds, 0 = no limit")
-	language  = flag.String("lang", "", "Language override (go, typescript, python) - auto-detect from AST filename if not specified")
-	verbose   = flag.Bool("v", false, "Enable verbose output")
+	astFile         = flag.String("ast", "", "Path to {lang}-ast.json from Phase 2 (required)")
+	outputDir       = flag.String("output", ".ring/codereview", "Output directory")
+	timeout         = flag.Int("timeout", 30, "Time budget in seconds, 0 = no limit")
+	language        = flag.String("lang", "", "Language override (go, typescript, python) - auto-detect from AST filename if not specified")
+	languagesFile   = flag.String("languages-file", "", "Path to JSON file listing languages to analyze")
+	callgraphSuffix = flag.String("output-suffix", "", "Suffix to append to callgraph output files")
+	verbose         = flag.Bool("v", false, "Enable verbose output")
 )
 
 func init() {
@@ -83,29 +85,27 @@ func run() error {
 	if *astFile == "" {
 		return fmt.Errorf("-ast flag is required")
 	}
+	validatedAST, err := validateASTPath(*astFile)
+	if err != nil {
+		return err
+	}
+	*astFile = validatedAST
 
-	// Detect or validate language
-	lang := *language
-	if lang == "" {
-		lang = detectLanguage(*astFile)
-		if lang == "" {
-			return fmt.Errorf("could not detect language from filename %q, use -lang flag", filepath.Base(*astFile))
+	languages := []string{}
+	if *language != "" {
+		languages = append(languages, *language)
+	}
+	if *languagesFile != "" {
+		fileLangs, err := readLanguagesFile(*languagesFile)
+		if err != nil {
+			return err
 		}
+		languages = append(languages, fileLangs...)
 	}
-	lang = callgraph.NormalizeLanguage(lang)
-
-	if !callgraph.IsSupported(lang) {
-		return fmt.Errorf("unsupported language: %s (supported: %s)", lang, strings.Join(callgraph.SupportedLanguagesNormalized(), ", "))
-	}
-
-	if *verbose {
-		fmt.Fprintf(os.Stderr, "AST input: %s\n", *astFile)
-		fmt.Fprintf(os.Stderr, "Language: %s\n", lang)
-		fmt.Fprintf(os.Stderr, "Output directory: %s\n", *outputDir)
-		fmt.Fprintf(os.Stderr, "Time budget: %d seconds\n", *timeout)
+	if len(languages) == 0 {
+		languages = append(languages, detectLanguage(*astFile))
 	}
 
-	// Read AST input with size limit
 	astData, err := fileutil.ReadJSONFileWithLimit(*astFile)
 	if err != nil {
 		return fmt.Errorf("failed to read AST file: %w", err)
@@ -124,8 +124,7 @@ func run() error {
 				fmt.Errorf("json.Unmarshal(astData, &single) into SemanticDiff failed: %w", errSingle),
 			)
 			return fmt.Errorf(
-				"failed to parse astData with json.Unmarshal as diffs ([]SemanticDiff) or single (SemanticDiff) (astData preview=%q): %w",
-				previewASTData(astData),
+				"failed to parse astData with json.Unmarshal as diffs ([]SemanticDiff) or single (SemanticDiff): %w",
 				joined,
 			)
 		}
@@ -137,64 +136,53 @@ func run() error {
 		diffs = []SemanticDiff{}
 	}
 
-	// Build modified functions list from all diffs
-	modifiedFuncs := buildModifiedFunctions(diffs)
+	if len(languages) == 0 || languages[0] == "" {
+		languages = extractLanguagesFromDiffs(diffs)
+	}
+	languages = normalizeLanguages(languages)
+	if len(languages) == 0 {
+		return fmt.Errorf("could not detect language from AST data, use -lang flag")
+	}
 
-	if *verbose {
-		fmt.Fprintf(os.Stderr, "Modified functions: %d\n", len(modifiedFuncs))
-		for _, f := range modifiedFuncs {
-			if f.Receiver != "" {
-				fmt.Fprintf(os.Stderr, "  - (%s).%s in %s\n", f.Receiver, f.Name, f.File)
-			} else {
-				fmt.Fprintf(os.Stderr, "  - %s in %s\n", f.Name, f.File)
-			}
+	for _, lang := range languages {
+		if !callgraph.IsSupported(lang) {
+			return fmt.Errorf("unsupported language: %s (supported: %s)", lang, strings.Join(callgraph.SupportedLanguagesNormalized(), ", "))
 		}
 	}
 
-	// Check for empty input
-	if len(modifiedFuncs) == 0 {
-		if *verbose {
-			fmt.Fprintf(os.Stderr, "No modified functions found, generating empty result\n")
-		}
-		// Generate empty result
-		result := &callgraph.CallGraphResult{
-			Language:          lang,
-			ModifiedFunctions: []callgraph.FunctionCallGraph{},
-			ImpactAnalysis: callgraph.ImpactAnalysis{
-				AffectedPackages: []string{},
-			},
-		}
-		return writeResults(result)
-	}
-
-	// Determine working directory for analysis
 	workDir, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed to get working directory: %w", err)
 	}
 
-	// Create analyzer
-	analyzer, err := callgraph.NewAnalyzer(lang, workDir)
-	if err != nil {
-		return fmt.Errorf("failed to create analyzer: %w", err)
+	var runErr error
+	for _, lang := range languages {
+		langDiffs := filterDiffsByLanguage(diffs, lang)
+		outputSuffix := ""
+		if *callgraphSuffix != "" {
+			outputSuffix = *callgraphSuffix
+		} else if len(languages) > 1 {
+			outputSuffix = "-" + lang
+		}
+
+		if err := runCallgraphForLanguage(lang, langDiffs, workDir, outputSuffix); err != nil {
+			runErr = errors.Join(runErr, err)
+		}
 	}
 
-	if *verbose {
-		fmt.Fprintf(os.Stderr, "Running call graph analysis...\n")
-	}
-
-	// Run analysis
-	result, err := analyzer.Analyze(modifiedFuncs, *timeout)
-	if err != nil {
-		return fmt.Errorf("analysis failed: %w", err)
-	}
-
-	// Write results
-	return writeResults(result)
+	return runErr
 }
 
 // detectLanguage extracts language from AST filename prefix.
-// Expected formats: go-ast.json, ts-ast.json, py-ast.json
+// Expected formats: go-ast.json, typescript-ast.json, python-ast.json
+func validateASTPath(path string) (string, error) {
+	validated, err := fileutil.ValidatePath(path, ".")
+	if err != nil {
+		return "", fmt.Errorf("invalid AST file path: %w", err)
+	}
+	return validated, nil
+}
+
 func detectLanguage(filename string) string {
 	base := filepath.Base(filename)
 	base = strings.ToLower(base)
@@ -209,6 +197,78 @@ func detectLanguage(filename string) string {
 		return callgraph.LangPython
 	}
 	return ""
+}
+
+func extractLanguagesFromDiffs(diffs []SemanticDiff) []string {
+	if len(diffs) == 0 {
+		return []string{}
+	}
+	counts := make(map[string]int)
+	for _, diff := range diffs {
+		lang := callgraph.NormalizeLanguage(diff.Language)
+		if lang != "" && callgraph.IsSupported(lang) {
+			counts[lang]++
+		}
+	}
+	if len(counts) == 0 {
+		return []string{}
+	}
+
+	priority := []string{callgraph.LangGo, callgraph.LangTypeScript, callgraph.LangPython}
+	ordered := make([]string, 0, len(counts))
+	for _, lang := range priority {
+		if counts[lang] > 0 {
+			ordered = append(ordered, lang)
+		}
+	}
+	for lang := range counts {
+		if !containsString(ordered, lang) {
+			ordered = append(ordered, lang)
+		}
+	}
+	return ordered
+}
+
+func normalizeLanguages(languages []string) []string {
+	seen := make(map[string]bool)
+	result := make([]string, 0, len(languages))
+	for _, lang := range languages {
+		normalized := callgraph.NormalizeLanguage(lang)
+		if normalized == "" || !callgraph.IsSupported(normalized) {
+			continue
+		}
+		if !seen[normalized] {
+			seen[normalized] = true
+			result = append(result, normalized)
+		}
+	}
+	return result
+}
+
+func filterDiffsByLanguage(diffs []SemanticDiff, lang string) []SemanticDiff {
+	if len(diffs) == 0 {
+		return diffs
+	}
+	normalized := callgraph.NormalizeLanguage(lang)
+	if normalized == "" {
+		return diffs
+	}
+	filtered := make([]SemanticDiff, 0, len(diffs))
+	for _, diff := range diffs {
+		if callgraph.NormalizeLanguage(diff.Language) == normalized {
+			filtered = append(filtered, diff)
+		}
+	}
+	return filtered
+}
+
+func containsString(items []string, value string) bool {
+	for _, item := range items {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }
 
 // buildModifiedFunctions converts []SemanticDiff to []callgraph.ModifiedFunction.
@@ -272,14 +332,6 @@ func writeResults(result *callgraph.CallGraphResult) error {
 	printSummary(result)
 
 	return nil
-}
-
-func previewASTData(astData []byte) string {
-	const max = 512
-	if len(astData) <= max {
-		return string(astData)
-	}
-	return string(astData[:max]) + "...(truncated)"
 }
 
 // printSummary prints analysis summary to stdout.

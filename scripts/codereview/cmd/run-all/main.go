@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -17,14 +18,17 @@ import (
 	"time"
 
 	ctxpkg "github.com/lerianstudio/ring/scripts/codereview/internal/context"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/git"
 )
 
 // scopeJSON represents the structure of scope.json from Phase 0.
 type scopeJSON struct {
-	BaseRef  string        `json:"base_ref"`
-	HeadRef  string        `json:"head_ref"`
-	Language string        `json:"language"`
-	Files    filesByStatus `json:"files"`
+	BaseRef   string        `json:"base_ref"`
+	HeadRef   string        `json:"head_ref"`
+	Language  string        `json:"language"`
+	Languages []string      `json:"languages"`
+	Files     filesByStatus `json:"files"`
 }
 
 // filesByStatus holds categorized file lists from scope.json.
@@ -32,6 +36,24 @@ type filesByStatus struct {
 	Modified []string `json:"modified"`
 	Added    []string `json:"added"`
 	Deleted  []string `json:"deleted"`
+}
+
+func normalizeScopeJSON(scope *scopeJSON) {
+	if scope == nil {
+		return
+	}
+	if scope.Files.Modified == nil {
+		scope.Files.Modified = []string{}
+	}
+	if scope.Files.Added == nil {
+		scope.Files.Added = []string{}
+	}
+	if scope.Files.Deleted == nil {
+		scope.Files.Deleted = []string{}
+	}
+	if scope.Languages == nil {
+		scope.Languages = []string{}
+	}
 }
 
 // filePair represents a before/after file pair for AST extraction.
@@ -49,7 +71,7 @@ var astTempState struct {
 // readScopeJSON reads and parses scope.json from the output directory.
 func readScopeJSON(outputDir string) (*scopeJSON, error) {
 	scopePath := filepath.Join(outputDir, "scope.json")
-	data, err := os.ReadFile(scopePath)
+	data, err := fileutil.ReadJSONFileWithLimit(scopePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read scope.json: %w", err)
 	}
@@ -58,21 +80,62 @@ func readScopeJSON(outputDir string) (*scopeJSON, error) {
 	if err := json.Unmarshal(data, &scope); err != nil {
 		return nil, fmt.Errorf("failed to parse scope.json: %w", err)
 	}
+	normalizeScopeJSON(&scope)
 
 	return &scope, nil
 }
 
-// shouldSkipForUnknownLanguage checks if phase should be skipped when language is unknown.
-// This is used for AST, callgraph, and dataflow phases that require language-specific analysis.
+// shouldSkipForNoFiles skips phases if no files are detected.
+func shouldSkipForNoFiles(cfg *config) (bool, string) {
+	scope, err := readScopeJSON(cfg.outputDir)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return true, "scope.json missing - skipping dependent phase"
+		}
+		return false, ""
+	}
+
+	totalFiles := len(scope.Files.Modified) + len(scope.Files.Added) + len(scope.Files.Deleted)
+	if totalFiles == 0 {
+		return true, "No changed files detected"
+	}
+	return false, ""
+}
+
+// shouldSkipForUnknownLanguage skips phases when the language is unknown.
 func shouldSkipForUnknownLanguage(cfg *config) (bool, string) {
 	scope, err := readScopeJSON(cfg.outputDir)
 	if err != nil {
-		return false, "" // Let phase fail with its own error
+		if errors.Is(err, os.ErrNotExist) {
+			return true, "scope.json missing - skipping dependent phase"
+		}
+		return false, ""
 	}
-	if scope.Language == "unknown" {
-		return true, "No supported code files detected (language: unknown)"
+
+	language := strings.ToLower(strings.TrimSpace(scope.Language))
+	if language == "" || language == "unknown" {
+		return true, "Unknown language detected"
 	}
 	return false, ""
+}
+
+// shouldSkipForMissingScope skips phases that require scope.json.
+func shouldSkipForMissingScope(cfg *config) (bool, string) {
+	_, err := readScopeJSON(cfg.outputDir)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return true, "scope.json missing - skipping dependent phase"
+		}
+		return false, "" // Let phase fail with its own error
+	}
+	return false, ""
+}
+
+func shouldSkipForNoFilesOrUnknownLanguage(cfg *config) (bool, string) {
+	if skip, reason := shouldSkipForNoFiles(cfg); skip {
+		return skip, reason
+	}
+	return shouldSkipForUnknownLanguage(cfg)
 }
 
 // generateASTBatchFile creates a batch JSON file for ast-extractor from scope data.
@@ -96,20 +159,12 @@ func generateASTBatchFile(cfg *config) (string, string, error) {
 	for _, file := range scope.Files.Modified {
 		beforePath, err := extractFileFromGit(cfg.baseRef, file, tempDir)
 		if err != nil {
-			// If we can't extract the before version, treat as new file
-			if cfg.verbose {
-				fmt.Fprintf(os.Stderr, "Warning: could not extract %s from %s: %v\n", file, cfg.baseRef, err)
-			}
-			pairs = append(pairs, filePair{
-				BeforePath: "",
-				AfterPath:  file,
-			})
-		} else {
-			pairs = append(pairs, filePair{
-				BeforePath: beforePath,
-				AfterPath:  file,
-			})
+			return "", "", fmt.Errorf("failed to extract %s from %s: %w", file, cfg.baseRef, err)
 		}
+		pairs = append(pairs, filePair{
+			BeforePath: beforePath,
+			AfterPath:  file,
+		})
 	}
 
 	// Handle added files - only after path
@@ -158,21 +213,44 @@ func generateASTBatchFile(cfg *config) (string, string, error) {
 // extractFileFromGit extracts a file from a git ref to a temp directory.
 // Returns the path to the extracted file.
 func extractFileFromGit(ref, filePath, tempDir string) (string, error) {
-	// Validate that filePath doesn't contain path traversal
-	if strings.Contains(filePath, "..") {
+	if filePath == "" {
+		return "", fmt.Errorf("invalid file path: empty")
+	}
+
+	// Reject absolute paths and traversal attempts
+	if filepath.IsAbs(filePath) {
+		return "", fmt.Errorf("invalid file path: absolute paths are not allowed")
+	}
+	cleaned := filepath.Clean(filePath)
+	if strings.HasPrefix(cleaned, ".."+string(filepath.Separator)) || cleaned == ".." {
+		return "", fmt.Errorf("invalid file path: contains path traversal")
+	}
+
+	relPath, err := filepath.Rel(".", cleaned)
+	if err != nil {
+		return "", fmt.Errorf("invalid file path: %w", err)
+	}
+	if strings.HasPrefix(relPath, ".."+string(filepath.Separator)) || relPath == ".." {
 		return "", fmt.Errorf("invalid file path: contains path traversal")
 	}
 
 	// Create subdirectories in temp to preserve file structure
-	destPath := filepath.Join(tempDir, filePath)
+	destPath := filepath.Join(tempDir, relPath)
 	destDir := filepath.Dir(destPath)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
+	if err := os.MkdirAll(destDir, 0o700); err != nil {
 		return "", fmt.Errorf("failed to create temp subdirectory: %w", err)
 	}
 
+	// Ensure destination remains within temp directory
+	cleanTemp := filepath.Clean(tempDir)
+	cleanDest := filepath.Clean(destPath)
+	if !strings.HasPrefix(cleanDest, cleanTemp+string(filepath.Separator)) && cleanDest != cleanTemp {
+		return "", fmt.Errorf("invalid file path: escapes temp directory")
+	}
+
 	// Use git show to extract file content
-	cmd := exec.Command("git", "show", ref+":"+filePath)
-	output, err := cmd.Output()
+	client := git.NewClient("")
+	output, err := client.ShowFile(ref, filePath)
 	if err != nil {
 		return "", fmt.Errorf("git show failed: %w", err)
 	}
@@ -186,14 +264,14 @@ func extractFileFromGit(ref, filePath, tempDir string) (string, error) {
 }
 
 // detectASTOutputFile finds the AST output file from the output directory.
-// Returns the path to the first found AST file (go-ast.json, ts-ast.json, py-ast.json, unknown-ast.json).
+// Returns the path to the first found AST file (go-ast.json, typescript-ast.json, python-ast.json).
 func detectASTOutputFile(outputDir string) (string, error) {
 	// Check for language-specific AST files in priority order
 	candidates := []string{
 		filepath.Join(outputDir, "go-ast.json"),
-		filepath.Join(outputDir, "ts-ast.json"),
-		filepath.Join(outputDir, "py-ast.json"),
-		filepath.Join(outputDir, "unknown-ast.json"), // Fallback for unknown language
+		filepath.Join(outputDir, "typescript-ast.json"),
+		filepath.Join(outputDir, "python-ast.json"),
+		filepath.Join(outputDir, "mixed-ast.json"),
 	}
 
 	for _, path := range candidates {
@@ -231,6 +309,8 @@ type Phase struct {
 type config struct {
 	baseRef     string
 	headRef     string
+	files       string
+	filesFrom   string
 	outputDir   string
 	binDir      string
 	skip        string
@@ -261,6 +341,8 @@ func parseFlags() *config {
 
 	flag.StringVar(&cfg.baseRef, "base", "main", "Base git reference (commit/branch)")
 	flag.StringVar(&cfg.headRef, "head", "HEAD", "Head git reference (commit/branch)")
+	flag.StringVar(&cfg.files, "files", "", "Comma-separated file patterns to analyze (mutually exclusive with --base/--head)")
+	flag.StringVar(&cfg.filesFrom, "files-from", "", "Path to file containing file patterns (one per line)")
 	flag.StringVar(&cfg.outputDir, "output", ".ring/codereview", "Output directory for all phase results")
 	flag.StringVar(&cfg.binDir, "bin-dir", "", "Directory containing phase binaries (auto-detect from executable path)")
 	flag.StringVar(&cfg.skip, "skip", "", "Comma-separated list of phases to skip (e.g., 'static-analysis,callgraph')")
@@ -270,6 +352,22 @@ func parseFlags() *config {
 
 	flag.Usage = printUsage
 	flag.Parse()
+
+	filesSelected := cfg.files != "" || cfg.filesFrom != ""
+	baseSet := false
+	headSet := false
+	flag.CommandLine.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		case "base":
+			baseSet = true
+		case "head":
+			headSet = true
+		}
+	})
+	if filesSelected && (baseSet || headSet) {
+		fmt.Fprintln(os.Stderr, "Error: --files/--files-from cannot be used with --base/--head")
+		os.Exit(2)
+	}
 
 	return cfg
 }
@@ -292,8 +390,16 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "  run-all\n\n")
 	fmt.Fprintf(os.Stderr, "  # Compare specific branches:\n")
 	fmt.Fprintf(os.Stderr, "  run-all --base=develop --head=feature/my-branch\n\n")
+
+	fmt.Fprintf(os.Stderr, "  # Analyze specific files:\n")
+	fmt.Fprintf(os.Stderr, "  run-all --files=cmd/*.go,scripts/**/*.ts\n\n")
+
+	fmt.Fprintf(os.Stderr, "  # Analyze files from a list:\n")
+	fmt.Fprintf(os.Stderr, "  run-all --files-from=.ring/filelist.txt\n\n")
+
 	fmt.Fprintf(os.Stderr, "  # Custom output directory:\n")
 	fmt.Fprintf(os.Stderr, "  run-all --output=./review-output\n\n")
+
 	fmt.Fprintf(os.Stderr, "  # Skip specific phases:\n")
 	fmt.Fprintf(os.Stderr, "  run-all --skip=static-analysis,dataflow\n\n")
 	fmt.Fprintf(os.Stderr, "  # Verbose mode with custom binary directory:\n")
@@ -317,11 +423,20 @@ func getPhases() []Phase {
 			Binary:  "scope-detector",
 			Timeout: 30 * time.Second,
 			Args: func(cfg *config) []string {
-				return []string{
-					"--base", cfg.baseRef,
-					"--head", cfg.headRef,
+				args := []string{
 					"--output", filepath.Join(cfg.outputDir, "scope.json"),
 				}
+				if cfg.files != "" || cfg.filesFrom != "" {
+					if cfg.files != "" {
+						args = append(args, "--files", cfg.files)
+					}
+					if cfg.filesFrom != "" {
+						args = append(args, "--files-from", cfg.filesFrom)
+					}
+					return args
+				}
+
+				return append(args, "--base", cfg.baseRef, "--head", cfg.headRef)
 			},
 		},
 		{
@@ -339,14 +454,13 @@ func getPhases() []Phase {
 			Name:    "ast",
 			Binary:  "ast-extractor",
 			Timeout: 2 * time.Minute,
-			Skip:    shouldSkipForUnknownLanguage,
+			Skip:    shouldSkipForNoFiles,
 			Args: func(cfg *config) []string {
 				// Generate batch file from scope.json
 				// This reads scope.json, extracts before-files from git, and creates ast-batch.json
 				batchPath, tempDir, err := generateASTBatchFile(cfg)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Warning: failed to generate AST batch file: %v\n", err)
-					// Return empty args to indicate error - phase will fail gracefully
 					return nil
 				}
 				// Store temp state for cleanup
@@ -362,29 +476,43 @@ func getPhases() []Phase {
 			Name:    "callgraph",
 			Binary:  "call-graph",
 			Timeout: 3 * time.Minute,
-			Skip:    shouldSkipForUnknownLanguage,
+			Skip:    shouldSkipForNoFilesOrUnknownLanguage,
 			Args: func(cfg *config) []string {
 				// Detect which AST output file exists from previous phase
 				astFile, err := detectASTOutputFile(cfg.outputDir)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-					// Return args with placeholder - phase will fail with clear error
-					return []string{
-						"--ast", filepath.Join(cfg.outputDir, "go-ast.json"),
-						"--output", cfg.outputDir,
-					}
+					return nil
 				}
-				return []string{
+
+				callgraphLangs, langErr := languagesForCallgraph(cfg.outputDir)
+				if langErr != nil {
+					fmt.Fprintf(os.Stderr, "Warning: %v\n", langErr)
+					return nil
+				}
+				args := []string{
 					"--ast", astFile,
 					"--output", cfg.outputDir,
 				}
+				if len(callgraphLangs) > 1 {
+					if err := writeCallgraphLanguageFile(cfg.outputDir, callgraphLangs); err != nil {
+						fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+						return nil
+					}
+					args = append(args, "--languages-file", callgraphLanguagesFile(cfg.outputDir))
+				}
+				if len(callgraphLangs) == 1 {
+					args = append(args, "--lang", callgraphLangs[0])
+				}
+				return args
+
 			},
 		},
 		{
 			Name:    "dataflow",
 			Binary:  "data-flow",
 			Timeout: 3 * time.Minute,
-			Skip:    shouldSkipForUnknownLanguage,
+			Skip:    shouldSkipForMissingScope,
 			Args: func(cfg *config) []string {
 				return []string{
 					"--scope", filepath.Join(cfg.outputDir, "scope.json"),
@@ -463,6 +591,12 @@ func run() error {
 		fmt.Fprintf(os.Stderr, "Configuration:\n")
 		fmt.Fprintf(os.Stderr, "  Base ref: %s\n", cfg.baseRef)
 		fmt.Fprintf(os.Stderr, "  Head ref: %s\n", cfg.headRef)
+		if cfg.files != "" {
+			fmt.Fprintf(os.Stderr, "  Files: %s\n", cfg.files)
+		}
+		if cfg.filesFrom != "" {
+			fmt.Fprintf(os.Stderr, "  Files from: %s\n", cfg.filesFrom)
+		}
 		fmt.Fprintf(os.Stderr, "  Output directory: %s\n", cfg.outputDir)
 		fmt.Fprintf(os.Stderr, "  Binary directory: %s\n", cfg.binDir)
 		if cfg.skip != "" {
@@ -472,7 +606,12 @@ func run() error {
 	}
 
 	// Create output directory if needed
-	if err := os.MkdirAll(cfg.outputDir, 0755); err != nil {
+	validatedOutputDir, err := fileutil.ValidatePath(cfg.outputDir, ".")
+	if err != nil {
+		return fmt.Errorf("invalid output directory: %w", err)
+	}
+	cfg.outputDir = validatedOutputDir
+	if err := os.MkdirAll(cfg.outputDir, 0o700); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -602,6 +741,17 @@ func executePhase(ctx context.Context, cfg *config, phase Phase, skipSet map[str
 		return result
 	}
 
+	// Build command arguments
+	args := phase.Args(cfg)
+	if args == nil {
+		result.Duration = time.Since(startTime)
+		result.Error = fmt.Errorf("failed to build phase arguments")
+		return result
+	}
+	if cfg.verbose {
+		args = append(args, "-v")
+	}
+
 	// Build binary path
 	binaryPath := filepath.Join(cfg.binDir, phase.Binary)
 
@@ -612,19 +762,14 @@ func executePhase(ctx context.Context, cfg *config, phase Phase, skipSet map[str
 		return result
 	}
 
-	// Build command arguments
-	args := phase.Args(cfg)
-	if cfg.verbose {
-		args = append(args, "-v")
-	}
-
 	// Create a context with timeout for this phase
 	// CommandContext will automatically kill the process when context is cancelled
 	phaseCtx, phaseCancel := context.WithTimeout(ctx, phase.Timeout)
 	defer phaseCancel()
 
 	// Use CommandContext for automatic process cleanup on cancellation/timeout
-	cmd := exec.CommandContext(phaseCtx, binaryPath, args...)
+	cmd := exec.CommandContext(phaseCtx, binaryPath, args...) // #nosec G204 - binary and args are internal/validated
+	cmd.Env = append([]string{"LC_ALL=C"}, os.Environ()...)
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -670,7 +815,11 @@ func executePhase(ctx context.Context, cfg *config, phase Phase, skipSet map[str
 			result.Error = fmt.Errorf("failed to read scope.json for AST output: %w", scopeErr)
 			result.Success = false
 		} else {
-			astOutputPath := filepath.Join(cfg.outputDir, fmt.Sprintf("%s-ast.json", scope.Language))
+			language := scope.Language
+			if language == "" {
+				language = "unknown"
+			}
+			astOutputPath := filepath.Join(cfg.outputDir, fmt.Sprintf("%s-ast.json", language))
 			if writeErr := os.WriteFile(astOutputPath, stdoutBuf.Bytes(), 0600); writeErr != nil {
 				result.Error = fmt.Errorf("failed to write AST output to %s: %w", astOutputPath, writeErr)
 				result.Success = false

@@ -2,16 +2,12 @@
 package scope
 
 import (
-	"errors"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/lerianstudio/ring/scripts/codereview/internal/git"
 )
-
-// ErrMixedLanguages is returned when multiple code languages are detected in the diff.
-var ErrMixedLanguages = errors.New("mixed languages detected: cannot determine primary language")
 
 // Language represents the programming language of code files.
 type Language int
@@ -21,6 +17,7 @@ const (
 	LanguageGo
 	LanguageTypeScript
 	LanguagePython
+	LanguageMixed
 )
 
 // String returns the string representation of the language.
@@ -32,6 +29,8 @@ func (l Language) String() string {
 		return "typescript"
 	case LanguagePython:
 		return "python"
+	case LanguageMixed:
+		return "mixed"
 	default:
 		return "unknown"
 	}
@@ -50,6 +49,7 @@ type ScopeResult struct {
 	BaseRef          string   `json:"base_ref"`
 	HeadRef          string   `json:"head_ref"`
 	Language         string   `json:"language"`
+	Languages        []string `json:"languages,omitempty"`
 	ModifiedFiles    []string `json:"modified"`
 	AddedFiles       []string `json:"added"`
 	DeletedFiles     []string `json:"deleted"`
@@ -63,6 +63,8 @@ type ScopeResult struct {
 type gitClientInterface interface {
 	GetDiff(baseRef, headRef string) (*git.DiffResult, error)
 	GetAllChangesDiff() (*git.DiffResult, error)
+	GetDiffStatsForFiles(baseRef string, files []string) (git.DiffStats, map[string]git.FileStats, error)
+	FileExistsAtRef(ref, path string) (bool, error)
 }
 
 // Detector analyzes git diffs to determine language and file categorization.
@@ -118,12 +120,15 @@ func (d *Detector) buildScopeResult(diffResult *git.DiffResult) (*ScopeResult, e
 
 	// Extract packages from code files only
 	codeFiles := FilterByLanguage(allPaths, lang)
-	packages := ExtractPackages(lang, codeFiles)
+	packages := ExtractPackages(codeFiles)
+
+	languages := DetectLanguages(allPaths)
 
 	return &ScopeResult{
 		BaseRef:          diffResult.BaseRef,
 		HeadRef:          diffResult.HeadRef,
 		Language:         lang.String(),
+		Languages:        languages,
 		ModifiedFiles:    modified,
 		AddedFiles:       added,
 		DeletedFiles:     deleted,
@@ -135,12 +140,12 @@ func (d *Detector) buildScopeResult(diffResult *git.DiffResult) (*ScopeResult, e
 }
 
 // DetectLanguage detects the primary programming language from a list of file paths.
-// Returns ErrMixedLanguages if multiple code languages are detected.
+// Returns LanguageMixed if multiple code languages are detected.
 func DetectLanguage(files []string) (Language, error) {
 	languagesFound := make(map[Language]bool)
 
 	for _, f := range files {
-		ext := getFileExtension(f)
+		ext := strings.ToLower(getFileExtension(f))
 		if lang, ok := extensionToLanguage[ext]; ok {
 			languagesFound[lang] = true
 		}
@@ -154,7 +159,7 @@ func DetectLanguage(files []string) (Language, error) {
 	}
 
 	if count > 1 {
-		return LanguageUnknown, ErrMixedLanguages
+		return LanguageMixed, nil
 	}
 
 	// Return the single detected language (count == 1 guarantees exactly one iteration)
@@ -162,6 +167,33 @@ func DetectLanguage(files []string) (Language, error) {
 		return lang, nil
 	}
 	return LanguageUnknown, nil // Required by compiler; logically unreachable
+}
+
+// DetectLanguages returns all detected programming languages from a list of file paths.
+// Results are returned as normalized language strings.
+func DetectLanguages(files []string) []string {
+	if len(files) == 0 {
+		return []string{}
+	}
+
+	languagesFound := make(map[Language]bool)
+	for _, f := range files {
+		ext := strings.ToLower(getFileExtension(f))
+		if lang, ok := extensionToLanguage[ext]; ok {
+			languagesFound[lang] = true
+		}
+	}
+
+	if len(languagesFound) == 0 {
+		return []string{}
+	}
+
+	languages := make([]string, 0, len(languagesFound))
+	for lang := range languagesFound {
+		languages = append(languages, lang.String())
+	}
+	sort.Strings(languages)
+	return languages
 }
 
 // getFileExtension returns the file extension including the dot.
@@ -208,8 +240,7 @@ func CategorizeFilesByStatus(files []git.ChangedFile) (modified, added, deleted 
 
 // ExtractPackages returns unique parent directories (packages) from file paths.
 // Results are sorted alphabetically.
-// TODO(review): lang parameter unused - reserved for future language-specific logic (code-reviewer, 2026-01-13, Low)
-func ExtractPackages(lang Language, files []string) []string {
+func ExtractPackages(files []string) []string {
 	if len(files) == 0 {
 		return []string{}
 	}
@@ -243,8 +274,8 @@ func FilterByLanguage(files []string, lang Language) []string {
 		return []string{}
 	}
 
-	// For unknown language, return all files
-	if lang == LanguageUnknown {
+	// For unknown or mixed language, return all files
+	if lang == LanguageUnknown || lang == LanguageMixed {
 		result := make([]string, len(files))
 		copy(result, files)
 		return result
