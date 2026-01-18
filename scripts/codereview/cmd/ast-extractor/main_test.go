@@ -150,7 +150,7 @@ func TestReadJSONFileWithLimit(t *testing.T) {
 		{
 			name: "nonexistent_file",
 			setup: func(t *testing.T) string {
-				return "/nonexistent/file.json"
+				return filepath.Join(t.TempDir(), "missing.json")
 			},
 			wantErr:   true,
 			errSubstr: "failed to stat file",

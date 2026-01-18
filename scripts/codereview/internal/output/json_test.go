@@ -18,6 +18,7 @@ func createTestScopeResult() *scope.ScopeResult {
 		BaseRef:          "main",
 		HeadRef:          "feature-branch",
 		Language:         "go",
+		Languages:        []string{"go"},
 		ModifiedFiles:    []string{"internal/service/user.go", "internal/handler/auth.go"},
 		AddedFiles:       []string{"internal/model/account.go"},
 		DeletedFiles:     []string{"internal/deprecated/old.go"},
@@ -34,6 +35,7 @@ func createEmptyScopeResult() *scope.ScopeResult {
 		BaseRef:          "main",
 		HeadRef:          "HEAD",
 		Language:         "unknown",
+		Languages:        []string{},
 		ModifiedFiles:    []string{},
 		AddedFiles:       []string{},
 		DeletedFiles:     []string{},
@@ -75,7 +77,7 @@ func TestToJSON_ReturnsValidCompactJSON(t *testing.T) {
 	}
 
 	// Verify required fields exist
-	requiredFields := []string{"base_ref", "head_ref", "language", "files", "stats", "packages_affected"}
+	requiredFields := []string{"base_ref", "head_ref", "language", "languages", "files", "stats", "packages_affected"}
 	for _, field := range requiredFields {
 		if _, ok := parsed[field]; !ok {
 			t.Errorf("ToJSON missing required field: %s", field)
@@ -107,6 +109,9 @@ func TestToJSON_HasCorrectStructure(t *testing.T) {
 	}
 	if parsed.Language != "go" {
 		t.Errorf("Expected language 'go', got '%s'", parsed.Language)
+	}
+	if len(parsed.Languages) != 1 || parsed.Languages[0] != "go" {
+		t.Errorf("Expected languages ['go'], got %v", parsed.Languages)
 	}
 
 	// Verify files structure
@@ -170,6 +175,7 @@ func TestToJSON_SlicesNeverNull(t *testing.T) {
 		BaseRef:          "main",
 		HeadRef:          "HEAD",
 		Language:         "unknown",
+		Languages:        nil,
 		ModifiedFiles:    nil,
 		AddedFiles:       nil,
 		DeletedFiles:     nil,
@@ -193,6 +199,9 @@ func TestToJSON_SlicesNeverNull(t *testing.T) {
 	}
 
 	// Verify arrays are present (empty arrays look like [])
+	if !strings.Contains(jsonStr, `"languages":[]`) {
+		t.Error("Expected empty array for languages")
+	}
 	if !strings.Contains(jsonStr, `"modified":[]`) {
 		t.Error("Expected empty array for modified files")
 	}
@@ -324,7 +333,10 @@ func TestWriteToStdout(t *testing.T) {
 	}
 
 	// Read captured output
-	capturedBytes, _ := io.ReadAll(r)
+	capturedBytes, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatalf("failed to read captured output: %v", err)
+	}
 	captured := string(capturedBytes)
 
 	// Verify it's valid JSON

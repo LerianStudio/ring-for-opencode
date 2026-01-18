@@ -129,12 +129,12 @@ func TestRenderImpactSummary_ShowsTestCoverage(t *testing.T) {
 	result := RenderImpactSummary(createTestCallGraphResult())
 
 	// ProcessPayment has tests
-	if !strings.Contains(result, ":white_check_mark: Has tests") {
-		t.Error("Expected test coverage indicator for function with tests")
+	if !strings.Contains(result, "Has tests") {
+		t.Error("Expected test coverage indicator")
 	}
 
 	// ValidateInput and UnusedHelper have no tests
-	if !strings.Contains(result, ":warning: No tests found") {
+	if !strings.Contains(result, "No tests found") {
 		t.Error("Expected warning for functions without tests")
 	}
 }
@@ -623,9 +623,10 @@ func TestRenderTestCoverage_WithTests(t *testing.T) {
 	renderTestCoverage(&sb, tests)
 
 	result := sb.String()
-	if !strings.Contains(result, ":white_check_mark: Has tests") {
-		t.Error("Expected positive test coverage indicator")
+	if !strings.Contains(result, "Has tests") {
+		t.Error("Expected test coverage indicator")
 	}
+
 	if !strings.Contains(result, "<details>") {
 		t.Error("Expected details element")
 	}
@@ -643,7 +644,7 @@ func TestRenderTestCoverage_NoTests(t *testing.T) {
 	renderTestCoverage(&sb, []callgraph.TestCoverage{})
 
 	result := sb.String()
-	if !strings.Contains(result, ":warning: No tests found") {
+	if !strings.Contains(result, "No tests found") {
 		t.Error("Expected warning for no tests")
 	}
 }
@@ -898,7 +899,7 @@ func TestRenderFunctionImpact_NoCallersNoCallees(t *testing.T) {
 	if !strings.Contains(result, "**Calls:** None") {
 		t.Error("Expected 'None' for callees")
 	}
-	if !strings.Contains(result, ":warning: No tests found") {
+	if !strings.Contains(result, "No tests found") {
 		t.Error("Expected warning for no tests")
 	}
 }

@@ -86,6 +86,9 @@ func TestRenderMarkdown(t *testing.T) {
 			TypesAdded:        1,
 			TypesRemoved:      0,
 			TypesModified:     1,
+			VariablesAdded:    0,
+			VariablesRemoved:  0,
+			VariablesModified: 0,
 			ImportsAdded:      2,
 			ImportsRemoved:    1,
 		},
@@ -102,6 +105,7 @@ func TestRenderMarkdown(t *testing.T) {
 	assert.Contains(t, output, "| Category | Added | Removed | Modified |")
 	assert.Contains(t, output, "| Functions | 1 | 1 | 1 |")
 	assert.Contains(t, output, "| Types | 1 | 0 | 1 |")
+	assert.Contains(t, output, "| Variables | 0 | 0 | 0 |")
 	assert.Contains(t, output, "| Imports | 2 | 1 | - |")
 
 	// Verify functions section
@@ -205,7 +209,7 @@ func TestRenderJSON(t *testing.T) {
 		Functions: []FunctionDiff{
 			{Name: "Foo", ChangeType: ChangeAdded},
 		},
-		Summary: ChangeSummary{FunctionsAdded: 1},
+		Summary: ChangeSummary{FunctionsAdded: 1, VariablesAdded: 0},
 	}
 
 	output, err := RenderJSON(diff)
@@ -228,7 +232,7 @@ func TestRenderMultipleMarkdown(t *testing.T) {
 			Functions: []FunctionDiff{
 				{Name: "FuncA", ChangeType: ChangeAdded},
 			},
-			Summary: ChangeSummary{FunctionsAdded: 1},
+			Summary: ChangeSummary{FunctionsAdded: 1, VariablesAdded: 0},
 		},
 		{
 			Language: "go",
@@ -236,7 +240,7 @@ func TestRenderMultipleMarkdown(t *testing.T) {
 			Functions: []FunctionDiff{
 				{Name: "FuncB", ChangeType: ChangeRemoved},
 			},
-			Summary: ChangeSummary{FunctionsRemoved: 1},
+			Summary: ChangeSummary{FunctionsRemoved: 1, VariablesAdded: 0},
 		},
 	}
 
@@ -249,6 +253,7 @@ func TestRenderMultipleMarkdown(t *testing.T) {
 
 	// Verify aggregated summary
 	assert.Contains(t, output, "| Functions | 1 | 1 | 0 |")
+	assert.Contains(t, output, "| Variables | 0 | 0 | 0 |")
 
 	// Verify individual file diffs are included
 	assert.Contains(t, output, "# Semantic Changes: pkg/a.go")

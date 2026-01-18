@@ -3,6 +3,8 @@ package scope
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 
@@ -16,6 +18,7 @@ func TestLanguage_String(t *testing.T) {
 		expected string
 	}{
 		{"unknown", LanguageUnknown, "unknown"},
+		{"mixed", LanguageMixed, "mixed"},
 		{"go", LanguageGo, "go"},
 		{"typescript", LanguageTypeScript, "typescript"},
 		{"python", LanguagePython, "python"},
@@ -60,10 +63,9 @@ func TestGetFileExtension(t *testing.T) {
 
 func TestDetectLanguage(t *testing.T) {
 	tests := []struct {
-		name        string
-		files       []string
-		expected    Language
-		expectError bool
+		name     string
+		files    []string
+		expected Language
 	}{
 		{
 			name:     "empty files",
@@ -101,43 +103,45 @@ func TestDetectLanguage(t *testing.T) {
 			expected: LanguageUnknown,
 		},
 		{
-			name:        "mixed go and typescript",
-			files:       []string{"main.go", "src/index.ts"},
-			expectError: true,
+			name:     "mixed go and typescript",
+			files:    []string{"main.go", "src/index.ts"},
+			expected: LanguageMixed,
 		},
 		{
-			name:        "mixed go and python",
-			files:       []string{"main.go", "script.py"},
-			expectError: true,
+			name:     "mixed go and python",
+			files:    []string{"main.go", "script.py"},
+			expected: LanguageMixed,
 		},
 		{
-			name:        "mixed typescript and python",
-			files:       []string{"index.ts", "main.py"},
-			expectError: true,
+			name:     "mixed typescript and python",
+			files:    []string{"index.ts", "main.py"},
+			expected: LanguageMixed,
 		},
 		{
-			name:        "all three languages",
-			files:       []string{"main.go", "index.ts", "script.py"},
-			expectError: true,
+			name:     "all three languages",
+			files:    []string{"main.go", "index.ts", "script.py"},
+			expected: LanguageMixed,
+		},
+		{
+			name:     "uppercase extensions",
+			files:    []string{"MAIN.GO", "src/INDEX.TS"},
+			expected: LanguageMixed,
+		},
+		{
+			name:     "uppercase go",
+			files:    []string{"MAIN.GO"},
+			expected: LanguageGo,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := DetectLanguage(tt.files)
-			if tt.expectError {
-				if err == nil {
-					t.Errorf("DetectLanguage() expected error, got nil")
-				}
-				if err != ErrMixedLanguages {
-					t.Errorf("DetectLanguage() error = %v, want ErrMixedLanguages", err)
-				}
-				return
-			}
 			if err != nil {
 				t.Errorf("DetectLanguage() unexpected error: %v", err)
 				return
 			}
+
 			if got != tt.expected {
 				t.Errorf("DetectLanguage() = %v, want %v", got, tt.expected)
 			}
@@ -234,63 +238,59 @@ func TestCategorizeFilesByStatus(t *testing.T) {
 func TestExtractPackages(t *testing.T) {
 	tests := []struct {
 		name     string
-		lang     Language
 		files    []string
 		expected []string
 	}{
 		{
 			name:     "empty files",
-			lang:     LanguageGo,
 			files:    []string{},
 			expected: []string{},
 		},
 		{
 			name:     "go files same package",
-			lang:     LanguageGo,
 			files:    []string{"internal/service/user.go", "internal/service/auth.go"},
 			expected: []string{"internal/service"},
 		},
 		{
 			name:     "go files different packages",
-			lang:     LanguageGo,
 			files:    []string{"internal/service/user.go", "internal/repository/user.go", "cmd/main.go"},
 			expected: []string{"cmd", "internal/repository", "internal/service"},
 		},
 		{
 			name:     "typescript files",
-			lang:     LanguageTypeScript,
 			files:    []string{"src/components/Button.tsx", "src/utils/helper.ts", "src/index.ts"},
 			expected: []string{"src", "src/components", "src/utils"},
 		},
 		{
 			name:     "python files",
-			lang:     LanguagePython,
 			files:    []string{"myapp/services/user.py", "myapp/models/user.py", "tests/test_user.py"},
 			expected: []string{"myapp/models", "myapp/services", "tests"},
 		},
 		{
 			name:     "root level files",
-			lang:     LanguageGo,
 			files:    []string{"main.go", "config.go"},
 			expected: []string{"."},
 		},
 		{
 			name:     "mixed root and nested",
-			lang:     LanguageGo,
 			files:    []string{"main.go", "internal/app/app.go"},
 			expected: []string{".", "internal/app"},
 		},
 		{
 			name:     "unknown language",
-			lang:     LanguageUnknown,
 			files:    []string{"file1.txt", "file2.md"},
 			expected: []string{"."},
+		},
+		{
+			name:     "mixed language returns all packages",
+			files:    []string{"internal/service/user.go", "src/index.ts"},
+			expected: []string{"internal/service", "src"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ExtractPackages(tt.lang, tt.files)
+			got := ExtractPackages(tt.files)
 			if !slices.Equal(got, tt.expected) {
 				t.Errorf("ExtractPackages() = %v, want %v", got, tt.expected)
 			}
@@ -341,6 +341,12 @@ func TestFilterByLanguage(t *testing.T) {
 			lang:     LanguageUnknown,
 			expected: []string{"file1.go", "file2.ts", "file3.py"},
 		},
+		{
+			name:     "mixed language returns all files",
+			files:    []string{"file1.go", "file2.ts", "file3.py"},
+			lang:     LanguageMixed,
+			expected: []string{"file1.go", "file2.ts", "file3.py"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -383,6 +389,7 @@ func TestScopeResult_JSON(t *testing.T) {
 		BaseRef:          "main",
 		HeadRef:          "feature",
 		Language:         "go",
+		Languages:        []string{"go"},
 		ModifiedFiles:    []string{"file1.go"},
 		AddedFiles:       []string{"file2.go"},
 		DeletedFiles:     []string{"file3.go"},
@@ -406,7 +413,7 @@ func TestScopeResult_JSON(t *testing.T) {
 
 	// Verify JSON field names match the struct tags (snake_case)
 	expectedKeys := []string{
-		"base_ref", "head_ref", "language", "modified", "added",
+		"base_ref", "head_ref", "language", "languages", "modified", "added",
 		"deleted", "total_files", "total_additions", "total_deletions",
 		"packages_affected",
 	}
@@ -456,6 +463,7 @@ func TestScopeResult_JSON(t *testing.T) {
 		}
 	}
 
+	verifyJSONSlice("languages", []string{"go"})
 	verifyJSONSlice("modified", []string{"file1.go"})
 	verifyJSONSlice("added", []string{"file2.go"})
 	verifyJSONSlice("deleted", []string{"file3.go"})
@@ -475,6 +483,9 @@ func TestScopeResult_JSON(t *testing.T) {
 	}
 	if roundTrip.Language != result.Language {
 		t.Errorf("round-trip Language: got %q, want %q", roundTrip.Language, result.Language)
+	}
+	if !slices.Equal(roundTrip.Languages, result.Languages) {
+		t.Errorf("round-trip Languages: got %v, want %v", roundTrip.Languages, result.Languages)
 	}
 	if roundTrip.TotalFiles != result.TotalFiles {
 		t.Errorf("round-trip TotalFiles: got %d, want %d", roundTrip.TotalFiles, result.TotalFiles)
@@ -507,9 +518,9 @@ func TestDetector_DetectFromRefs(t *testing.T) {
 		headRef     string
 		mockResult  *git.DiffResult
 		mockErr     error
-		expectError bool
 		checkResult func(*testing.T, *ScopeResult)
 	}{
+
 		{
 			name:    "successful detection with go files",
 			baseRef: "main",
@@ -596,7 +607,7 @@ func TestDetector_DetectFromRefs(t *testing.T) {
 			},
 		},
 		{
-			name:    "mixed languages returns error",
+			name:    "mixed languages returns mixed",
 			baseRef: "main",
 			headRef: "HEAD",
 			mockResult: &git.DiffResult{
@@ -608,7 +619,11 @@ func TestDetector_DetectFromRefs(t *testing.T) {
 				},
 				Stats: git.DiffStats{TotalFiles: 2},
 			},
-			expectError: true,
+			checkResult: func(t *testing.T, r *ScopeResult) {
+				if r.Language != "mixed" {
+					t.Errorf("Language = %q, want %q", r.Language, "mixed")
+				}
+			},
 		},
 	}
 
@@ -621,13 +636,6 @@ func TestDetector_DetectFromRefs(t *testing.T) {
 			}
 
 			result, err := d.DetectFromRefs(tt.baseRef, tt.headRef)
-
-			if tt.expectError {
-				if err == nil {
-					t.Error("DetectFromRefs() expected error, got nil")
-				}
-				return
-			}
 
 			if err != nil {
 				t.Errorf("DetectFromRefs() unexpected error: %v", err)
@@ -646,9 +654,9 @@ func TestDetector_DetectAllChanges(t *testing.T) {
 		name        string
 		mockResult  *git.DiffResult
 		mockErr     error
-		expectError bool
 		checkResult func(*testing.T, *ScopeResult)
 	}{
+
 		{
 			name: "successful detection",
 			mockResult: &git.DiffResult{
@@ -683,13 +691,6 @@ func TestDetector_DetectAllChanges(t *testing.T) {
 
 			result, err := d.DetectAllChanges()
 
-			if tt.expectError {
-				if err == nil {
-					t.Error("DetectAllChanges() expected error, got nil")
-				}
-				return
-			}
-
 			if err != nil {
 				t.Errorf("DetectAllChanges() unexpected error: %v", err)
 				return
@@ -708,6 +709,50 @@ type mockGitClient struct {
 	diffErr          error
 	allChangesResult *git.DiffResult
 	allChangesErr    error
+	stats            git.DiffStats
+	statsByFile      map[string]git.FileStats
+	fileExists       map[string]bool
+	fileExistsErr    error
+	statsErr         error
+}
+
+func TestDetector_DetectFromFiles(t *testing.T) {
+	files := []string{"internal/scope/scope.go", "ts/ast-extractor.ts"}
+	tempDir := t.TempDir()
+	for _, file := range files {
+		fullPath := filepath.Join(tempDir, file)
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+		if err := os.WriteFile(fullPath, []byte("data"), 0o644); err != nil {
+			t.Fatalf("failed to write file: %v", err)
+		}
+	}
+
+	d := NewDetector(tempDir)
+	d.gitClient = &mockGitClient{
+		stats:       git.DiffStats{TotalFiles: 2, TotalAdditions: 4, TotalDeletions: 1},
+		statsByFile: map[string]git.FileStats{"internal/scope/scope.go": {Additions: 3, Deletions: 1}, "ts/ast-extractor.ts": {Additions: 1, Deletions: 0}},
+		fileExists:  map[string]bool{"internal/scope/scope.go": true, "ts/ast-extractor.ts": true},
+	}
+
+	result, err := d.DetectFromFiles("HEAD", files)
+	if err != nil {
+		t.Fatalf("DetectFromFiles() unexpected error: %v", err)
+	}
+
+	if result.Language != "mixed" {
+		t.Errorf("Language = %q, want mixed", result.Language)
+	}
+	if len(result.ModifiedFiles) != 2 {
+		t.Errorf("ModifiedFiles len = %d, want 2", len(result.ModifiedFiles))
+	}
+	if len(result.AddedFiles) != 0 {
+		t.Errorf("AddedFiles len = %d, want 0", len(result.AddedFiles))
+	}
+	if result.TotalFiles != 2 {
+		t.Errorf("TotalFiles = %d, want 2", result.TotalFiles)
+	}
 }
 
 func (m *mockGitClient) GetDiff(baseRef, headRef string) (*git.DiffResult, error) {
@@ -722,4 +767,24 @@ func (m *mockGitClient) GetAllChangesDiff() (*git.DiffResult, error) {
 		return nil, m.allChangesErr
 	}
 	return m.allChangesResult, nil
+}
+
+func (m *mockGitClient) GetDiffStatsForFiles(baseRef string, files []string) (git.DiffStats, map[string]git.FileStats, error) {
+	if m.statsErr != nil {
+		return git.DiffStats{}, nil, m.statsErr
+	}
+	if m.statsByFile == nil {
+		return m.stats, map[string]git.FileStats{}, nil
+	}
+	return m.stats, m.statsByFile, nil
+}
+
+func (m *mockGitClient) FileExistsAtRef(ref, path string) (bool, error) {
+	if m.fileExistsErr != nil {
+		return false, m.fileExistsErr
+	}
+	if m.fileExists == nil {
+		return false, nil
+	}
+	return m.fileExists[path], nil
 }

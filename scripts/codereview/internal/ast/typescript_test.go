@@ -33,7 +33,7 @@ func TestTypeScriptExtractor_NewExtractor(t *testing.T) {
 	extractor := NewTypeScriptExtractor(scriptDir)
 
 	assert.Equal(t, "node", extractor.nodeExecutable)
-	assert.Equal(t, filepath.Join(scriptDir, "ts", "dist", "ast-extractor.js"), extractor.scriptPath)
+	assert.Equal(t, findTypeScriptASTExtractor(scriptDir), extractor.scriptPath)
 }
 
 func TestTypeScriptExtractor_ExtractDiff(t *testing.T) {

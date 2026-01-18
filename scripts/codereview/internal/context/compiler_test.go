@@ -154,6 +154,12 @@ func TestCompiler_PartialInputs(t *testing.T) {
 		BaseRef:  "main",
 		HeadRef:  "HEAD",
 		Language: "go",
+		Files: ScopeFiles{
+			Modified: []string{},
+			Added:    []string{},
+			Deleted:  []string{},
+		},
+		Stats: ScopeStats{},
 	}
 	scopeData, err := json.Marshal(scope)
 	if err != nil {
@@ -253,7 +259,17 @@ func TestCompiler_UncoveredFunctions(t *testing.T) {
 	outputDir := t.TempDir()
 
 	// Create phase outputs with an uncovered function
-	scope := ScopeData{BaseRef: "main", HeadRef: "HEAD", Language: "go"}
+	scope := ScopeData{
+		BaseRef:  "main",
+		HeadRef:  "HEAD",
+		Language: "go",
+		Files: ScopeFiles{
+			Modified: []string{},
+			Added:    []string{},
+			Deleted:  []string{},
+		},
+		Stats: ScopeStats{},
+	}
 	writeJSON(t, inputDir, "scope.json", scope)
 
 	calls := CallGraphData{
@@ -320,16 +336,22 @@ func createSamplePhaseOutputs(t *testing.T, dir string) {
 
 	// scope.json
 	scope := ScopeData{
-		BaseRef:          "main",
-		HeadRef:          "HEAD",
-		Language:         "go",
-		ModifiedFiles:    []string{"internal/handler/user.go"},
-		AddedFiles:       []string{"internal/service/notification.go"},
-		TotalFiles:       2,
-		TotalAdditions:   100,
-		TotalDeletions:   10,
+		BaseRef:  "main",
+		HeadRef:  "HEAD",
+		Language: "go",
+		Files: ScopeFiles{
+			Modified: []string{"internal/handler/user.go"},
+			Added:    []string{"internal/service/notification.go"},
+			Deleted:  []string{},
+		},
+		Stats: ScopeStats{
+			TotalFiles:     2,
+			TotalAdditions: 100,
+			TotalDeletions: 10,
+		},
 		PackagesAffected: []string{"internal/handler", "internal/service"},
 	}
+
 	writeJSON(t, dir, "scope.json", scope)
 
 	// static-analysis.json
@@ -417,7 +439,15 @@ func TestCompiler_TestReviewerNewErrorPaths(t *testing.T) {
 	outputDir := t.TempDir()
 
 	// Create scope
-	scope := ScopeData{Language: "go", ModifiedFiles: []string{"user.go"}}
+	scope := ScopeData{
+		Language: "go",
+		Files: ScopeFiles{
+			Modified: []string{"user.go"},
+			Added:    []string{},
+			Deleted:  []string{},
+		},
+		Stats: ScopeStats{},
+	}
 	scopeData, err := json.Marshal(scope)
 	if err != nil {
 		t.Fatalf("failed to marshal scope: %v", err)

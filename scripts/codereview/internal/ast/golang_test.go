@@ -2,15 +2,50 @@ package ast
 
 import (
 	"context"
+	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
+
+func codereviewRoot(t *testing.T) string {
+	t.Helper()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("failed to determine test file path")
+	}
+	root := filepath.Join(filepath.Dir(filename), "..", "..")
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		t.Fatalf("failed to resolve codereview root: %v", err)
+	}
+	if _, err := os.Stat(absRoot); err != nil {
+		t.Fatalf("codereview root does not exist: %v", err)
+	}
+	return absRoot
+}
+
+func setWorkingDir(t *testing.T, dir string) {
+	t.Helper()
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("failed to change directory: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(cwd)
+	})
+}
 
 func TestGoExtractor_ExtractDiff(t *testing.T) {
 	extractor := NewGoExtractor()
 
-	beforePath := filepath.Join("..", "..", "testdata", "go", "before.go")
-	afterPath := filepath.Join("..", "..", "testdata", "go", "after.go")
+	root := codereviewRoot(t)
+	setWorkingDir(t, root)
+	beforePath := filepath.Join("testdata", "go", "before.go")
+	afterPath := filepath.Join("testdata", "go", "after.go")
 
 	diff, err := extractor.ExtractDiff(context.Background(), beforePath, afterPath)
 	if err != nil {
@@ -64,6 +99,19 @@ func TestGoExtractor_ExtractDiff(t *testing.T) {
 		t.Errorf("expected Config to be added, got %v", typeChanges["Config"])
 	}
 
+	// Verify variable changes
+	varChanges := make(map[string]ChangeType)
+	for _, v := range diff.Variables {
+		varChanges[v.Name] = v.ChangeType
+	}
+
+	if ct, ok := varChanges["DefaultTimeout"]; !ok || ct != ChangeAdded {
+		t.Errorf("expected DefaultTimeout to be added, got %v", varChanges["DefaultTimeout"])
+	}
+	if ct, ok := varChanges["greetingPrefix"]; !ok || ct != ChangeAdded {
+		t.Errorf("expected greetingPrefix to be added, got %v", varChanges["greetingPrefix"])
+	}
+
 	// Verify import changes
 	importChanges := make(map[string]ChangeType)
 	for _, imp := range diff.Imports {
@@ -90,12 +138,17 @@ func TestGoExtractor_ExtractDiff(t *testing.T) {
 	if diff.Summary.TypesAdded < 1 {
 		t.Errorf("expected at least 1 type added, got %d", diff.Summary.TypesAdded)
 	}
+	if diff.Summary.VariablesAdded < 2 {
+		t.Errorf("expected at least 2 variables added, got %d", diff.Summary.VariablesAdded)
+	}
 }
 
 func TestGoExtractor_NewFile(t *testing.T) {
 	extractor := NewGoExtractor()
 
-	afterPath := filepath.Join("..", "..", "testdata", "go", "after.go")
+	root := codereviewRoot(t)
+	setWorkingDir(t, root)
+	afterPath := filepath.Join("testdata", "go", "after.go")
 
 	diff, err := extractor.ExtractDiff(context.Background(), "", afterPath)
 	if err != nil {
@@ -113,7 +166,9 @@ func TestGoExtractor_NewFile(t *testing.T) {
 func TestGoExtractor_DeletedFile(t *testing.T) {
 	extractor := NewGoExtractor()
 
-	beforePath := filepath.Join("..", "..", "testdata", "go", "before.go")
+	root := codereviewRoot(t)
+	setWorkingDir(t, root)
+	beforePath := filepath.Join("testdata", "go", "before.go")
 
 	diff, err := extractor.ExtractDiff(context.Background(), beforePath, "")
 	if err != nil {

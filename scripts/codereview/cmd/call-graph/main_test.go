@@ -45,7 +45,7 @@ func TestReadJSONFileWithLimit(t *testing.T) {
 		{
 			name: "nonexistent_file",
 			setup: func(t *testing.T) string {
-				return "/nonexistent/file.json"
+				return filepath.Join(t.TempDir(), "missing.json")
 			},
 			wantErr:   true,
 			errSubstr: "failed to stat file",
@@ -132,7 +132,7 @@ func TestDetectLanguage(t *testing.T) {
 			want:     callgraph.LangTypeScript,
 		},
 		{
-			name:     "typescript_prefix",
+			name:     "typescript_full_name",
 			filename: "typescript-ast.json",
 			want:     callgraph.LangTypeScript,
 		},
@@ -142,7 +142,7 @@ func TestDetectLanguage(t *testing.T) {
 			want:     callgraph.LangPython,
 		},
 		{
-			name:     "python_prefix",
+			name:     "python_full_name",
 			filename: "python-ast.json",
 			want:     callgraph.LangPython,
 		},
@@ -174,6 +174,11 @@ func TestDetectLanguage(t *testing.T) {
 		{
 			name:     "full_path_ts",
 			filename: ".ring/codereview/ts-ast.json",
+			want:     callgraph.LangTypeScript,
+		},
+		{
+			name:     "full_path_typescript",
+			filename: ".ring/codereview/typescript-ast.json",
 			want:     callgraph.LangTypeScript,
 		},
 		{
@@ -411,95 +416,125 @@ func TestExtractPackageFromPath(t *testing.T) {
 	}
 }
 
-func TestPreviewASTData(t *testing.T) {
+func TestExtractLanguagesFromDiffs(t *testing.T) {
 	tests := []struct {
-		name    string
-		input   []byte
-		maxLen  int
-		wantLen int
-		wantEnd string
+		name  string
+		diffs []SemanticDiff
+		want  []string
 	}{
 		{
-			name:    "short_data_under_512",
-			input:   []byte(`{"key": "value"}`),
-			maxLen:  512,
-			wantLen: 16,
-			wantEnd: "",
+			name:  "empty",
+			diffs: []SemanticDiff{},
+			want:  []string{},
 		},
 		{
-			name:    "exact_512_bytes",
-			input:   make([]byte, 512),
-			maxLen:  512,
-			wantLen: 512,
-			wantEnd: "",
+			name: "single_language",
+			diffs: []SemanticDiff{
+				{Language: "go"},
+				{Language: "golang"},
+			},
+			want: []string{callgraph.LangGo},
 		},
 		{
-			name:    "over_512_bytes",
-			input:   make([]byte, 1000),
-			maxLen:  512,
-			wantLen: 512 + len("...(truncated)"),
-			wantEnd: "...(truncated)",
+			name: "multiple_languages_priority",
+			diffs: []SemanticDiff{
+				{Language: "python"},
+				{Language: "typescript"},
+				{Language: "go"},
+			},
+			want: []string{callgraph.LangGo, callgraph.LangTypeScript, callgraph.LangPython},
 		},
 		{
-			name:    "empty_data",
-			input:   []byte{},
-			maxLen:  512,
-			wantLen: 0,
-			wantEnd: "",
+			name: "unsupported_languages_ignored",
+			diffs: []SemanticDiff{
+				{Language: "rust"},
+				{Language: ""},
+			},
+			want: []string{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Fill byte arrays with recognizable content
-			if len(tt.input) > 0 && tt.input[0] == 0 {
-				for i := range tt.input {
-					tt.input[i] = 'a'
-				}
+			got := extractLanguagesFromDiffs(tt.diffs)
+			if len(got) != len(tt.want) {
+				t.Fatalf("extractLanguagesFromDiffs length = %d, want %d", len(got), len(tt.want))
 			}
-
-			got := previewASTData(tt.input)
-
-			if len(got) != tt.wantLen {
-				t.Errorf("previewASTData() length = %d, want %d", len(got), tt.wantLen)
-			}
-
-			if tt.wantEnd != "" {
-				if len(got) < len(tt.wantEnd) {
-					t.Errorf("previewASTData() too short to contain ending %q", tt.wantEnd)
-				} else if got[len(got)-len(tt.wantEnd):] != tt.wantEnd {
-					t.Errorf("previewASTData() should end with %q, got ending %q",
-						tt.wantEnd, got[len(got)-len(tt.wantEnd):])
+			for i, value := range tt.want {
+				if got[i] != value {
+					t.Fatalf("extractLanguagesFromDiffs[%d] = %q, want %q", i, got[i], value)
 				}
 			}
 		})
 	}
 }
 
-func TestPreviewASTData_ContentPreservation(t *testing.T) {
-	// Test that short content is preserved exactly
-	input := `{"language": "go", "functions": []}`
-	got := previewASTData([]byte(input))
+func TestNormalizeLanguages(t *testing.T) {
+	tests := []struct {
+		name      string
+		languages []string
+		want      []string
+	}{
+		{
+			name:      "dedupe_and_normalize",
+			languages: []string{"Go", "golang", "TS", "typescript"},
+			want:      []string{callgraph.LangGo, callgraph.LangTypeScript},
+		},
+		{
+			name:      "filters_unsupported",
+			languages: []string{"go", "rust", ""},
+			want:      []string{callgraph.LangGo},
+		},
+		{
+			name:      "empty",
+			languages: []string{},
+			want:      []string{},
+		},
+	}
 
-	if got != input {
-		t.Errorf("previewASTData() should preserve short content exactly:\ngot:  %s\nwant: %s", got, input)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizeLanguages(tt.languages)
+			if len(got) != len(tt.want) {
+				t.Fatalf("normalizeLanguages length = %d, want %d", len(got), len(tt.want))
+			}
+			for i, value := range tt.want {
+				if got[i] != value {
+					t.Fatalf("normalizeLanguages[%d] = %q, want %q", i, got[i], value)
+				}
+			}
+		})
 	}
 }
 
-func TestPreviewASTData_TruncationPreservesStart(t *testing.T) {
-	// Create content longer than 512 bytes
-	prefix := `{"important": "data", "start": "`
-	content := prefix + string(make([]byte, 600)) + `"}`
-
-	got := previewASTData([]byte(content))
-
-	// Verify the start is preserved
-	if len(got) < len(prefix) {
-		t.Fatalf("previewASTData() too short, got %d chars", len(got))
+func TestFilterDiffsByLanguage(t *testing.T) {
+	diffs := []SemanticDiff{
+		{Language: "go", FilePath: "go.go"},
+		{Language: "python", FilePath: "py.py"},
+		{Language: "typescript", FilePath: "ts.ts"},
 	}
 
-	if got[:len(prefix)] != prefix {
-		t.Errorf("previewASTData() should preserve start of content:\ngot:  %s\nwant: %s", got[:len(prefix)], prefix)
+	filtered := filterDiffsByLanguage(diffs, "go")
+	if len(filtered) != 1 {
+		t.Fatalf("Expected 1 diff, got %d", len(filtered))
+	}
+	if filtered[0].FilePath != "go.go" {
+		t.Fatalf("Unexpected diff: %+v", filtered[0])
+	}
+
+	filtered = filterDiffsByLanguage(diffs, "")
+	if len(filtered) != len(diffs) {
+		t.Fatalf("Expected unfiltered diffs, got %d", len(filtered))
+	}
+}
+
+func TestContainsString(t *testing.T) {
+	items := []string{"go", "typescript"}
+	if !containsString(items, "go") {
+		t.Fatal("Expected to find go")
+	}
+	if containsString(items, "python") {
+		t.Fatal("Did not expect to find python")
 	}
 }
 

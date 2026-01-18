@@ -131,7 +131,9 @@ func TestParseSkipList_InvalidPhase(t *testing.T) {
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	_, _ = buf.ReadFrom(r)
+	if _, err := buf.ReadFrom(r); err != nil {
+		t.Fatalf("failed to read stderr output: %v", err)
+	}
 	stderrOutput := buf.String()
 
 	// Valid phases should still be in result
@@ -186,9 +188,10 @@ func TestParseSkipList_EmptyEntries(t *testing.T) {
 
 // TestExecutePhase_BinaryNotFound verifies error when binary doesn't exist.
 func TestExecutePhase_BinaryNotFound(t *testing.T) {
+	tempDir := t.TempDir()
 	cfg := &config{
 		binDir:    "/nonexistent/binary/path",
-		outputDir: t.TempDir(),
+		outputDir: filepath.Join(tempDir, "output"),
 	}
 
 	phase := Phase{
@@ -220,9 +223,11 @@ func TestExecutePhase_BinaryNotFound(t *testing.T) {
 
 // TestExecutePhase_Skipped verifies skipped phases are handled correctly.
 func TestExecutePhase_Skipped(t *testing.T) {
+	binDir := t.TempDir()
+	tempOutputDir := filepath.Join(t.TempDir(), "output")
 	cfg := &config{
-		binDir:    t.TempDir(),
-		outputDir: t.TempDir(),
+		binDir:    binDir,
+		outputDir: tempOutputDir,
 	}
 
 	phase := Phase{
@@ -279,7 +284,7 @@ func TestExecutePhase_Timeout(t *testing.T) {
 
 	cfg := &config{
 		binDir:    binDir,
-		outputDir: tempDir,
+		outputDir: filepath.Join(tempDir, "output"),
 	}
 
 	phase := Phase{
@@ -340,7 +345,7 @@ func TestExecutePhase_Success(t *testing.T) {
 
 	cfg := &config{
 		binDir:    binDir,
-		outputDir: tempDir,
+		outputDir: filepath.Join(tempDir, "output"),
 	}
 
 	phase := Phase{
@@ -394,7 +399,7 @@ func TestExecutePhase_ContextCancellation(t *testing.T) {
 
 	cfg := &config{
 		binDir:    binDir,
-		outputDir: tempDir,
+		outputDir: filepath.Join(tempDir, "output"),
 	}
 
 	phase := Phase{
@@ -439,11 +444,15 @@ func TestExecutePhase_ContextCancellation(t *testing.T) {
 func TestExecutePhase_ContextPhaseSpecialHandling(t *testing.T) {
 	// Create temp directory with mock phase outputs
 	tempDir := t.TempDir()
-	createMockPhaseOutputs(t, tempDir)
+	outputDir := filepath.Join(tempDir, "output")
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		t.Fatalf("Failed to create output directory: %v", err)
+	}
+	createMockPhaseOutputs(t, outputDir)
 
 	cfg := &config{
 		binDir:    tempDir, // Doesn't matter for context phase
-		outputDir: tempDir,
+		outputDir: outputDir,
 	}
 
 	phase := Phase{
@@ -462,7 +471,7 @@ func TestExecutePhase_ContextPhaseSpecialHandling(t *testing.T) {
 	}
 
 	// Verify context files were created
-	expectedFile := filepath.Join(tempDir, "context-code-reviewer.md")
+	expectedFile := filepath.Join(outputDir, "context-code-reviewer.md")
 	if _, err := os.Stat(expectedFile); os.IsNotExist(err) {
 		t.Errorf("Context file not created: %s", expectedFile)
 	}
@@ -523,6 +532,8 @@ func TestMain_Help(t *testing.T) {
 		"run-all",
 		"-base",
 		"-head",
+		"-files",
+		"-files-from",
 		"-output",
 		"-skip",
 		"-verbose",
@@ -753,6 +764,16 @@ func TestRun_ExitCodes(t *testing.T) {
 			args:        []string{"--bin-dir=" + emptyBinDir, "--skip=context"},
 			expectExit0: false,
 		},
+		{
+			name:        "files_with_base_exits_nonzero",
+			args:        []string{"--files=README.md", "--base=main"},
+			expectExit0: false,
+		},
+		{
+			name:        "files_from_with_head_exits_nonzero",
+			args:        []string{"--files-from=README.md", "--head=HEAD"},
+			expectExit0: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -811,10 +832,11 @@ func TestGetPhases(t *testing.T) {
 
 // TestPhaseArgs verifies phase argument generation.
 func TestPhaseArgs(t *testing.T) {
+	tempDir := t.TempDir()
 	cfg := &config{
 		baseRef:   "main",
 		headRef:   "feature-branch",
-		outputDir: "/tmp/output",
+		outputDir: filepath.Join(tempDir, "output"),
 	}
 
 	phases := getPhases()
@@ -843,6 +865,154 @@ func TestPhaseArgs(t *testing.T) {
 	}
 }
 
+// ============================================================================
+// Skip Condition & Git Extraction Tests
+// ============================================================================
+
+func TestShouldSkipForNoFiles_MissingScope(t *testing.T) {
+	cfg := &config{outputDir: t.TempDir()}
+
+	skip, reason := shouldSkipForNoFiles(cfg)
+	if !skip {
+		t.Fatal("Expected skip when scope.json is missing")
+	}
+	if !strings.Contains(reason, "scope.json") {
+		t.Fatalf("Expected scope.json reason, got %q", reason)
+	}
+}
+
+func TestShouldSkipForNoFiles_EmptyScope(t *testing.T) {
+	tempDir := t.TempDir()
+	writeScopeJSON(t, tempDir, "go", nil, nil, nil)
+	cfg := &config{outputDir: tempDir}
+
+	skip, reason := shouldSkipForNoFiles(cfg)
+	if !skip {
+		t.Fatal("Expected skip when no files are present")
+	}
+	if reason != "No changed files detected" {
+		t.Fatalf("Unexpected skip reason: %q", reason)
+	}
+}
+
+func TestShouldSkipForUnknownLanguage(t *testing.T) {
+	tempDir := t.TempDir()
+	writeScopeJSON(t, tempDir, "unknown", []string{"main.go"}, nil, nil)
+	cfg := &config{outputDir: tempDir}
+
+	skip, reason := shouldSkipForUnknownLanguage(cfg)
+	if !skip {
+		t.Fatal("Expected skip for unknown language")
+	}
+	if reason != "Unknown language detected" {
+		t.Fatalf("Unexpected skip reason: %q", reason)
+	}
+}
+
+func TestShouldSkipForMissingScope(t *testing.T) {
+	cfg := &config{outputDir: t.TempDir()}
+
+	skip, reason := shouldSkipForMissingScope(cfg)
+	if !skip {
+		t.Fatal("Expected skip when scope.json is missing")
+	}
+	if !strings.Contains(reason, "scope.json") {
+		t.Fatalf("Expected scope.json reason, got %q", reason)
+	}
+}
+
+func TestShouldSkipForNoFilesOrUnknownLanguage_UsesNoFilesReason(t *testing.T) {
+	tempDir := t.TempDir()
+	writeScopeJSON(t, tempDir, "unknown", nil, nil, nil)
+	cfg := &config{outputDir: tempDir}
+
+	skip, reason := shouldSkipForNoFilesOrUnknownLanguage(cfg)
+	if !skip {
+		t.Fatal("Expected skip when no files are present")
+	}
+	if reason != "No changed files detected" {
+		t.Fatalf("Unexpected skip reason: %q", reason)
+	}
+}
+
+func TestShouldSkipForNoFilesOrUnknownLanguage_UnknownLanguage(t *testing.T) {
+	tempDir := t.TempDir()
+	writeScopeJSON(t, tempDir, "unknown", []string{"main.go"}, nil, nil)
+	cfg := &config{outputDir: tempDir}
+
+	skip, reason := shouldSkipForNoFilesOrUnknownLanguage(cfg)
+	if !skip {
+		t.Fatal("Expected skip when language is unknown")
+	}
+	if reason != "Unknown language detected" {
+		t.Fatalf("Unexpected skip reason: %q", reason)
+	}
+}
+
+func TestExtractFileFromGit_Success(t *testing.T) {
+	tempDir := t.TempDir()
+	path, err := extractFileFromGit("HEAD", "scripts/codereview/cmd/run-all/main.go", tempDir)
+	if err != nil {
+		t.Fatalf("Expected success extracting file, got error: %v", err)
+	}
+	if !strings.HasPrefix(filepath.Clean(path), filepath.Clean(tempDir)+string(filepath.Separator)) {
+		t.Fatalf("Expected file in temp dir, got %s", path)
+	}
+	if _, statErr := os.Stat(path); statErr != nil {
+		t.Fatalf("Expected extracted file to exist: %v", statErr)
+	}
+}
+
+func TestExtractFileFromGit_InvalidPaths(t *testing.T) {
+	tempDir := t.TempDir()
+
+	tests := []struct {
+		name      string
+		filePath  string
+		errSubstr string
+	}{
+		{
+			name:      "empty_path",
+			filePath:  "",
+			errSubstr: "invalid file path: empty",
+		},
+		{
+			name:      "absolute_path",
+			filePath:  filepath.Join(tempDir, "file.go"),
+			errSubstr: "absolute paths are not allowed",
+		},
+		{
+			name:      "traversal_path",
+			filePath:  "../README.md",
+			errSubstr: "contains path traversal",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := extractFileFromGit("HEAD", tt.filePath, tempDir)
+			if err == nil {
+				t.Fatalf("Expected error for %s", tt.name)
+			}
+			if !strings.Contains(err.Error(), tt.errSubstr) {
+				t.Fatalf("Expected error containing %q, got %v", tt.errSubstr, err)
+			}
+		})
+	}
+}
+
+func TestExtractFileFromGit_GitShowFailure(t *testing.T) {
+	tempDir := t.TempDir()
+
+	_, err := extractFileFromGit("HEAD", "no-such-file.txt", tempDir)
+	if err == nil {
+		t.Fatal("Expected error for missing file in git")
+	}
+	if !strings.Contains(err.Error(), "git show failed") {
+		t.Fatalf("Expected git show failure, got %v", err)
+	}
+}
+
 // containsArg checks if an argument is in the args slice.
 func containsArg(args []string, arg string) bool {
 	for _, a := range args {
@@ -857,6 +1027,33 @@ func containsArg(args []string, arg string) bool {
 // Helper Functions for Tests
 // ============================================================================
 
+func writeScopeJSON(t *testing.T, dir, language string, modified, added, deleted []string) {
+	t.Helper()
+
+	if modified == nil {
+		modified = []string{}
+	}
+	if added == nil {
+		added = []string{}
+	}
+	if deleted == nil {
+		deleted = []string{}
+	}
+
+	scopeData := map[string]interface{}{
+		"base_ref":  "main",
+		"head_ref":  "HEAD",
+		"language":  language,
+		"languages": []string{language},
+		"files": map[string]interface{}{
+			"modified": modified,
+			"added":    added,
+			"deleted":  deleted,
+		},
+	}
+	writeMockJSON(t, filepath.Join(dir, "scope.json"), scopeData)
+}
+
 // createMockPhaseOutputs creates mock phase output files in the given directory.
 func createMockPhaseOutputs(t *testing.T, dir string) {
 	t.Helper()
@@ -866,6 +1063,7 @@ func createMockPhaseOutputs(t *testing.T, dir string) {
 		"base_ref":          "main",
 		"head_ref":          "HEAD",
 		"language":          "go",
+		"languages":         []string{"go"},
 		"files":             map[string]interface{}{"modified": []string{"main.go"}, "added": []string{}, "deleted": []string{}},
 		"stats":             map[string]interface{}{"total_files": 1, "total_additions": 10, "total_deletions": 5},
 		"packages_affected": []string{"main"},

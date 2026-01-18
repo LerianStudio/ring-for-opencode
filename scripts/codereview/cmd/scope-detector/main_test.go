@@ -117,6 +117,8 @@ func TestMain_Help(t *testing.T) {
 		"scope-detector",
 		"-base",
 		"-head",
+		"-files",
+		"-files-from",
 		"-output",
 		"-workdir",
 		"-version",
@@ -269,7 +271,7 @@ func TestMain_JSONStructure(t *testing.T) {
 	}
 
 	// Check top-level required fields
-	requiredTopLevel := []string{"base_ref", "head_ref", "language", "files", "stats", "packages_affected"}
+	requiredTopLevel := []string{"base_ref", "head_ref", "language", "languages", "files", "stats", "packages_affected"}
 	for _, field := range requiredTopLevel {
 		if _, exists := rawJSON[field]; !exists {
 			t.Errorf("Missing required top-level field: %s", field)
