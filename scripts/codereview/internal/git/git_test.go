@@ -786,6 +786,21 @@ func TestParseNameStatusOutput(t *testing.T) {
 			}
 		})
 	}
+
+	multi := nulJoin("M", "one.go", "A", "two.go")
+	files, err := parseNameStatusOutput(multi)
+	if err != nil {
+		t.Fatalf("parseNameStatusOutput() unexpected error for multi-record: %v", err)
+	}
+	if len(files) != 2 {
+		t.Fatalf("multi-record files length = %d, want %d", len(files), 2)
+	}
+	if files[0].Path != "one.go" || files[1].Path != "two.go" {
+		t.Fatalf("multi-record paths = %q, %q", files[0].Path, files[1].Path)
+	}
+	if files[0].Status != StatusModified || files[1].Status != StatusAdded {
+		t.Fatalf("multi-record statuses = %v, %v", files[0].Status, files[1].Status)
+	}
 }
 
 func TestParseNameStatusOutputEmpty(t *testing.T) {

@@ -9,6 +9,7 @@ const (
 	LanguageGo         Language = "go"
 	LanguageTypeScript Language = "typescript"
 	LanguagePython     Language = "python"
+	LanguageMixed      Language = "mixed"
 )
 
 // TargetKind declares how a linter wants its targets expressed.

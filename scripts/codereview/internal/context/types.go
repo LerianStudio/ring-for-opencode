@@ -20,16 +20,33 @@ type PhaseOutputs struct {
 
 // ScopeData represents Phase 0 output (scope.json).
 type ScopeData struct {
-	BaseRef          string   `json:"base_ref"`
-	HeadRef          string   `json:"head_ref"`
-	Language         string   `json:"language"`
-	ModifiedFiles    []string `json:"modified"`
-	AddedFiles       []string `json:"added"`
-	DeletedFiles     []string `json:"deleted"`
-	TotalFiles       int      `json:"total_files"`
-	TotalAdditions   int      `json:"total_additions"`
-	TotalDeletions   int      `json:"total_deletions"`
-	PackagesAffected []string `json:"packages_affected"`
+	BaseRef          string     `json:"base_ref"`
+	HeadRef          string     `json:"head_ref"`
+	Language         string     `json:"language"`
+	Languages        []string   `json:"languages,omitempty"`
+	Files            ScopeFiles `json:"files"`
+	Stats            ScopeStats `json:"stats"`
+	PackagesAffected []string   `json:"packages_affected"`
+	ModifiedFiles    []string   `json:"-"`
+	AddedFiles       []string   `json:"-"`
+	DeletedFiles     []string   `json:"-"`
+	TotalFiles       int        `json:"-"`
+	TotalAdditions   int        `json:"-"`
+	TotalDeletions   int        `json:"-"`
+}
+
+// ScopeFiles represents nested file lists in scope.json.
+type ScopeFiles struct {
+	Modified []string `json:"modified"`
+	Added    []string `json:"added"`
+	Deleted  []string `json:"deleted"`
+}
+
+// ScopeStats represents nested stats in scope.json.
+type ScopeStats struct {
+	TotalFiles     int `json:"total_files"`
+	TotalAdditions int `json:"total_additions"`
+	TotalDeletions int `json:"total_deletions"`
 }
 
 // StaticAnalysisData represents Phase 1 output (static-analysis.json).

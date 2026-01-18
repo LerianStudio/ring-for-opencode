@@ -99,9 +99,14 @@ func (g *GolangciLint) Run(ctx context.Context, projectDir string, packages []st
 		return result, nil
 	}
 
+	trimmed := strings.TrimSpace(string(execResult.Stdout))
+	if trimmed == "" {
+		return result, nil
+	}
+
 	// Parse JSON output
 	var output golangciLintOutput
-	if err := json.Unmarshal(execResult.Stdout, &output); err != nil {
+	if err := json.Unmarshal([]byte(trimmed), &output); err != nil {
 		// Try to parse partial output
 		result.Errors = append(result.Errors, fmt.Sprintf("golangci-lint output parse warning: %v", err))
 		return result, nil

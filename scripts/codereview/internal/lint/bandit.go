@@ -26,7 +26,6 @@ type banditResult struct {
 	TestName        string `json:"test_name"`
 }
 
-// TODO(review): TotalIssues field is unused, consider removing or using (code-reviewer, 2026-01-13, Low)
 type banditMetrics struct {
 	TotalIssues int `json:"issues"`
 }

@@ -78,6 +78,9 @@ func (g *GoAnalyzer) loadPackages(ctx context.Context, patterns []string) ([]*pa
 func (g *GoAnalyzer) buildSSA(pkgs []*packages.Package) *ssa.Program {
 	// ssautil.AllPackages also returns an []*ssa.Package (ssaPkgs), but we only need the *ssa.Program for cha.CallGraph.
 	prog, _ := ssautil.AllPackages(pkgs, ssa.InstantiateGenerics)
+	if prog == nil {
+		return nil
+	}
 	prog.Build()
 	return prog
 }
@@ -102,6 +105,7 @@ func (g *GoAnalyzer) Analyze(modifiedFuncs []ModifiedFunction, timeBudgetSec int
 	result := &CallGraphResult{
 		Language:          "go",
 		ModifiedFunctions: make([]FunctionCallGraph, 0, len(modifiedFuncs)),
+		Warnings:          []string{},
 		ImpactAnalysis: ImpactAnalysis{
 			AffectedPackages: getAffectedPackages(modifiedFuncs),
 		},
@@ -154,6 +158,11 @@ func (g *GoAnalyzer) Analyze(modifiedFuncs []ModifiedFunction, timeBudgetSec int
 
 	// Build SSA
 	prog := g.buildSSA(pkgs)
+	if prog == nil {
+		result.Warnings = append(result.Warnings, "SSA program build failed")
+		result.PartialResults = true
+		return result, nil
+	}
 
 	// Build call graph using CHA (Class Hierarchy Analysis)
 	// CHA is fast but conservative - it over-approximates call targets
