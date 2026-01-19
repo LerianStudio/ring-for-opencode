@@ -87,9 +87,11 @@ func TestFileStatusString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.status.String(); got != tt.expected {
+			got := tt.status.String()
+			if got != tt.expected {
 				t.Errorf("FileStatus.String() = %q, want %q", got, tt.expected)
 			}
+
 		})
 	}
 }
@@ -112,9 +114,11 @@ func TestParseFileStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ParseFileStatus(tt.input); got != tt.expected {
+			got := ParseFileStatus(tt.input)
+			if got != tt.expected {
 				t.Errorf("ParseFileStatus(%q) = %v, want %v", tt.input, got, tt.expected)
 			}
+
 		})
 	}
 }
@@ -140,14 +144,15 @@ func TestClientGetDiff(t *testing.T) {
 	if len(result.Files) != 1 {
 		t.Fatalf("Files length = %d, want %d", len(result.Files), 1)
 	}
-	if result.Files[0].Path != "README.md" {
-		t.Errorf("Path = %q, want %q", result.Files[0].Path, "README.md")
+	file := result.Files[0]
+	if file.Path != "README.md" {
+		t.Errorf("Path = %q, want %q", file.Path, "README.md")
 	}
-	if result.Files[0].Additions != 1 {
-		t.Errorf("Additions = %d, want %d", result.Files[0].Additions, 1)
+	if file.Additions != 1 {
+		t.Errorf("Additions = %d, want %d", file.Additions, 1)
 	}
-	if result.Files[0].Deletions != 0 {
-		t.Errorf("Deletions = %d, want %d", result.Files[0].Deletions, 0)
+	if file.Deletions != 0 {
+		t.Errorf("Deletions = %d, want %d", file.Deletions, 0)
 	}
 	if result.Stats.TotalAdditions != 1 {
 		t.Errorf("TotalAdditions = %d, want %d", result.Stats.TotalAdditions, 1)
@@ -224,7 +229,8 @@ func TestClientGetDiffNumstatFailure(t *testing.T) {
 	if !strings.Contains(result.StatsError, "numstat") {
 		t.Fatalf("StatsError = %q, want numstat context", result.StatsError)
 	}
-	if result.Files[0].Additions != 0 || result.Files[0].Deletions != 0 {
+	file := result.Files[0]
+	if file.Additions != 0 || file.Deletions != 0 {
 		t.Fatalf("expected file stats to remain zero on numstat failure")
 	}
 	if result.Stats.TotalAdditions != 0 {
@@ -271,11 +277,12 @@ func TestClientGetDiffBinaryNumstat(t *testing.T) {
 	if len(result.Files) != 1 {
 		t.Fatalf("Files length = %d, want %d", len(result.Files), 1)
 	}
-	if result.Files[0].Additions != 0 {
-		t.Errorf("Additions = %d, want %d", result.Files[0].Additions, 0)
+	file := result.Files[0]
+	if file.Additions != 0 {
+		t.Errorf("Additions = %d, want %d", file.Additions, 0)
 	}
-	if result.Files[0].Deletions != 0 {
-		t.Errorf("Deletions = %d, want %d", result.Files[0].Deletions, 0)
+	if file.Deletions != 0 {
+		t.Errorf("Deletions = %d, want %d", file.Deletions, 0)
 	}
 	if result.Stats.TotalAdditions != 0 {
 		t.Errorf("TotalAdditions = %d, want %d", result.Stats.TotalAdditions, 0)
@@ -961,5 +968,70 @@ func TestParseNumstatMalformedRecord(t *testing.T) {
 				t.Error("expected error for malformed numstat record")
 			}
 		})
+	}
+}
+
+func TestClientFileExistsAtRef(t *testing.T) {
+	repo := setupTestRepo(t)
+	writeFile(t, repo, "notes.txt", "hello\n")
+	runGit(t, repo, "add", "notes.txt")
+	runGit(t, repo, "commit", "-m", "add notes")
+
+	client := NewClient(repo)
+	exists, err := client.FileExistsAtRef("HEAD", "notes.txt")
+	if err != nil {
+		t.Fatalf("FileExistsAtRef error = %v", err)
+	}
+	if !exists {
+		t.Fatal("expected file to exist at HEAD")
+	}
+
+	exists, err = client.FileExistsAtRef("HEAD", "missing.txt")
+	if err != nil {
+		t.Fatalf("FileExistsAtRef error = %v", err)
+	}
+	if exists {
+		t.Fatal("expected missing file to return false")
+	}
+}
+
+func TestClientShowFile(t *testing.T) {
+	repo := setupTestRepo(t)
+	writeFile(t, repo, "notes.txt", "hello\n")
+	runGit(t, repo, "add", "notes.txt")
+	runGit(t, repo, "commit", "-m", "add notes")
+
+	client := NewClient(repo)
+	content, err := client.ShowFile("HEAD", "notes.txt")
+	if err != nil {
+		t.Fatalf("ShowFile error = %v", err)
+	}
+	if string(content) != "hello\n" {
+		t.Fatalf("ShowFile content = %q", string(content))
+	}
+}
+
+func TestClientGetDiffStatsForFiles(t *testing.T) {
+	repo := setupTestRepo(t)
+	writeFile(t, repo, "notes.txt", "hello\n")
+	writeFile(t, repo, "other.txt", "one\n")
+	runGit(t, repo, "add", "notes.txt", "other.txt")
+	runGit(t, repo, "commit", "-m", "add files")
+	writeFile(t, repo, "notes.txt", "hello\nworld\n")
+
+	client := NewClient(repo)
+	stats, files, err := client.GetDiffStatsForFiles("HEAD", []string{"notes.txt"})
+	if err != nil {
+		t.Fatalf("GetDiffStatsForFiles error = %v", err)
+	}
+	if stats.TotalFiles != 1 {
+		t.Fatalf("TotalFiles = %d, want 1", stats.TotalFiles)
+	}
+	fileStats, ok := files["notes.txt"]
+	if !ok {
+		t.Fatalf("missing stats for notes.txt")
+	}
+	if fileStats.Additions != 1 || fileStats.Deletions != 0 {
+		t.Fatalf("notes.txt stats = %+v", fileStats)
 	}
 }
