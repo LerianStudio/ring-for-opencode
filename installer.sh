@@ -147,7 +147,7 @@ copy_tree_with_expansion() {
   find "$TARGET_ROOT/$rel_dir" -type f -name "*.md" | while read -r md_file; do
     if grep -q "{OPENCODE_CONFIG}" "$md_file" 2>/dev/null; then
       expand_placeholders "$md_file"
-      echo "  Expanded: ${md_file#$TARGET_ROOT/}"
+      echo "  Expanded: ${md_file#"$TARGET_ROOT"/}"
     fi
   done
 }
@@ -351,21 +351,24 @@ if [[ -d "$RELEASE_BIN_DIR" ]]; then
   find "$RELEASE_BIN_DIR" -maxdepth 1 -type f -not -name "CHECKSUMS*" -exec cp {} "$TARGET_BIN_DIR/" \;
   chmod +x "$TARGET_BIN_DIR"/*
   echo "Installed pre-built binaries to $TARGET_BIN_DIR"
-elif command -v go >/dev/null 2>&1; then
-  echo "Pre-built binaries not found for $PLATFORM. Attempting to build from source..."
+fi
+
+if command -v go >/dev/null 2>&1; then
   if [[ -d "$TARGET_ROOT/scripts/codereview" ]]; then
-    echo "Building codereview tools..."
-    # Build context tools specifically
-    if (cd "$TARGET_ROOT/scripts/codereview" && make build-context); then
+    echo "Building codereview tools from source..."
+    if (cd "$TARGET_ROOT/scripts/codereview" && GOFLAGS="-buildvcs=false" make build); then
       echo "Codereview tools built successfully."
+      chmod +x "$TARGET_BIN_DIR"/*
     else
       echo "WARN: Failed to build codereview tools. 'go' command failed." >&2
     fi
+  else
+    echo "WARN: Codereview source directory not found. Skipping build." >&2
   fi
-else
+elif [[ ! -d "$RELEASE_BIN_DIR" ]]; then
   echo "WARN: Pre-built binaries not found and 'go' is missing." >&2
   echo "Codereview tools source installed but not built." >&2
-  echo "To enable deep code review analysis, install Go and run: cd ~/.config/opencode/scripts/codereview && make build-context" >&2
+  echo "To enable deep code review analysis, install Go and run: cd ~/.config/opencode/scripts/codereview && make build" >&2
 fi
 
 echo ""
