@@ -125,14 +125,18 @@ func (g *GoExtractor) parseFile(path string) (*ParsedFile, error) {
 		parsed.Imports[path] = alias
 	}
 
-	// Extract functions, types, and globals
-	ast.Inspect(file, func(n ast.Node) bool {
-		switch node := n.(type) {
+	// Extract top-level functions, types, and globals
+	initIndex := 0
+	for _, decl := range file.Decls {
+		switch node := decl.(type) {
 		case *ast.FuncDecl:
 			fn := g.extractFunc(fset, node)
 			key := fn.Name
 			if fn.Receiver != "" {
 				key = fn.Receiver + "." + fn.Name
+			} else if fn.Name == "init" {
+				key = fmt.Sprintf("init#%d", initIndex)
+				initIndex++
 			}
 			parsed.Functions[key] = fn
 
@@ -158,8 +162,7 @@ func (g *GoExtractor) parseFile(path string) (*ParsedFile, error) {
 				}
 			}
 		}
-		return true
-	})
+	}
 
 	return parsed, nil
 }
@@ -314,7 +317,9 @@ func (g *GoExtractor) extractType(fset *token.FileSet, ts *ast.TypeSpec) *GoType
 
 func (g *GoExtractor) typeToString(expr ast.Expr) string {
 	var buf bytes.Buffer
-	printer.Fprint(&buf, token.NewFileSet(), expr)
+	if err := printer.Fprint(&buf, token.NewFileSet(), expr); err != nil {
+		return ""
+	}
 	return buf.String()
 }
 

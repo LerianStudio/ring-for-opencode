@@ -208,3 +208,42 @@ func TestGoExtractor_ParseFile_InvalidPath(t *testing.T) {
 		t.Error("expected error for nonexistent file, got nil")
 	}
 }
+
+func TestGoExtractor_ParseFile_RespectsScope(t *testing.T) {
+	extractor := NewGoExtractor()
+	path := filepath.Join(t.TempDir(), "sample.go")
+	content := `package main
+
+var Config = "Global"
+
+type ConfigType struct {}
+
+func init() {}
+func init() {}
+
+func main() {
+	var Config = "Local"
+	_ = Config
+	type ConfigType struct {}
+	_ = ConfigType{}
+}`
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("failed to write file: %v", err)
+	}
+
+	setWorkingDir(t, filepath.Dir(path))
+	parsed, err := extractor.parseFile(path)
+	if err != nil {
+		t.Fatalf("parseFile failed: %v", err)
+	}
+
+	if parsed.Variables["Config"] == nil {
+		t.Fatalf("expected global Config variable")
+	}
+	if parsed.Types["ConfigType"] == nil {
+		t.Fatalf("expected global ConfigType")
+	}
+	if len(parsed.Functions) != 3 {
+		t.Fatalf("expected 3 functions (main + 2 init), got %d", len(parsed.Functions))
+	}
+}
