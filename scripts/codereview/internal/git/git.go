@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -98,6 +100,22 @@ type FileStats struct {
 type Client struct {
 	workDir string
 	runner  func(workDir string, args ...string) ([]byte, error)
+}
+
+// ListUnstagedFiles returns tracked unstaged files and untracked files.
+func (c *Client) ListUnstagedFiles() ([]string, error) {
+	unstaged, err := c.runGit("diff", "--name-only", "-z")
+	if err != nil {
+		return nil, fmt.Errorf("failed to list unstaged files: %w", err)
+	}
+	untracked, err := c.runGit("ls-files", "--others", "--exclude-standard", "-z")
+	if err != nil {
+		return nil, fmt.Errorf("failed to list untracked files: %w", err)
+	}
+
+	files := parseNulSeparated(unstaged)
+	files = append(files, parseNulSeparated(untracked)...)
+	return uniqueSortedFiles(files), nil
 }
 
 // FileExistsAtRef checks if a file exists at a given git ref.
@@ -438,32 +456,73 @@ func parseNameStatusOutput(output []byte) ([]ChangedFile, error) {
 			i++
 			continue
 		}
-
 		statusToken := string(tokens[i])
-		i++
-
 		status := ParseFileStatus(statusToken)
 		cf := ChangedFile{Status: status}
+		i++
+
+		if i >= len(tokens) {
+			return nil, fmt.Errorf("unexpected end of output")
+		}
+		cf.Path = string(tokens[i])
+		i++
 
 		if status == StatusRenamed || status == StatusCopied {
-			if i+1 >= len(tokens) {
-				return nil, fmt.Errorf("invalid rename/copy record: %s", statusToken)
-			}
-			cf.OldPath = string(tokens[i])
-			cf.Path = string(tokens[i+1])
-			i += 2
-		} else {
 			if i >= len(tokens) {
-				return nil, fmt.Errorf("invalid name-status record: %s", statusToken)
+				return nil, fmt.Errorf("unexpected end of output for rename/copy")
 			}
+			cf.OldPath = cf.Path
 			cf.Path = string(tokens[i])
 			i++
 		}
 
 		files = append(files, cf)
 	}
-
 	return files, nil
+}
+
+func parseNulSeparated(output []byte) []string {
+	if len(output) == 0 {
+		return []string{}
+	}
+	parts := bytes.Split(output, []byte{0})
+	for len(parts) > 0 && len(parts[len(parts)-1]) == 0 {
+		parts = parts[:len(parts)-1]
+	}
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if len(part) == 0 {
+			continue
+		}
+		result = append(result, string(part))
+	}
+	return result
+}
+
+func uniqueSortedFiles(files []string) []string {
+	if len(files) == 0 {
+		return []string{}
+	}
+	seen := make(map[string]bool)
+	result := make([]string, 0, len(files))
+	for _, file := range files {
+		if file == "" {
+			continue
+		}
+		cleaned := filepath.Clean(file)
+		if cleaned == "." {
+			continue
+		}
+		if !seen[cleaned] {
+			seen[cleaned] = true
+			result = append(result, cleaned)
+		}
+	}
+	if len(result) == 0 {
+		return []string{}
+	}
+	sort.Strings(result)
+	return result
 }
 
 type fileStats struct {

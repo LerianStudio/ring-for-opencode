@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -630,6 +631,65 @@ func TestClientGetWorkingTreeDiff(t *testing.T) {
 	}
 	if result.StatsError != "" {
 		t.Errorf("StatsError = %q, want empty", result.StatsError)
+	}
+}
+
+func TestClientListUnstagedFiles(t *testing.T) {
+	repo := setupTestRepo(t)
+	writeFile(t, repo, "tracked.txt", "base\n")
+	runGit(t, repo, "add", "tracked.txt")
+	runGit(t, repo, "commit", "-m", "add tracked")
+	writeFile(t, repo, "tracked.txt", "base\nupdated\n")
+	writeFile(t, repo, "untracked.txt", "new\n")
+
+	client := NewClient(repo)
+	files, err := client.ListUnstagedFiles()
+	if err != nil {
+		t.Fatalf("ListUnstagedFiles error = %v", err)
+	}
+	if len(files) != 2 {
+		t.Fatalf("files len = %d, want 2", len(files))
+	}
+	if files[0] != "tracked.txt" {
+		t.Fatalf("files[0] = %q, want tracked.txt", files[0])
+	}
+	if files[1] != "untracked.txt" {
+		t.Fatalf("files[1] = %q, want untracked.txt", files[1])
+	}
+}
+
+func TestClientListUnstagedFiles_GitFailure(t *testing.T) {
+	client := &Client{runner: func(_ string, _ ...string) ([]byte, error) {
+		return nil, errors.New("git failure")
+	}}
+
+	_, err := client.ListUnstagedFiles()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !strings.Contains(err.Error(), "failed to list") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestUniqueSortedFiles_DedupAndClean(t *testing.T) {
+	input := []string{"b.go", "a.go", ".", "a.go", "dir/../c.go", ""}
+	got := uniqueSortedFiles(input)
+	want := []string{"a.go", "b.go", "c.go"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("got %v want %v", got, want)
+	}
+}
+
+func TestParseNulSeparated(t *testing.T) {
+	got := parseNulSeparated([]byte("a\x00b\x00\x00"))
+	want := []string{"a", "b"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("got %v want %v", got, want)
+	}
+	got = parseNulSeparated(nil)
+	if len(got) != 0 {
+		t.Fatalf("expected empty slice")
 	}
 }
 

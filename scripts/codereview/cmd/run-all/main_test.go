@@ -564,6 +564,7 @@ func TestMain_Help(t *testing.T) {
 		"-head",
 		"-files",
 		"-files-from",
+		"-unstaged",
 		"-output",
 		"-skip",
 		"-verbose",
@@ -804,6 +805,16 @@ func TestRun_ExitCodes(t *testing.T) {
 			args:        []string{"--files-from=README.md", "--head=HEAD"},
 			expectExit0: false,
 		},
+		{
+			name:        "unstaged_with_base_exits_nonzero",
+			args:        []string{"--unstaged", "--base=main"},
+			expectExit0: false,
+		},
+		{
+			name:        "unstaged_with_files_exits_nonzero",
+			args:        []string{"--unstaged", "--files=README.md"},
+			expectExit0: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -892,6 +903,13 @@ func TestPhaseArgs(t *testing.T) {
 	contextArgs := contextPhase.Args(cfg)
 	if !containsArg(contextArgs, "--input") || !containsArg(contextArgs, "--output") {
 		t.Error("Context phase should have --input and --output args")
+	}
+
+	// Test unstaged scope args
+	unstagedCfg := &config{unstaged: true, outputDir: cfg.outputDir}
+	unstagedArgs := scopePhase.Args(unstagedCfg)
+	if !containsArg(unstagedArgs, "--unstaged") {
+		t.Error("Scope phase should include --unstaged when configured")
 	}
 }
 

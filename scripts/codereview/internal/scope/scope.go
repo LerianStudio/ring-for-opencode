@@ -2,6 +2,7 @@
 package scope
 
 import (
+	"fmt"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -65,6 +66,7 @@ type gitClientInterface interface {
 	GetAllChangesDiff() (*git.DiffResult, error)
 	GetDiffStatsForFiles(baseRef string, files []string) (git.DiffStats, map[string]git.FileStats, error)
 	FileExistsAtRef(ref, path string) (bool, error)
+	ListUnstagedFiles() ([]string, error)
 }
 
 // Detector analyzes git diffs to determine language and file categorization.
@@ -99,6 +101,86 @@ func (d *Detector) DetectAllChanges() (*ScopeResult, error) {
 	}
 
 	return d.buildScopeResult(diffResult)
+}
+
+// DetectUnstagedChanges analyzes only unstaged and untracked files.
+func (d *Detector) DetectUnstagedChanges() (*ScopeResult, error) {
+	files, err := d.gitClient.ListUnstagedFiles()
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return d.emptyScopeResult("HEAD", "working-tree"), nil
+	}
+	return d.buildScopeResultFromFiles("HEAD", files)
+}
+
+func (d *Detector) buildScopeResultFromFiles(baseRef string, files []string) (*ScopeResult, error) {
+	cleanFiles := normalizeFileList(files)
+	if len(cleanFiles) == 0 {
+		return d.emptyScopeResult(baseRef, "working-tree"), nil
+	}
+
+	stats, statsByFile, err := d.gitClient.GetDiffStatsForFiles(baseRef, cleanFiles)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get diff stats for files: %w", err)
+	}
+
+	changedFiles := make([]git.ChangedFile, 0, len(cleanFiles))
+	for _, file := range cleanFiles {
+		status, statusErr := resolveFileStatus(d.gitClient, d.workDir, baseRef, file)
+		if statusErr != nil {
+			return nil, statusErr
+		}
+		if status == git.StatusUnknown {
+			status = git.StatusModified
+		}
+		fileStats := findFileStats(statsByFile, file)
+		changedFiles = append(changedFiles, git.ChangedFile{
+			Path:      file,
+			Status:    status,
+			Additions: fileStats.Additions,
+			Deletions: fileStats.Deletions,
+		})
+	}
+
+	lang, err := DetectLanguage(cleanFiles)
+	if err != nil {
+		return nil, err
+	}
+	languages := DetectLanguages(cleanFiles)
+	packages := ExtractPackages(FilterByLanguage(cleanFiles, lang))
+	modified, added, deleted := CategorizeFilesByStatus(changedFiles)
+
+	return &ScopeResult{
+		BaseRef:          baseRef,
+		HeadRef:          "working-tree",
+		Language:         lang.String(),
+		Languages:        languages,
+		ModifiedFiles:    modified,
+		AddedFiles:       added,
+		DeletedFiles:     deleted,
+		TotalFiles:       len(cleanFiles),
+		TotalAdditions:   stats.TotalAdditions,
+		TotalDeletions:   stats.TotalDeletions,
+		PackagesAffected: packages,
+	}, nil
+}
+
+func (d *Detector) emptyScopeResult(baseRef, headRef string) *ScopeResult {
+	return &ScopeResult{
+		BaseRef:          baseRef,
+		HeadRef:          headRef,
+		Language:         LanguageUnknown.String(),
+		Languages:        []string{},
+		ModifiedFiles:    []string{},
+		AddedFiles:       []string{},
+		DeletedFiles:     []string{},
+		TotalFiles:       0,
+		TotalAdditions:   0,
+		TotalDeletions:   0,
+		PackagesAffected: []string{},
+	}
 }
 
 // buildScopeResult creates a ScopeResult from a git DiffResult.

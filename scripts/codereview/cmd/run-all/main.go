@@ -310,6 +310,7 @@ type config struct {
 	headRef     string
 	files       string
 	filesFrom   string
+	unstaged    bool
 	outputDir   string
 	binDir      string
 	skip        string
@@ -342,6 +343,7 @@ func parseFlags() *config {
 	flag.StringVar(&cfg.headRef, "head", "HEAD", "Head git reference (commit/branch)")
 	flag.StringVar(&cfg.files, "files", "", "Comma-separated file patterns to analyze (mutually exclusive with --base/--head)")
 	flag.StringVar(&cfg.filesFrom, "files-from", "", "Path to file containing file patterns (one per line)")
+	flag.BoolVar(&cfg.unstaged, "unstaged", false, "Analyze only unstaged and untracked files")
 	flag.StringVar(&cfg.outputDir, "output", ".ring/codereview", "Output directory for all phase results")
 	flag.StringVar(&cfg.binDir, "bin-dir", "", "Directory containing phase binaries (auto-detect from executable path)")
 	flag.StringVar(&cfg.skip, "skip", "", "Comma-separated list of phases to skip (e.g., 'static-analysis,callgraph')")
@@ -363,6 +365,10 @@ func parseFlags() *config {
 			headSet = true
 		}
 	})
+	if cfg.unstaged && (filesSelected || baseSet || headSet) {
+		fmt.Fprintln(os.Stderr, "Error: --unstaged cannot be used with --files/--files-from or --base/--head")
+		os.Exit(2)
+	}
 	if filesSelected && (baseSet || headSet) {
 		fmt.Fprintln(os.Stderr, "Error: --files/--files-from cannot be used with --base/--head")
 		os.Exit(2)
@@ -396,6 +402,9 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, "  # Analyze files from a list:\n")
 	fmt.Fprintf(os.Stderr, "  run-all --files-from=.ring/filelist.txt\n\n")
 
+	fmt.Fprintf(os.Stderr, "  # Analyze unstaged + untracked files:\n")
+	fmt.Fprintf(os.Stderr, "  run-all --unstaged\n\n")
+
 	fmt.Fprintf(os.Stderr, "  # Custom output directory:\n")
 	fmt.Fprintf(os.Stderr, "  run-all --output=./review-output\n\n")
 
@@ -425,6 +434,9 @@ func getPhases() []Phase {
 				args := []string{
 					"--output", filepath.Join(cfg.outputDir, "scope.json"),
 				}
+				if cfg.unstaged {
+					return append(args, "--unstaged")
+				}
 				if cfg.files != "" || cfg.filesFrom != "" {
 					if cfg.files != "" {
 						args = append(args, "--files", cfg.files)
@@ -436,6 +448,7 @@ func getPhases() []Phase {
 				}
 
 				return append(args, "--base", cfg.baseRef, "--head", cfg.headRef)
+
 			},
 		},
 		{
@@ -568,6 +581,9 @@ func run() error {
 		fmt.Fprintf(os.Stderr, "Configuration:\n")
 		fmt.Fprintf(os.Stderr, "  Base ref: %s\n", cfg.baseRef)
 		fmt.Fprintf(os.Stderr, "  Head ref: %s\n", cfg.headRef)
+		if cfg.unstaged {
+			fmt.Fprintln(os.Stderr, "  Mode: unstaged + untracked")
+		}
 		if cfg.files != "" {
 			fmt.Fprintf(os.Stderr, "  Files: %s\n", cfg.files)
 		}

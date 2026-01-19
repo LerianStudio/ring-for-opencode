@@ -32,50 +32,7 @@ func (d *Detector) DetectFromFiles(baseRef string, files []string) (*ScopeResult
 		baseRef = "HEAD"
 	}
 
-	stats, statsByFile, err := d.gitClient.GetDiffStatsForFiles(baseRef, cleanFiles)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get diff stats for files: %w", err)
-	}
-
-	var changedFiles []git.ChangedFile
-	for _, file := range cleanFiles {
-		status, statusErr := resolveFileStatus(d.gitClient, workDir, baseRef, file)
-		if statusErr != nil {
-			return nil, statusErr
-		}
-		if status == git.StatusUnknown {
-			status = git.StatusModified
-		}
-		fileStats := findFileStats(statsByFile, file)
-		changedFiles = append(changedFiles, git.ChangedFile{
-			Path:      file,
-			Status:    status,
-			Additions: fileStats.Additions,
-			Deletions: fileStats.Deletions,
-		})
-	}
-
-	lang, err := DetectLanguage(cleanFiles)
-	if err != nil {
-		return nil, err
-	}
-	languages := DetectLanguages(cleanFiles)
-	packages := ExtractPackages(FilterByLanguage(cleanFiles, lang))
-	modified, added, deleted := CategorizeFilesByStatus(changedFiles)
-
-	return &ScopeResult{
-		BaseRef:          baseRef,
-		HeadRef:          "working-tree",
-		Language:         lang.String(),
-		Languages:        languages,
-		ModifiedFiles:    modified,
-		AddedFiles:       added,
-		DeletedFiles:     deleted,
-		TotalFiles:       len(cleanFiles),
-		TotalAdditions:   stats.TotalAdditions,
-		TotalDeletions:   stats.TotalDeletions,
-		PackagesAffected: packages,
-	}, nil
+	return d.buildScopeResultFromFiles(baseRef, cleanFiles)
 }
 
 func resolveFileStatus(client gitClientInterface, workDir, baseRef, file string) (git.FileStatus, error) {

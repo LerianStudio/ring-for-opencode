@@ -3,6 +3,7 @@ package scope
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -703,12 +704,87 @@ func TestDetector_DetectAllChanges(t *testing.T) {
 	}
 }
 
+func TestDetector_DetectUnstagedChanges(t *testing.T) {
+	workDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(workDir, "cmd"), 0o755); err != nil {
+		t.Fatalf("failed to create workdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(workDir, "new.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("failed to write new.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(workDir, "cmd", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatalf("failed to write cmd/main.go: %v", err)
+	}
+
+	d := NewDetector(workDir)
+	d.gitClient = &mockGitClient{
+		unstagedFiles: []string{"new.go", "cmd/main.go"},
+		stats:         git.DiffStats{TotalFiles: 2, TotalAdditions: 3, TotalDeletions: 1},
+		statsByFile: map[string]git.FileStats{
+			"new.go":      {Additions: 2, Deletions: 0},
+			"cmd/main.go": {Additions: 1, Deletions: 1},
+		},
+		fileExists: map[string]bool{"cmd/main.go": true, "new.go": false},
+	}
+
+	result, err := d.DetectUnstagedChanges()
+	if err != nil {
+		t.Fatalf("DetectUnstagedChanges() unexpected error: %v", err)
+	}
+	if result.BaseRef != "HEAD" {
+		t.Fatalf("BaseRef = %q, want HEAD", result.BaseRef)
+	}
+	if result.HeadRef != "working-tree" {
+		t.Fatalf("HeadRef = %q, want working-tree", result.HeadRef)
+	}
+	if result.TotalFiles != 2 {
+		t.Fatalf("TotalFiles = %d, want 2", result.TotalFiles)
+	}
+	if len(result.AddedFiles) != 1 {
+		t.Fatalf("AddedFiles len = %d, want 1", len(result.AddedFiles))
+	}
+	if len(result.ModifiedFiles) != 1 {
+		t.Fatalf("ModifiedFiles len = %d, want 1", len(result.ModifiedFiles))
+	}
+	if len(result.DeletedFiles) != 0 {
+		t.Fatalf("DeletedFiles len = %d, want 0", len(result.DeletedFiles))
+	}
+}
+
+func TestDetector_DetectUnstagedChanges_Empty(t *testing.T) {
+	d := NewDetector("")
+	d.gitClient = &mockGitClient{}
+
+	result, err := d.DetectUnstagedChanges()
+	if err != nil {
+		t.Fatalf("DetectUnstagedChanges() unexpected error: %v", err)
+	}
+	if result.TotalFiles != 0 {
+		t.Fatalf("TotalFiles = %d, want 0", result.TotalFiles)
+	}
+	if result.Language != "unknown" {
+		t.Fatalf("Language = %q, want unknown", result.Language)
+	}
+}
+
+func TestDetector_DetectUnstagedChanges_Error(t *testing.T) {
+	d := NewDetector("")
+	d.gitClient = &mockGitClient{unstagedErr: errors.New("boom")}
+
+	_, err := d.DetectUnstagedChanges()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
 // mockGitClient implements git operations for testing.
 type mockGitClient struct {
 	diffResult       *git.DiffResult
 	diffErr          error
 	allChangesResult *git.DiffResult
 	allChangesErr    error
+	unstagedFiles    []string
+	unstagedErr      error
 	stats            git.DiffStats
 	statsByFile      map[string]git.FileStats
 	fileExists       map[string]bool
@@ -787,4 +863,11 @@ func (m *mockGitClient) FileExistsAtRef(ref, path string) (bool, error) {
 		return false, nil
 	}
 	return m.fileExists[path], nil
+}
+
+func (m *mockGitClient) ListUnstagedFiles() ([]string, error) {
+	if m.unstagedErr != nil {
+		return nil, m.unstagedErr
+	}
+	return m.unstagedFiles, nil
 }

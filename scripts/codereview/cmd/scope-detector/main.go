@@ -21,6 +21,7 @@ var (
 	headRef     = flag.String("head", "", "Head reference (commit/branch). When both refs empty, detects all uncommitted changes")
 	filesFlag   = flag.String("files", "", "Comma-separated file patterns to analyze (mutually exclusive with --base/--head)")
 	filesFrom   = flag.String("files-from", "", "Path to file containing file patterns (one per line)")
+	unstaged    = flag.Bool("unstaged", false, "Analyze only unstaged and untracked files")
 	outputPath  = flag.String("output", "", "Output file path. Empty = write to stdout")
 	workDir     = flag.String("workdir", "", "Working directory. Empty = current directory")
 	showVersion = flag.Bool("version", false, "Show version and exit")
@@ -42,6 +43,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  scope-detector --base=main --head=HEAD     # Compare branches\n")
 		fmt.Fprintf(os.Stderr, "  scope-detector --files=cmd/*.go,scripts/**/*.ts\n")
 		fmt.Fprintf(os.Stderr, "  scope-detector --files-from=.ring/filelist.txt\n")
+		fmt.Fprintf(os.Stderr, "  scope-detector --unstaged\n")
 		fmt.Fprintf(os.Stderr, "  scope-detector --output=.ring/codereview/scope.json\n")
 	}
 	flag.Parse()
@@ -83,8 +85,8 @@ func run() error {
 	}
 
 	if len(patterns) > 0 {
-		if *baseRef != "" || *headRef != "" {
-			return fmt.Errorf("--files/--files-from cannot be used with --base/--head")
+		if *baseRef != "" || *headRef != "" || *unstaged {
+			return fmt.Errorf("--files/--files-from cannot be used with --base/--head or --unstaged")
 		}
 		expanded, expandErr := scope.ExpandFilePatterns(wd, patterns)
 		if expandErr != nil {
@@ -109,6 +111,11 @@ func run() error {
 		} else {
 			result, err = detector.DetectFromFiles("", expanded)
 		}
+	} else if *unstaged {
+		if *baseRef != "" || *headRef != "" {
+			return fmt.Errorf("--unstaged cannot be used with --base/--head")
+		}
+		result, err = detector.DetectUnstagedChanges()
 	} else if *baseRef == "" && *headRef == "" {
 		// No refs specified: detect all uncommitted changes (staged + unstaged)
 		result, err = detector.DetectAllChanges()
@@ -125,12 +132,16 @@ func run() error {
 	if *verbose {
 		fmt.Fprintln(os.Stderr, "=== Scope Detector (Verbose) ===")
 		fmt.Fprintf(os.Stderr, "Working directory: %s\n", wd)
-		if *baseRef == "" {
+		if *unstaged {
+			fmt.Fprintln(os.Stderr, "Mode: unstaged + untracked")
+		} else if *baseRef == "" {
 			fmt.Fprintln(os.Stderr, "Base ref: (empty - detecting all uncommitted changes)")
 		} else {
 			fmt.Fprintf(os.Stderr, "Base ref: %s\n", *baseRef)
 		}
-		if *headRef == "" {
+		if *unstaged {
+			fmt.Fprintln(os.Stderr, "Head ref: working tree")
+		} else if *headRef == "" {
 			fmt.Fprintln(os.Stderr, "Head ref: (empty - using working tree)")
 		} else {
 			fmt.Fprintf(os.Stderr, "Head ref: %s\n", *headRef)
