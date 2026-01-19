@@ -17,7 +17,6 @@ import (
 	"syscall"
 	"time"
 
-	ctxpkg "github.com/lerianstudio/ring/scripts/codereview/internal/context"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/git"
 )
@@ -537,30 +536,8 @@ func getPhases() []Phase {
 // validateBinDir validates the bin-dir path for security.
 // It uses proper path resolution to prevent path traversal attacks and verifies the directory exists.
 func validateBinDir(binDir string) error {
-	// Get absolute path - this resolves any relative components including ".."
-	absPath, err := filepath.Abs(binDir)
-	if err != nil {
-		return fmt.Errorf("invalid bin-dir path: %w", err)
-	}
-
-	// Clean the path to resolve any remaining traversal sequences
-	absPath = filepath.Clean(absPath)
-
-	// Verify directory exists
-	info, err := os.Stat(absPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("bin-dir does not exist: %s", absPath)
-		}
-		return fmt.Errorf("failed to stat bin-dir: %w", err)
-	}
-
-	// Verify it's a directory
-	if !info.IsDir() {
-		return fmt.Errorf("bin-dir is not a directory: %s", absPath)
-	}
-
-	return nil
+	_, err := fileutil.ValidateDirectory(binDir, "")
+	return err
 }
 
 // run executes the main CLI logic.
@@ -633,7 +610,8 @@ func run() error {
 		case <-ctx.Done():
 			fmt.Fprintf(os.Stderr, "\nInterrupted. Stopping execution.\n")
 			cleanupASTTempFiles() // Cleanup on interrupt
-			printSummary(results, time.Since(startTime))
+			interruptSummary := buildSummary(results)
+			printSummary(interruptSummary, time.Since(startTime))
 			return fmt.Errorf("execution interrupted")
 		default:
 		}
@@ -663,7 +641,8 @@ func run() error {
 	totalDuration := time.Since(startTime)
 
 	// Print summary
-	printSummary(results, totalDuration)
+	summary := buildSummary(results)
+	printSummary(summary, totalDuration)
 
 	// Determine exit code
 	for _, result := range results {
@@ -732,14 +711,6 @@ func executePhase(ctx context.Context, cfg *config, phase Phase, skipSet map[str
 	}
 
 	startTime := time.Now()
-
-	// Special handling for context phase - use internal compiler
-	if phase.Name == "context" {
-		result.Error = executeContextPhase(cfg)
-		result.Duration = time.Since(startTime)
-		result.Success = result.Error == nil
-		return result
-	}
 
 	// Build command arguments
 	args := phase.Args(cfg)
@@ -832,46 +803,46 @@ func executePhase(ctx context.Context, cfg *config, phase Phase, skipSet map[str
 	return result
 }
 
-// executeContextPhase runs the context compiler directly instead of via binary.
-func executeContextPhase(cfg *config) error {
-	compiler, err := ctxpkg.NewCompilerWithValidation(cfg.outputDir, cfg.outputDir)
-	if err != nil {
-		return fmt.Errorf("compiler initialization failed: %w", err)
+type summary struct {
+	Passed       int
+	Failed       int
+	Skipped      int
+	FailedPhases []PhaseResult
+	Results      []PhaseResult
+}
+
+func buildSummary(results []PhaseResult) summary {
+	result := summary{Results: results}
+	for _, phase := range results {
+		if phase.Skipped {
+			result.Skipped++
+			continue
+		}
+		if phase.Success {
+			result.Passed++
+			continue
+		}
+		result.Failed++
+		result.FailedPhases = append(result.FailedPhases, phase)
 	}
-	return compiler.Compile()
+	return result
 }
 
 // printSummary prints the execution summary.
-func printSummary(results []PhaseResult, totalDuration time.Duration) {
+func printSummary(summary summary, totalDuration time.Duration) {
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "========================================\n")
 	fmt.Fprintf(os.Stderr, "  Code Review Pre-Analysis Summary\n")
 	fmt.Fprintf(os.Stderr, "========================================\n")
 	fmt.Fprintf(os.Stderr, "\n")
 
-	passed := 0
-	failed := 0
-	skipped := 0
-	var failedPhases []string
-
-	for _, result := range results {
-		if result.Skipped {
-			skipped++
-		} else if result.Success {
-			passed++
-		} else {
-			failed++
-			failedPhases = append(failedPhases, result.Name)
-		}
-	}
-
-	fmt.Fprintf(os.Stderr, "Phases: %d passed, %d failed, %d skipped\n", passed, failed, skipped)
+	fmt.Fprintf(os.Stderr, "Phases: %d passed, %d failed, %d skipped\n", summary.Passed, summary.Failed, summary.Skipped)
 	fmt.Fprintf(os.Stderr, "Total time: %v\n", totalDuration.Round(time.Millisecond))
 	fmt.Fprintf(os.Stderr, "\n")
 
 	// Phase breakdown
 	fmt.Fprintf(os.Stderr, "Phase Breakdown:\n")
-	for _, result := range results {
+	for _, result := range summary.Results {
 		if result.Skipped {
 			if result.SkipReason != "" {
 				fmt.Fprintf(os.Stderr, "  [SKIP] %-20s %s\n", result.Name, result.SkipReason)
@@ -887,20 +858,15 @@ func printSummary(results []PhaseResult, totalDuration time.Duration) {
 	fmt.Fprintf(os.Stderr, "\n")
 
 	// Failed phases detail
-	if len(failedPhases) > 0 {
+	if len(summary.FailedPhases) > 0 {
 		fmt.Fprintf(os.Stderr, "Failed phases:\n")
-		for _, name := range failedPhases {
-			for _, result := range results {
-				if result.Name == name {
-					fmt.Fprintf(os.Stderr, "  - %s: %v\n", name, result.Error)
-					break
-				}
-			}
+		for _, phase := range summary.FailedPhases {
+			fmt.Fprintf(os.Stderr, "  - %s: %v\n", phase.Name, phase.Error)
 		}
 		fmt.Fprintf(os.Stderr, "\n")
 	}
 
-	if failed == 0 {
+	if summary.Failed == 0 {
 		fmt.Fprintf(os.Stderr, "All phases completed successfully.\n")
 	} else {
 		fmt.Fprintf(os.Stderr, "Some phases failed. Review output for details.\n")

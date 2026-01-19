@@ -58,32 +58,14 @@ func main() {
 // validateScriptsDir validates the scripts directory path for security.
 // It prevents path traversal attacks and verifies the directory exists.
 func validateScriptsDir(scriptsDir string) error {
-	// Check for traversal attempts in the ORIGINAL path before normalization
+	if scriptsDir == "" {
+		return nil
+	}
 	if strings.Contains(scriptsDir, "..") {
 		return fmt.Errorf("path traversal detected in scripts directory")
 	}
-
-	// Get absolute path
-	absPath, err := filepath.Abs(scriptsDir)
-	if err != nil {
-		return fmt.Errorf("invalid scripts directory path: %w", err)
-	}
-
-	// Verify directory exists
-	info, err := os.Stat(absPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("scripts directory does not exist: %s", absPath)
-		}
-		return fmt.Errorf("failed to stat scripts directory: %w", err)
-	}
-
-	// Verify it's a directory
-	if !info.IsDir() {
-		return fmt.Errorf("scripts path is not a directory: %s", absPath)
-	}
-
-	return nil
+	_, err := fileutil.ValidateDirectory(scriptsDir, "")
+	return err
 }
 
 func run() error {

@@ -440,7 +440,7 @@ func TestExecutePhase_ContextCancellation(t *testing.T) {
 	}
 }
 
-// TestExecutePhase_ContextPhaseSpecialHandling verifies the context phase uses internal compiler.
+// TestExecutePhase_ContextPhaseSpecialHandling verifies the context phase runs as a binary.
 func TestExecutePhase_ContextPhaseSpecialHandling(t *testing.T) {
 	// Create temp directory with mock phase outputs
 	tempDir := t.TempDir()
@@ -450,22 +450,26 @@ func TestExecutePhase_ContextPhaseSpecialHandling(t *testing.T) {
 	}
 	createMockPhaseOutputs(t, outputDir)
 
+	compilePath := buildCompileContextBinary(t, tempDir)
+
 	cfg := &config{
-		binDir:    tempDir, // Doesn't matter for context phase
+		binDir:    tempDir,
 		outputDir: outputDir,
 	}
 
 	phase := Phase{
 		Name:    "context",
-		Binary:  "compile-context", // Not actually used
+		Binary:  filepath.Base(compilePath),
 		Timeout: 30 * time.Second,
-		Args:    func(cfg *config) []string { return []string{} },
+		Args: func(cfg *config) []string {
+			return []string{"--input", cfg.outputDir, "--output", cfg.outputDir}
+		},
 	}
 
 	ctx := context.Background()
 	result := executePhase(ctx, cfg, phase, map[string]bool{})
 
-	// Context phase uses internal compiler, should succeed with mock data
+	// Context phase uses external compiler, should succeed with mock data
 	if !result.Success {
 		t.Errorf("Expected success for context phase, got error: %v", result.Error)
 	}
@@ -475,6 +479,32 @@ func TestExecutePhase_ContextPhaseSpecialHandling(t *testing.T) {
 	if _, err := os.Stat(expectedFile); os.IsNotExist(err) {
 		t.Errorf("Context file not created: %s", expectedFile)
 	}
+}
+
+func buildCompileContextBinary(t *testing.T, dir string) string {
+	t.Helper()
+	binaryPath := filepath.Join(dir, "compile-context")
+	buildCmd := exec.Command("go", "build", "-o", binaryPath, "./cmd/compile-context")
+	buildCmd.Dir = filepath.Join(repoRoot(t), "scripts", "codereview")
+	output, err := buildCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to build compile-context binary: %v\nOutput: %s", err, string(output))
+	}
+	return binaryPath
+}
+
+func repoRoot(t *testing.T) string {
+	t.Helper()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("failed to determine test file path")
+	}
+	root := filepath.Join(filepath.Dir(filename), "..", "..", "..", "..")
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		t.Fatalf("failed to resolve repo root: %v", err)
+	}
+	return absRoot
 }
 
 // ============================================================================

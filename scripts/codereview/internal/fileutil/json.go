@@ -86,3 +86,24 @@ func ReadJSONFileWithLimit(path string) ([]byte, error) {
 
 	return os.ReadFile(cleanPath) // #nosec G304 - path is validated against traversal
 }
+
+// ValidateDirectory ensures a directory exists and does not escape the working directory.
+func ValidateDirectory(path string, workDir string) (string, error) {
+	cleanPath, err := ValidatePath(path, workDir)
+	if err != nil {
+		return "", err
+	}
+
+	info, err := os.Stat(cleanPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("directory does not exist: %s", cleanPath)
+		}
+		return "", fmt.Errorf("failed to stat directory: %w", err)
+	}
+	if !info.IsDir() {
+		return "", fmt.Errorf("path is not a directory: %s", cleanPath)
+	}
+
+	return cleanPath, nil
+}
