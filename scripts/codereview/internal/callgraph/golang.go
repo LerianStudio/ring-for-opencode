@@ -26,15 +26,18 @@ const (
 
 // GoAnalyzer implements call graph analysis for Go code.
 type GoAnalyzer struct {
-	workDir string
+	workDir        string
+	loadPackagesFn func(ctx context.Context, patterns []string) ([]*packages.Package, []string, error)
 }
 
 // NewGoAnalyzer creates a new Go call graph analyzer.
 // workDir is the root directory for package loading.
 func NewGoAnalyzer(workDir string) *GoAnalyzer {
-	return &GoAnalyzer{
+	analyzer := &GoAnalyzer{
 		workDir: workDir,
 	}
+	analyzer.loadPackagesFn = analyzer.loadPackages
+	return analyzer
 }
 
 // loadPackages loads Go packages from the working directory.
@@ -136,7 +139,11 @@ func (g *GoAnalyzer) Analyze(modifiedFuncs []ModifiedFunction, timeBudgetSec int
 	patterns := []string{"./..."}
 
 	// Load packages
-	pkgs, pkgWarnings, err := g.loadPackages(ctx, patterns)
+	loadPackages := g.loadPackagesFn
+	if loadPackages == nil {
+		loadPackages = g.loadPackages
+	}
+	pkgs, pkgWarnings, err := loadPackages(ctx, patterns)
 	if err != nil {
 		// Check if context was cancelled (time budget exceeded)
 		if ctx.Err() != nil {

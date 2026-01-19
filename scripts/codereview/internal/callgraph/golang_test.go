@@ -1,9 +1,12 @@
 package callgraph
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"golang.org/x/tools/go/packages"
 )
 
 func TestGetAffectedPackages(t *testing.T) {
@@ -408,4 +411,67 @@ func TestGoAnalyzerType(t *testing.T) {
 
 	// Type assertion should work
 	var _ *GoAnalyzer = analyzer
+}
+
+func TestAnalyzeTimeout(t *testing.T) {
+	analyzer := NewGoAnalyzer("/tmp/does-not-exist")
+	analyzer.loadPackagesFn = func(ctx context.Context, patterns []string) ([]*packages.Package, []string, error) {
+		<-ctx.Done()
+		return nil, nil, context.DeadlineExceeded
+	}
+
+	result, err := analyzer.Analyze([]ModifiedFunction{{Name: "Foo", File: "foo.go"}}, 1)
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected non-nil result")
+	}
+	if !result.TimeBudgetExceeded {
+		t.Fatalf("expected TimeBudgetExceeded")
+	}
+	if !result.PartialResults {
+		t.Fatalf("expected PartialResults")
+	}
+}
+
+func TestAnalyzeTruncatesModifiedFunctions(t *testing.T) {
+	workDir := t.TempDir()
+	module := `module example.com/test
+
+go 1.20
+`
+	if err := os.WriteFile(filepath.Join(workDir, "go.mod"), []byte(module), 0o644); err != nil {
+		t.Fatalf("failed to write go.mod: %v", err)
+	}
+	pkgDir := filepath.Join(workDir, "calc")
+	if err := os.MkdirAll(pkgDir, 0o755); err != nil {
+		t.Fatalf("failed to create package dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(pkgDir, "calc.go"), []byte("package calc\n\nfunc Add(a, b int) int { return a + b }\n"), 0o644); err != nil {
+		t.Fatalf("failed to write calc.go: %v", err)
+	}
+
+	funcs := make([]ModifiedFunction, maxModifiedFunctions+2)
+	for i := range funcs {
+		funcs[i] = ModifiedFunction{Name: "Add", File: filepath.Join("calc", "calc.go")}
+	}
+
+	analyzer := NewGoAnalyzer(workDir)
+	result, err := analyzer.Analyze(funcs, 30)
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("Analyze returned nil result")
+	}
+	if !result.PartialResults {
+		t.Fatalf("expected partial results when truncating")
+	}
+	if len(result.ModifiedFunctions) != maxModifiedFunctions {
+		t.Fatalf("modified functions = %d, want %d", len(result.ModifiedFunctions), maxModifiedFunctions)
+	}
+	if len(result.Warnings) == 0 {
+		t.Fatalf("expected warnings when truncating")
+	}
 }
