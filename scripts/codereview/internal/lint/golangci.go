@@ -29,14 +29,17 @@ type golangciPosition struct {
 
 // GolangciLint implements the golangci-lint wrapper.
 type GolangciLint struct {
-	executor *Executor
+	executor  *Executor
+	versionFn func(ctx context.Context) (string, error)
 }
 
 // NewGolangciLint creates a new golangci-lint wrapper.
 func NewGolangciLint() *GolangciLint {
-	return &GolangciLint{
+	linter := &GolangciLint{
 		executor: NewExecutor(),
 	}
+	linter.versionFn = linter.Version
+	return linter
 }
 
 // Name returns the linter name.
@@ -72,7 +75,11 @@ func (g *GolangciLint) Version(ctx context.Context) (string, error) {
 func (g *GolangciLint) Run(ctx context.Context, projectDir string, packages []string) (*Result, error) {
 	result := NewResult()
 
-	version, err := g.Version(ctx)
+	versionFn := g.versionFn
+	if versionFn == nil {
+		versionFn = g.Version
+	}
+	version, err := versionFn(ctx)
 	if err != nil {
 		result.Errors = append(result.Errors, fmt.Sprintf("golangci-lint version check failed: %v", err))
 	} else {

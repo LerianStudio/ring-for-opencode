@@ -1,9 +1,12 @@
 package lint
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMapGolangciSeverity(t *testing.T) {
@@ -130,4 +133,58 @@ func TestGolangciLint_Name(t *testing.T) {
 func TestGolangciLint_Language(t *testing.T) {
 	g := NewGolangciLint()
 	assert.Equal(t, LanguageGo, g.Language())
+}
+
+func TestGolangciLintRun_ExecutionFailure(t *testing.T) {
+	linter := NewGolangciLint()
+	linter.versionFn = func(ctx context.Context) (string, error) {
+		return "1.2.3", nil
+	}
+	executor := NewExecutor()
+	executor.SetRunFn(func(ctx context.Context, dir string, name string, args ...string) *ExecResult {
+		return &ExecResult{Err: errors.New("boom")}
+	})
+	linter.executor = executor
+
+	result, err := linter.Run(context.Background(), "/tmp", []string{"./..."})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.NotEmpty(t, result.Errors)
+}
+
+func TestGolangciLintRun_ParseFailure(t *testing.T) {
+	linter := NewGolangciLint()
+	linter.versionFn = func(ctx context.Context) (string, error) {
+		return "1.2.3", nil
+	}
+	executor := NewExecutor()
+	executor.SetRunFn(func(ctx context.Context, dir string, name string, args ...string) *ExecResult {
+		return &ExecResult{Stdout: []byte("{broken")}
+	})
+	linter.executor = executor
+
+	result, err := linter.Run(context.Background(), "/tmp", []string{"./..."})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.NotEmpty(t, result.Errors)
+	assert.Empty(t, result.Findings)
+}
+
+func TestGolangciLintRun_Success(t *testing.T) {
+	linter := NewGolangciLint()
+	linter.versionFn = func(ctx context.Context) (string, error) {
+		return "1.2.3", nil
+	}
+	executor := NewExecutor()
+	executor.SetRunFn(func(ctx context.Context, dir string, name string, args ...string) *ExecResult {
+		return &ExecResult{Stdout: []byte(`{"Issues":[{"FromLinter":"gosec","Text":"oops","Severity":"warning","SourceLines":["line"],"Pos":{"Filename":"/project/main.go","Line":12,"Column":3}}]}`)}
+	})
+	linter.executor = executor
+
+	result, err := linter.Run(context.Background(), "/project", []string{"./..."})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.Len(t, result.Findings, 1)
+	assert.Equal(t, SeverityWarning, result.Findings[0].Severity)
+	assert.Equal(t, CategorySecurity, result.Findings[0].Category)
 }
