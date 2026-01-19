@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 )
@@ -153,7 +154,7 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 
 	// Read language-specific AST (Phase 2) - support multi-language projects
 	outputs.ASTByLanguage = make(map[string]*ASTData)
-	for _, lang := range []string{"go", "typescript", "python"} {
+	for _, lang := range c.languagesFromScope(outputs.Scope) {
 		astPath := filepath.Join(c.inputDir, fmt.Sprintf("%s-ast.json", lang))
 		if data, err := readJSONFileWithLimit(astPath); err == nil {
 			var ast ASTData
@@ -173,7 +174,7 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 
 	// Read language-specific call graph (Phase 3) - support multi-language projects
 	outputs.CallGraphByLanguage = make(map[string]*CallGraphData)
-	for _, lang := range []string{"go", "typescript", "python"} {
+	for _, lang := range c.languagesFromScope(outputs.Scope) {
 		callsPath := filepath.Join(c.inputDir, fmt.Sprintf("%s-calls.json", lang))
 		if data, err := readJSONFileWithLimit(callsPath); err == nil {
 			var calls CallGraphData
@@ -193,7 +194,7 @@ func (c *Compiler) readPhaseOutputs() (*PhaseOutputs, error) {
 
 	// Read language-specific data flow (Phase 4) - support multi-language projects
 	outputs.DataFlowByLanguage = make(map[string]*DataFlowData)
-	for _, lang := range []string{"go", "typescript", "python"} {
+	for _, lang := range c.languagesFromScope(outputs.Scope) {
 		flowPath := filepath.Join(c.inputDir, fmt.Sprintf("%s-flow.json", lang))
 		if data, err := readJSONFileWithLimit(flowPath); err == nil {
 			var flow DataFlowData
@@ -227,6 +228,33 @@ func applyScopeDerivedFields(scope *ScopeData) {
 	if scope.Languages == nil {
 		scope.Languages = []string{}
 	}
+}
+
+func (c *Compiler) languagesFromScope(scope *ScopeData) []string {
+	if scope == nil {
+		return []string{"go", "typescript", "python"}
+	}
+
+	langs := append([]string{}, scope.Languages...)
+	primary := strings.TrimSpace(scope.Language)
+	if primary != "" {
+		found := false
+		for _, lang := range langs {
+			if lang == primary {
+				found = true
+				break
+			}
+		}
+		if !found {
+			langs = append(langs, primary)
+		}
+	}
+
+	if len(langs) == 0 {
+		return []string{"go", "typescript", "python"}
+	}
+
+	return langs
 }
 
 // generateReviewerContext generates the context file for a specific reviewer.
