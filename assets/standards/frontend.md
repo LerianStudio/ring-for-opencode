@@ -1,8 +1,11 @@
 # Frontend Standards
 
+> **⚠️ MAINTENANCE:** This file is indexed in `dev-team/skills/shared-patterns/standards-coverage-table.md`.
+> When adding/removing `## ` sections, follow FOUR-FILE UPDATE RULE in CLAUDE.md: (1) edit standards file, (2) update TOC, (3) update standards-coverage-table.md, (4) update agent file.
+
 This file defines the specific standards for frontend development.
 
-> **Project Rules**: Check if `docs/PROJECT_RULES.md` exists in the target project. If it exists, load it for project-specific technology choices and configurations. If it doesn't exist, ask the user: "Would you like me to create a PROJECT_RULES.md file using the Ring template? This helps document your project's specific tech stack, integrations, and deployment model."
+> **Reference**: Always consult `docs/PROJECT_RULES.md` for common project standards.
 
 ---
 
@@ -10,7 +13,7 @@ This file defines the specific standards for frontend development.
 
 | # | Section | Description |
 |---|---------|-------------|
-| 1 | [Framework](#framework) | React 18+, Next.js 14+ |
+| 1 | [Framework](#framework) | React 18+, Next.js (version policy) |
 | 2 | [Libraries & Tools](#libraries--tools) | Core, state, forms, UI, styling, testing |
 | 3 | [State Management Patterns](#state-management-patterns) | TanStack Query, Zustand |
 | 4 | [Form Patterns](#form-patterns) | React Hook Form + Zod |
@@ -22,7 +25,7 @@ This file defines the specific standards for frontend development.
 | 10 | [Performance](#performance) | Code splitting, image optimization |
 | 11 | [Directory Structure](#directory-structure) | Next.js App Router layout |
 | 12 | [Forbidden Patterns](#forbidden-patterns) | Anti-patterns to avoid |
-| 13 | [Standards Compliance Categories](#standards-compliance-categories) | Categories for ring:dev-refactor |
+| 13 | [Standards Compliance Categories](#standards-compliance-categories) | Categories for dev-refactor |
 
 **Meta-sections (not checked by agents):**
 - [Checklist](#checklist) - Self-verification before submitting code
@@ -31,8 +34,21 @@ This file defines the specific standards for frontend development.
 
 ## Framework
 
-- React 18+ / Next.js 14+
+- React 18+
+- Next.js (see version policy below)
 - TypeScript strict mode (see `typescript.md`)
+
+### Framework Version Policy
+
+| Scenario | Rule |
+|----------|------|
+| **New project** | Use **latest stable version** (verify at nextjs.org before starting) |
+| **Existing codebase** | **Maintain project's current version** (read package.json) |
+
+**Before starting any project:**
+1. For NEW projects: Check https://nextjs.org for latest stable version
+2. For EXISTING projects: Read `package.json` to determine current version
+3. NEVER hardcode a specific version in implementation - use project's version
 
 ---
 
@@ -43,7 +59,7 @@ This file defines the specific standards for frontend development.
 | Library | Use Case |
 |---------|----------|
 | React 18+ | UI framework |
-| Next.js 14+ | Full-stack framework |
+| Next.js (latest stable) | Full-stack framework (see version policy above) |
 | TypeScript 5+ | Type safety |
 
 ### State Management
@@ -712,7 +728,7 @@ const handleClick = useCallback((id: string) => {
 
 ## Standards Compliance Categories
 
-**When invoked from ring:dev-refactor, check all categories:**
+**When invoked from dev-refactor, check all categories:**
 
 | Category | Ring Standard | What to Verify |
 |----------|--------------|----------------|
