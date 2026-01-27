@@ -1,24 +1,23 @@
 ---
-name: "ring:pre-dev-trd-creation"
+name: ring:pre-dev-trd-creation
 description: |
   Gate 3: Technical architecture document - defines HOW/WHERE with technology-agnostic
   patterns before concrete implementation choices.
-license: MIT
-compatibility: opencode
-metadata:
-  trigger: |
-    - PRD passed Gate 1 (required)
-    - Feature Map passed Gate 2 (if Large Track)
-    - About to design technical architecture
-    - Tempted to specify "PostgreSQL" instead of "Relational Database"
-  skip_when: |
-    - PRD not validated → complete Gate 1 first
-    - Architecture already documented → proceed to API Design
-    - Pure business requirement change → update PRD
+
+trigger: |
+  - PRD passed Gate 1 (required)
+  - Feature Map passed Gate 2 (if Large Track)
+  - About to design technical architecture
+  - Tempted to specify "PostgreSQL" instead of "Relational Database"
+
+skip_when: |
+  - PRD not validated → complete Gate 1 first
+  - Architecture already documented → proceed to API Design
+  - Pure business requirement change → update PRD
 
 sequence:
-  after: [ring:pre-dev-prd-creation, ring:pre-dev-feature-map]
-  before: [ring:pre-dev-api-design, ring:pre-dev-task-breakdown]
+  after: [pre-dev-prd-creation, pre-dev-feature-map]
+  before: [pre-dev-api-design, pre-dev-task-breakdown]
 ---
 
 # TRD Creation - Architecture Before Implementation
@@ -47,17 +46,15 @@ Specifying technologies in TRD creates:
 
 **If ambiguous, AskUserQuestion:** "What is the primary technology stack?" Options: Go (Backend), TypeScript (Backend), TypeScript (Frontend), Full-Stack TypeScript
 
-### Step 0.2: Load Ring Standards from Local Files
+### Step 0.2: Load Ring Standards via WebFetch
 
-Use the Read tool to load the relevant standards from `{OPENCODE_CONFIG}/standards/`:
-
-| Standard | Local Path | Purpose |
-|----------|------------|---------|
-| **golang.md** | `{OPENCODE_CONFIG}/standards/golang.md` | Go patterns, DDD |
-| **typescript.md** | `{OPENCODE_CONFIG}/standards/typescript.md` | TS patterns, async |
-| **frontend.md** | `{OPENCODE_CONFIG}/standards/frontend.md` | React, Next.js, a11y |
-| **devops.md** | `{OPENCODE_CONFIG}/standards/devops.md` | Docker, CI/CD |
-| **sre.md** | `{OPENCODE_CONFIG}/standards/sre.md` | Health checks, logging |
+| Standard | URL | Purpose |
+|----------|-----|---------|
+| **golang.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md` | Go patterns, DDD |
+| **typescript.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md` | TS patterns, async |
+| **frontend.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/frontend.md` | React, Next.js, a11y |
+| **devops.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/devops.md` | Docker, CI/CD |
+| **sre.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/sre.md` | Health checks, logging |
 
 | Tech Stack | Load |
 |------------|------|
@@ -68,26 +65,7 @@ Use the Read tool to load the relevant standards from `{OPENCODE_CONFIG}/standar
 
 ### Step 0.3: Read PROJECT_RULES.md
 
-Check for project standards file:
-
-```yaml
-Priority order:
-  1. docs/PROJECT_RULES.md (current)
-  2. docs/STANDARDS.md (legacy)
-
-If found:
-  - Load and continue to Step 0.4
-
-If NOT found:
-  - Check if {OPENCODE_CONFIG}/templates/PROJECT_RULES.md exists
-  - Present option to user:
-    "PROJECT_RULES.md not found. Would you like me to create one from the Ring template?"
-    - YES: Copy {OPENCODE_CONFIG}/templates/PROJECT_RULES.md to docs/PROJECT_RULES.md
-           Ask user to review and customize for their project
-           Continue to Step 0.4
-    - NO:  For greenfield projects, continue without (TRD will help define standards)
-           For existing projects, recommend creating PROJECT_RULES.md first
-```
+Check: `docs/PROJECT_RULES.md` → `docs/STANDARDS.md` (legacy) → STOP if not found
 
 ### Step 0.4: Analyze PRD and Suggest Technologies
 
@@ -241,6 +219,213 @@ If feature is a licensed product/plugin (as determined in Question 3 of pre-dev 
 
 **Note for Go Services:** Lerian's License Manager (lib-license-go) is the standard licensing system. Reference `golang.md` → License Manager Integration section in the TRD so engineers know where to find implementation patterns including global middleware and graceful shutdown.
 
+## Frontend-Backend Integration Pattern (If Fullstack)
+
+**⛔ HARD GATE:** If the feature is fullstack (`topology.scope: fullstack`), this section is MANDATORY in the TRD.
+
+### Step 1: Read api_pattern from research.md
+
+The api_pattern was determined during Topology Discovery (Q7) and persisted in research.md frontmatter.
+
+```yaml
+# From research.md frontmatter
+topology:
+  scope: fullstack
+  api_pattern: direct | bff | other
+```
+
+### Step 2: Document Pattern in TRD
+
+**TRD must include an `## Integration Patterns` section:**
+
+```markdown
+## Integration Patterns
+
+### Frontend-Backend Communication
+
+**Pattern:** [direct | bff | other]
+
+**Rationale:** [Why this pattern was chosen]
+
+**Architecture Implications:**
+- [List architectural decisions driven by this pattern]
+```
+
+### Pattern-Specific Documentation
+
+**If `api_pattern: direct`:**
+
+```markdown
+### Frontend-Backend Communication
+
+**Pattern:** Direct API calls
+
+**Rationale:** Single backend service, simple CRUD operations, no data aggregation needed.
+
+**Architecture Implications:**
+- Frontend components call backend API directly via fetch/axios
+- No intermediate layer required
+- Authentication tokens managed client-side (httpOnly cookies recommended)
+- Error handling at component level
+
+**Data Flow:**
+Frontend Component → Backend API → Database
+```
+
+**If `api_pattern: bff`:**
+
+```markdown
+### Frontend-Backend Communication
+
+**Pattern:** BFF (Backend-for-Frontend) layer
+
+**Rationale:** [Multiple backend services | Complex data aggregation | Sensitive keys to hide | Request optimization needed]
+
+**Architecture Implications:**
+- Frontend calls BFF API routes (Next.js API Routes recommended)
+- BFF aggregates data from multiple backend services
+- Sensitive API keys stored server-side in BFF
+- Response transformation happens in BFF layer
+- Frontend receives optimized, frontend-specific data shapes
+
+**Data Flow:**
+Frontend Component → BFF API Route → Backend Service(s) → Database(s)
+
+**BFF Responsibilities:**
+- Data aggregation from multiple services
+- Response transformation for frontend consumption
+- Authentication token management (httpOnly cookies with Secure and SameSite attributes)
+- Rate limiting and caching
+- Error normalization
+```
+
+### Rationalization Table for Integration Patterns
+
+| Excuse | Reality |
+|--------|---------|
+| "API pattern doesn't affect architecture" | Pattern determines data flow, error handling, and layer responsibilities. Document it. |
+| "We can decide direct vs BFF later" | Architecture depends on this choice. Decide now to inform component design. |
+| "BFF is overkill for our feature" | If research.md says `api_pattern: bff`, honor the decision. It was made with context. |
+| "Just use direct for simplicity" | Simplicity isn't always correct. Follow the topology decision. |
+
+## Design System & Styling (For Frontend Features)
+
+**⛔ HARD GATE:** If the feature includes any user-facing UI, this section is MANDATORY.
+
+### Step 1: Detect UI Library
+
+**Auto-detection from package.json:**
+| Package Present | UI Library |
+|-----------------|------------|
+| `@lerianstudio/sindarian-ui` | Sindarian UI (Radix-based) |
+| `@radix-ui/*` | Radix UI Primitives |
+| `@shadcn/ui` or `shadcn` in devDeps | shadcn/ui |
+| `@chakra-ui/react` | Chakra UI |
+| `@headlessui/react` | Headless UI |
+| `@mui/material` | Material UI |
+| None detected | Ask user for choice |
+
+**If no UI library detected, AskUserQuestion:**
+"What UI component library will this project use?"
+Options: shadcn/ui (Recommended), Chakra UI, Material UI, Headless UI, Custom components
+
+### Step 2: Document Styling Configuration
+
+**TRD must include a `## Design System Configuration` section:**
+
+```markdown
+## Design System Configuration
+
+### UI Library
+- **Library:** [Detected or chosen library]
+- **Version:** [Package version from package.json]
+
+### CSS Framework
+- **Framework:** [TailwindCSS v4 / CSS Modules / Styled Components / etc.]
+- **Config File:** [tailwind.config.ts / postcss.config.js / etc.]
+
+### Theme Integration
+- **CSS Variables Required:** Yes/No
+- **Dark Mode:** prefers-color-scheme / class-based / not supported
+- **Source Directive:** @source path for component styles
+
+### Required CSS Imports
+List CSS files that MUST be imported in globals.css:
+- `@import "tailwindcss";`
+- `@import "@library/dist/components/ui/button/styles.css";`
+- etc.
+
+### Theme Variables
+Document required CSS custom properties:
+- Color scale (zinc, shadcn)
+- Spacing variables
+- Component-specific variables (button, input, dialog)
+```
+
+### Step 3: Component Availability Matrix
+
+**TRD MUST document which components exist in the chosen UI library:**
+
+```markdown
+### Component Availability
+
+| Component Needed | Available in Library | Notes |
+|------------------|---------------------|-------|
+| Button | ✅ Yes | Variants: primary, secondary, outline |
+| Dialog/Modal | ✅ Yes | Use DialogTrigger pattern |
+| Form | ✅ Yes | Requires Form context wrapper |
+| Input | ⚠️ Partial | Requires FormField context |
+| IconButton | ✅ Yes | Separate component for icon-only |
+| Toast | ✅ Yes | Requires Toaster provider |
+| Table | ✅ Yes | Use TableHeader, TableBody, etc. |
+
+### Missing Components (Must Create)
+- [ ] Component X - not available, need custom implementation
+```
+
+### Step 4: Variant Mapping
+
+**TRD MUST document available variants to prevent implementation errors:**
+
+```markdown
+### Button Variants (Example)
+
+| Design Intent | Correct Variant | WRONG (Don't Use) |
+|---------------|-----------------|-------------------|
+| Primary action | `variant="primary"` | `variant="default"` |
+| Secondary action | `variant="secondary"` | - |
+| Cancel/neutral | `variant="outline"` | `variant="ghost"` |
+| Destructive | `variant="primary" className="bg-red-600"` | `variant="destructive"` |
+| Icon-only | Use `<IconButton>` | `<Button size="icon">` |
+```
+
+### Rationalization Table for Design System
+
+| Excuse | Reality |
+|--------|---------|
+| "Styling is implementation detail" | Styling bugs cause white screens and broken UX. Document upfront. |
+| "Developers will figure out CSS" | Missing CSS variables = hours of debugging. Specify requirements. |
+| "All UI libraries work the same" | They don't. Form patterns, variants, and contexts vary significantly. |
+| "We'll add dark mode later" | CSS architecture for dark mode must be set from the start. |
+| "Component variants are obvious" | They're not. `ghost` vs `plain` vs `outline` varies by library. |
+| "Just use the library's defaults" | Defaults may not match design. Document exact variants needed. |
+
+### Red Flags - STOP
+
+If reviewing a TRD for a UI feature and you see NONE of these, **STOP and add them**:
+
+- No UI library specified
+- No CSS framework documented
+- No theme variables listed
+- No component availability matrix
+- No variant mapping
+
+### Gate 3 Validation Addition for UI Features
+
+| Category | Requirements |
+|----------|--------------|
+| **Design System** | UI library specified; CSS framework documented; theme variables listed; component availability verified; variant mapping complete |
+
 ## ADR Template
 
 ```markdown
@@ -262,12 +447,49 @@ If feature is a licensed product/plugin (as determined in Question 3 of pre-dev 
 
 **Action:** 80+ present autonomously | 50-79 present options | <50 request clarification
 
+---
+
+## Document Placement
+
+**trd.md is a shared document** - it defines architecture for the entire feature.
+
+| Structure | trd.md Location |
+|-----------|-----------------|
+| single-repo | `docs/pre-dev/{feature}/trd.md` |
+| monorepo | `docs/pre-dev/{feature}/trd.md` (root) |
+| multi-repo | Write to BOTH repos |
+
+**Multi-repo handling:**
+
+```bash
+# Read topology from research.md frontmatter
+if [[ "$structure" == "multi-repo" ]]; then
+    # Write to both repositories
+    mkdir -p "{backend.path}/docs/pre-dev/{feature}"
+    mkdir -p "{frontend.path}/docs/pre-dev/{feature}"
+
+    # Write TRD to primary (backend)
+    # Then copy to frontend
+    cp "{backend.path}/docs/pre-dev/{feature}/trd.md" "{frontend.path}/docs/pre-dev/{feature}/trd.md"
+fi
+```
+
+**Sync footer for multi-repo:**
+```markdown
+---
+**Sync Status:** Architecture document maintained in both repositories.
+```
+
+---
+
 ## Output & After Approval
 
-**Output to:** `docs/pre-dev/{feature-name}/trd.md`
+**Output to:**
+- **single-repo/monorepo:** `docs/pre-dev/{feature-name}/trd.md`
+- **multi-repo:** Both `{backend.path}/docs/pre-dev/{feature}/trd.md` AND `{frontend.path}/docs/pre-dev/{feature}/trd.md`
 
 1. ✅ Lock TRD - architecture patterns are now reference
-2. 🎯 Use as input for API Design (`ring:pre-dev-api-design`)
+2. 🎯 Use as input for API Design (`pre-dev-api-design`)
 3. 🚫 Never add technologies retroactively
 4. 📋 Keep architecture/implementation strictly separated
 

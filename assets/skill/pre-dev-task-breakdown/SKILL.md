@@ -1,24 +1,23 @@
 ---
-name: "ring:pre-dev-task-breakdown"
+name: ring:pre-dev-task-breakdown
 description: |
   Gate 7: Implementation tasks - value-driven decomposition into working increments
   that deliver measurable user value.
-license: MIT
-compatibility: opencode
-metadata:
-  trigger: |
-    - PRD passed Gate 1 (required)
-    - TRD passed Gate 3 (required)
-    - All Large Track gates passed (if applicable)
-    - Ready to create sprint/iteration tasks
-  skip_when: |
-    - PRD or TRD not validated → complete earlier gates
-    - Tasks already exist → proceed to Subtask Creation
-    - Trivial change → direct implementation
+
+trigger: |
+  - PRD passed Gate 1 (required)
+  - TRD passed Gate 3 (required)
+  - All Large Track gates passed (if applicable)
+  - Ready to create sprint/iteration tasks
+
+skip_when: |
+  - PRD or TRD not validated → complete earlier gates
+  - Tasks already exist → proceed to Subtask Creation
+  - Trivial change → direct implementation
 
 sequence:
-  after: [ring:pre-dev-trd-creation, ring:pre-dev-dependency-map]
-  before: [ring:pre-dev-subtask-creation, ring:executing-plans]
+  after: [pre-dev-trd-creation, pre-dev-dependency-map]
+  before: [pre-dev-subtask-creation, executing-plans]
 ---
 
 # Task Breakdown - Value-Driven Decomposition
@@ -106,8 +105,241 @@ If you catch yourself writing any of these in a task, **STOP**:
 | **Technical Clarity** | Success criteria measurable/testable; dependencies correctly mapped; testing approach defined; DoD comprehensive |
 | **Team Readiness** | Skills match capabilities; estimates realistic; capacity available; handoffs minimized |
 | **Risk Management** | Risks identified per task; mitigations defined; high-risk tasks scheduled early; fallback plans exist |
+| **Multi-Module** (if applicable) | All tasks have `target:` field; all tasks have `working_directory:`; per-module files generated (if doc_organization: per-module) |
 
 **Gate Result:** ✅ PASS → Subtasks | ⚠️ CONDITIONAL (refine oversized/vague) | ❌ FAIL (re-decompose)
+
+## Multi-Module Task Tagging
+
+**If TopologyConfig exists in research.md frontmatter** (from Gate 0):
+
+### Read Topology Configuration
+
+```yaml
+# From research.md frontmatter
+topology:
+  scope: fullstack
+  structure: monorepo | multi-repo
+  modules:
+    backend:
+      path: packages/api
+      language: golang
+    frontend:
+      path: packages/web
+      framework: nextjs
+  doc_organization: unified | per-module
+```
+
+### Task Target Assignment
+
+Each task MUST have `target:` and `working_directory:` fields when topology is multi-module.
+
+**Agent assignment depends on both `target` and `api_pattern`:**
+
+| Target | API Pattern | Task Type | Agent |
+|--------|-------------|-----------|-------|
+| `backend` | any | API endpoints, services, data layer, CLI | `ring:backend-engineer-golang` or `ring:backend-engineer-typescript` |
+| `frontend` | `direct` | UI components, pages, forms, Server Components | `ring:frontend-engineer` |
+| `frontend` | `direct` | Server Actions, data fetching hooks | `ring:frontend-engineer` |
+| `frontend` | `bff` | API routes, data aggregation, transformation | `ring:frontend-bff-engineer-typescript` |
+| `frontend` | `bff` | UI components, pages, forms | `ring:frontend-engineer` |
+| `shared` | any | CI/CD, configs, docs, cross-module utilities | DevOps or general |
+
+### How to Determine Agent for Frontend Tasks
+
+**Read `api_pattern` from research.md frontmatter:**
+
+```yaml
+# From research.md
+topology:
+  scope: fullstack
+  api_pattern: direct | bff | other
+```
+
+**Decision Flow:**
+
+```
+Is task target: frontend?
+├─ NO → Use backend-engineer-* based on language
+└─ YES → Check api_pattern
+    ├─ direct → ALL frontend tasks use frontend-engineer
+    └─ bff → Split tasks:
+        ├─ API routes, aggregation, transformation → frontend-bff-engineer-typescript
+        └─ UI components, pages, forms → frontend-engineer
+```
+
+### Task Format with Agent Assignment
+
+```markdown
+## T-003: User Login API Endpoint
+
+**Target:** backend
+**Working Directory:** packages/api
+**Agent:** ring:backend-engineer-golang
+
+**Deliverable:** Working login API that validates credentials and returns JWT token.
+
+...rest of task...
+```
+
+```markdown
+## T-004: User Dashboard Data Aggregation
+
+**Target:** frontend
+**Working Directory:** packages/web
+**Agent:** ring:frontend-bff-engineer-typescript  # Because api_pattern: bff
+
+**Deliverable:** BFF endpoint that aggregates user profile, recent activity, and notifications.
+
+...rest of task...
+```
+
+```markdown
+## T-005: User Dashboard UI
+
+**Target:** frontend
+**Working Directory:** packages/web
+**Agent:** ring:frontend-engineer  # UI task, even with BFF pattern
+
+**Deliverable:** Dashboard page component consuming aggregated data from BFF.
+
+...rest of task...
+```
+
+### Validation for Agent Assignment
+
+| Check | Requirement |
+|-------|-------------|
+| All tasks have `Agent:` field | MANDATORY |
+| Agent matches api_pattern rules | If frontend + bff → check task type |
+| BFF tasks clearly separated | Data aggregation vs UI clearly split |
+| No mixed responsibilities | One task = one agent |
+
+### Per-Module Output
+
+**Document placement depends on topology.structure:**
+
+#### Single-Repo
+
+All tasks in one file:
+```
+docs/pre-dev/{feature}/
+└── tasks.md           # All tasks with target tags
+```
+
+#### Monorepo (per-module placement)
+
+Index at root, filtered tasks in module directories:
+```
+docs/pre-dev/{feature}/
+└── tasks.md           # Index with ALL tasks (target tags included)
+
+{backend.path}/docs/pre-dev/{feature}/
+└── tasks.md           # Backend tasks only (target: backend)
+
+{frontend.path}/docs/pre-dev/{feature}/
+└── tasks.md           # Frontend tasks only (target: frontend)
+```
+
+#### Multi-Repo (distributed placement)
+
+Tasks distributed to respective repositories:
+```
+{backend.path}/docs/pre-dev/{feature}/
+└── tasks.md           # Backend tasks only
+
+{frontend.path}/docs/pre-dev/{feature}/
+└── tasks.md           # Frontend tasks only
+```
+
+**Note:** For multi-repo, there is no central index. Each repo contains only its relevant tasks.
+
+### Task Splitting Logic
+
+```python
+def split_tasks_by_module(all_tasks: list, topology: dict) -> dict:
+    """
+    Split tasks into module-specific files.
+
+    Returns dict with keys: 'index', 'backend', 'frontend'
+    """
+    structure = topology.get('structure', 'single-repo')
+    modules = topology.get('modules', {})
+    backend_path = modules.get('backend', {}).get('path', '.')
+    frontend_path = modules.get('frontend', {}).get('path', '.')
+
+    backend_tasks = [t for t in all_tasks if t.get('target') == 'backend']
+    frontend_tasks = [t for t in all_tasks if t.get('target') == 'frontend']
+    shared_tasks = [t for t in all_tasks if t.get('target') == 'shared']
+
+    if structure == 'single-repo':
+        return {
+            'index': {
+                'path': f"docs/pre-dev/{feature}/tasks.md",
+                'tasks': all_tasks
+            }
+        }
+
+    if structure == 'monorepo':
+        return {
+            'index': {
+                'path': f"docs/pre-dev/{feature}/tasks.md",
+                'tasks': all_tasks
+            },
+            'backend': {
+                'path': f"{backend_path}/docs/pre-dev/{feature}/tasks.md",
+                'tasks': backend_tasks + shared_tasks
+            },
+            'frontend': {
+                'path': f"{frontend_path}/docs/pre-dev/{feature}/tasks.md",
+                'tasks': frontend_tasks + shared_tasks
+            }
+        }
+
+    if structure == 'multi-repo':
+        return {
+            'backend': {
+                'path': f"{backend_path}/docs/pre-dev/{feature}/tasks.md",
+                'tasks': backend_tasks + shared_tasks
+            },
+            'frontend': {
+                'path': f"{frontend_path}/docs/pre-dev/{feature}/tasks.md",
+                'tasks': frontend_tasks + shared_tasks
+            }
+        }
+```
+
+### Module-Specific Task File Header
+
+Each module-specific tasks.md should include:
+
+```markdown
+---
+feature: {feature-name}
+module: backend | frontend
+filtered_from: docs/pre-dev/{feature}/tasks.md  # (monorepo only)
+total_tasks: N
+---
+
+# {Feature Name} - {Module} Tasks
+
+This file contains tasks filtered for the **{module}** module.
+
+**Full task list:** {link to index if monorepo, or note "distributed" if multi-repo}
+
+---
+```
+
+### Validation for Multi-Module
+
+| Check | Requirement |
+|-------|-------------|
+| All tasks have `target:` | If topology is monorepo or multi-repo |
+| All tasks have `working_directory:` | If topology is monorepo or multi-repo |
+| Target matches task content | Backend tasks have backend work, etc. |
+| Working directory resolves correctly | Path exists or will be created |
+
+---
 
 ## Task Template Structure
 
@@ -116,6 +348,9 @@ Output to `docs/pre-dev/{feature-name}/tasks.md`. Each task includes:
 | Section | Content |
 |---------|---------|
 | **Header** | T-[XXX]: [Task Title - What It Delivers] |
+| **Target** | backend \| frontend \| shared (if multi-module) |
+| **Working Directory** | Path from topology config (if multi-module) |
+| **Agent** | Recommended agent: ring:backend-engineer-*, ring:frontend-*-engineer-*, etc. |
 | **Deliverable** | One sentence: what working software ships |
 | **Scope** | Includes (specific capabilities), Excludes (future tasks with IDs) |
 | **Success Criteria** | Testable items: Functional, Technical, Operational, Quality |
@@ -152,10 +387,16 @@ Optimize task order by sprint/phase with goals, critical path identification, an
 
 ## Output & After Approval
 
-**Output to:** `docs/pre-dev/{feature-name}/tasks.md`
+**Output to (depends on topology.structure):**
+
+| Structure | Files Generated |
+|-----------|-----------------|
+| single-repo | `docs/pre-dev/{feature}/tasks.md` |
+| monorepo | Index + `{backend.path}/docs/pre-dev/{feature}/tasks.md` + `{frontend.path}/docs/pre-dev/{feature}/tasks.md` |
+| multi-repo | `{backend.path}/docs/pre-dev/{feature}/tasks.md` + `{frontend.path}/docs/pre-dev/{feature}/tasks.md` |
 
 1. ✅ Tasks become sprint backlog
-2. 🎯 Use as input for subtasks (`ring:pre-dev-subtask-creation`)
+2. 🎯 Use as input for subtasks (`pre-dev-subtask-creation`)
 3. 📊 Track progress per task (not per subtask)
 4. 🚫 No implementation yet - that's in subtasks
 

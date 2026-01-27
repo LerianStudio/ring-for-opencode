@@ -1,24 +1,23 @@
 ---
-name: "ring:pre-dev-api-design"
+name: ring:pre-dev-api-design
 description: |
   Gate 4: API contracts document - defines component interfaces and data contracts
   before protocol/technology selection. Large Track only.
-license: MIT
-compatibility: opencode
-metadata:
-  trigger: |
-    - TRD passed Gate 3 validation
-    - System has multiple components that need to integrate
-    - Building APIs (internal or external)
-    - Large Track workflow (2+ day features)
-  skip_when: |
-    - Small Track workflow → skip to Task Breakdown
-    - Single component system → skip to Data Model
-    - TRD not validated → complete Gate 3 first
+
+trigger: |
+  - TRD passed Gate 3 validation
+  - System has multiple components that need to integrate
+  - Building APIs (internal or external)
+  - Large Track workflow (2+ day features)
+
+skip_when: |
+  - Small Track workflow → skip to Task Breakdown
+  - Single component system → skip to Data Model
+  - TRD not validated → complete Gate 3 first
 
 sequence:
-  after: [ring:pre-dev-trd-creation]
-  before: [ring:pre-dev-data-model]
+  after: [pre-dev-trd-creation]
+  before: [pre-dev-data-model]
 ---
 
 # API/Contract Design - Defining Component Interfaces
@@ -108,7 +107,9 @@ If you catch yourself writing any of these in API Design, **STOP**:
 
 ## Contract Template Structure
 
-Output to `docs/pre-dev/{feature-name}/api-design.md` with these sections:
+Output to (path depends on topology.structure):
+- **single-repo:** `docs/pre-dev/{feature-name}/api-design.md`
+- **monorepo/multi-repo:** `{backend.path}/docs/pre-dev/{feature-name}/api-design.md`
 
 | Section | Content |
 |---------|---------|
@@ -171,10 +172,36 @@ Output to `docs/pre-dev/{feature-name}/api-design.md` with these sections:
 
 **Action:** 80+ autonomous generation | 50-79 present options | <50 ask clarifying questions
 
+---
+
+## Document Placement
+
+**api-design.md is a backend document** - it defines API contracts implemented by backend services.
+
+| Structure | api-design.md Location |
+|-----------|------------------------|
+| single-repo | `docs/pre-dev/{feature}/api-design.md` |
+| monorepo | `{backend.path}/docs/pre-dev/{feature}/api-design.md` |
+| multi-repo | `{backend.path}/docs/pre-dev/{feature}/api-design.md` |
+
+**Why backend path?** API contracts are:
+- Implemented by backend engineers
+- Referenced during backend code review
+- Versioned with backend code
+
+**Directory creation for multi-module:**
+```bash
+# Read topology from research.md frontmatter
+backend_path="${topology_modules_backend_path:-"."}"
+mkdir -p "${backend_path}/docs/pre-dev/{feature}"
+```
+
+---
+
 ## After Approval
 
 1. ✅ Lock contracts - interfaces are now implementation reference
-2. 🎯 Use contracts as input for Data Modeling (`ring:pre-dev-data-model`)
+2. 🎯 Use contracts as input for Data Modeling (`pre-dev-data-model`)
 3. 🚫 Never add protocol specifics retroactively
 4. 📋 Keep technology-agnostic until Dependency Map
 

@@ -1,24 +1,23 @@
 ---
-name: "ring:pre-dev-data-model"
+name: ring:pre-dev-data-model
 description: |
   Gate 5: Data structures document - defines entities, relationships, and ownership
   before database technology selection. Large Track only.
-license: MIT
-compatibility: opencode
-metadata:
-  trigger: |
-    - API Design passed Gate 4 validation
-    - System stores persistent data
-    - Multiple entities with relationships
-    - Large Track workflow (2+ day features)
-  skip_when: |
-    - Small Track workflow → skip to Task Breakdown
-    - No persistent data → skip to Dependency Map
-    - API Design not validated → complete Gate 4 first
+
+trigger: |
+  - API Design passed Gate 4 validation
+  - System stores persistent data
+  - Multiple entities with relationships
+  - Large Track workflow (2+ day features)
+
+skip_when: |
+  - Small Track workflow → skip to Task Breakdown
+  - No persistent data → skip to Dependency Map
+  - API Design not validated → complete Gate 4 first
 
 sequence:
-  after: [ring:pre-dev-api-design]
-  before: [ring:pre-dev-dependency-map]
+  after: [pre-dev-api-design]
+  before: [pre-dev-dependency-map]
 ---
 
 # Data Modeling - Defining Data Structures
@@ -109,7 +108,9 @@ If you catch yourself writing any of these in Data Model, **STOP**:
 
 ## Data Model Template Structure
 
-Output to `docs/pre-dev/{feature-name}/data-model.md` with these sections:
+Output to (path depends on topology.structure):
+- **single-repo:** `docs/pre-dev/{feature-name}/data-model.md`
+- **monorepo/multi-repo:** `{backend.path}/docs/pre-dev/{feature-name}/data-model.md`
 
 | Section | Content |
 |---------|---------|
@@ -165,10 +166,36 @@ Output to `docs/pre-dev/{feature-name}/data-model.md` with these sections:
 
 **Action:** 80+ autonomous generation | 50-79 present options | <50 ask clarifying questions
 
+---
+
+## Document Placement
+
+**data-model.md is a backend document** - it defines entity structures owned by backend services.
+
+| Structure | data-model.md Location |
+|-----------|------------------------|
+| single-repo | `docs/pre-dev/{feature}/data-model.md` |
+| monorepo | `{backend.path}/docs/pre-dev/{feature}/data-model.md` |
+| multi-repo | `{backend.path}/docs/pre-dev/{feature}/data-model.md` |
+
+**Why backend path?** Data models are:
+- Implemented as database schemas by backend engineers
+- Define entities owned by backend components
+- Versioned with backend database migrations
+
+**Directory creation for multi-module:**
+```bash
+# Read topology from research.md frontmatter
+backend_path="${topology_modules_backend_path:-"."}"
+mkdir -p "${backend_path}/docs/pre-dev/{feature}"
+```
+
+---
+
 ## After Approval
 
 1. ✅ Lock data model - entity structure is now reference
-2. 🎯 Use model as input for Dependency Map (`ring:pre-dev-dependency-map`)
+2. 🎯 Use model as input for Dependency Map (`pre-dev-dependency-map`)
 3. 🚫 Never add database specifics retroactively
 4. 📋 Keep technology-agnostic until Dependency Map
 

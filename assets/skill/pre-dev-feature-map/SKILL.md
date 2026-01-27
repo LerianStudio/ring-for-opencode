@@ -1,24 +1,23 @@
 ---
-name: "ring:pre-dev-feature-map"
+name: ring:pre-dev-feature-map
 description: |
   Gate 2: Feature relationship map - visualizes feature landscape, groupings,
   and interactions at business level before technical architecture.
-license: MIT
-compatibility: opencode
-metadata:
-  trigger: |
-    - PRD passed Gate 1 validation
-    - Multiple features with complex interactions
-    - Need to understand feature scope and relationships
-    - Large Track workflow (2+ day features)
-  skip_when: |
-    - Small Track workflow (<2 days) → skip to TRD
-    - Single simple feature → TRD directly
-    - PRD not validated → complete Gate 1 first
+
+trigger: |
+  - PRD passed Gate 1 validation
+  - Multiple features with complex interactions
+  - Need to understand feature scope and relationships
+  - Large Track workflow (2+ day features)
+
+skip_when: |
+  - Small Track workflow (<2 days) → skip to TRD
+  - Single simple feature → TRD directly
+  - PRD not validated → complete Gate 1 first
 
 sequence:
-  after: [ring:pre-dev-prd-creation]
-  before: [ring:pre-dev-trd-creation]
+  after: [pre-dev-prd-creation]
+  before: [pre-dev-trd-creation]
 ---
 
 # Feature Map Creation - Understanding the Feature Landscape
@@ -39,9 +38,10 @@ Jumping from PRD to TRD without mapping creates:
 
 | Phase | Activities |
 |-------|------------|
-| **1. Feature Analysis** | Load approved PRD (Gate 1); extract all features; identify user journeys; map feature interactions and dependencies |
+| **1. Feature Analysis** | Load approved PRD (Gate 1) and ux-criteria.md; extract all features; identify user journeys; map feature interactions and dependencies |
 | **2. Feature Mapping** | Categorize (Core/Supporting/Enhancement/Integration); group into domains; map user journeys; identify integration points; define boundaries; visualize relationships; prioritize by value |
 | **3. Gate 2 Validation** | All PRD features mapped; categories defined; domains logical; journeys complete; integration points identified; boundaries clear; priorities support phased delivery; no technical details |
+| **4. UX Design** | Dispatch `product-designer` to create detailed user flows (Mermaid) and wireframe specifications (YAML) |
 
 ## Explicit Rules
 
@@ -102,7 +102,44 @@ If you catch yourself writing any of these in a Feature Map, **STOP**:
 | **Integration Points** | All interactions identified; data/event exchange points marked; directional deps clear; circular deps resolved |
 | **Priority & Phasing** | MVP features identified; rationale documented; incremental value delivery; deps don't block MVP |
 
-**Gate Result:** ✅ PASS → TRD | ⚠️ CONDITIONAL (clarify boundaries) | ❌ FAIL (poor groupings/missing features)
+**Gate Result:** ✅ PASS → UX Design → TRD | ⚠️ CONDITIONAL (clarify boundaries) | ❌ FAIL (poor groupings/missing features)
+
+## Phase 4: UX Design (Large Track Only)
+
+**After Feature Map passes Gate 2 validation, dispatch product-designer for UX design:**
+
+```
+Task(
+  subagent_type="ring:product-designer",
+  model="opus",
+  prompt="Create detailed UX design based on PRD, ux-criteria.md, and feature-map.md at docs/pre-dev/{feature}/. Mode: ux-design. Create: user-flows.md with Mermaid diagrams for all user journeys (happy path, error paths, edge cases), wireframes/ directory with YAML specs for all screens, UI state documentation for all interactive elements."
+)
+```
+
+**UX Design Outputs:**
+- `docs/pre-dev/{feature}/user-flows.md` - Detailed user flows with Mermaid diagrams
+- `docs/pre-dev/{feature}/wireframes/` - Directory with YAML wireframe specs per screen
+
+**UX Design Checklist:**
+
+| Check | Required |
+|-------|----------|
+| All user journeys from feature-map have flows | Yes |
+| Happy path documented for each flow | Yes |
+| Error paths documented for each flow | Yes |
+| Edge cases identified and documented | Yes |
+| Wireframe spec for each unique screen | Yes |
+| All UI states defined (loading, error, empty, success) | Yes |
+| Responsive behavior documented | Yes |
+| Accessibility requirements in specs | Yes |
+
+**If UX Design fails:**
+- Missing flow → Add flow for user journey
+- Missing state → Add state definition
+- Incomplete wireframe → Enhance spec with missing components
+- Accessibility gaps → Add a11y requirements
+
+**Note:** This phase is for Large Track only (2+ day features). Small Track skips to TRD directly.
 
 ## Feature Map Template Structure
 
@@ -141,12 +178,16 @@ Output to `docs/pre-dev/{feature-name}/feature-map.md` with these sections:
 
 ## Output & After Approval
 
-**Output to:** `docs/pre-dev/{feature-name}/feature-map.md`
+**Outputs:**
+- `docs/pre-dev/{feature-name}/feature-map.md` - Feature relationship map
+- `docs/pre-dev/{feature-name}/user-flows.md` - Detailed user flows (from product-designer, Large Track only)
+- `docs/pre-dev/{feature-name}/wireframes/` - Wireframe specifications (from product-designer, Large Track only)
 
 1. ✅ Lock Feature Map - scope and relationships are now reference
-2. 🎯 Use as input for TRD (next phase)
-3. 🚫 Never add technical architecture retroactively
-4. 📋 Keep business features separate from technical components
+2. ✅ Lock user-flows.md and wireframes/ - UX specs for implementation (Large Track)
+3. 🎯 Use all as input for TRD (next phase)
+4. 🚫 Never add technical architecture retroactively
+5. 📋 Keep business features separate from technical components
 
 ## The Bottom Line
 
