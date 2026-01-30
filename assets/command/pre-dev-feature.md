@@ -167,7 +167,74 @@ Topology Configuration:
 - **Usage:** This choice informs wireframes (class naming), component implementation, and code review criteria
 - **CANNOT be skipped:** Even with auto-detection, user must confirm the choice
 
-**Question 7 (MANDATORY if scope=fullstack):** "How will the frontend communicate with backend services?"
+**Question 7 (MANDATORY if Q4=Yes AND new project):** "What is the target accessibility level?"
+- **Trigger:** Only ask if Q4 = "Yes" AND (no existing `package.json` OR no existing a11y config)
+- **Auto-detection:** Check for existing accessibility configuration:
+  - `@axe-core/*` in package.json → Skip, note "Detected: accessibility testing configured"
+  - `pa11y` in package.json → Skip, note "Detected: accessibility testing configured"
+  - `.lighthouserc.*` file exists → Skip, note "Detected: Lighthouse CI configured"
+  - If **config found** → Skip question, use detected level
+  - If **not found** → Ask question
+- Header: "Accessibility"
+- Options:
+  - "WCAG 2.1 AA (Recommended)" - Standard compliance, 4.5:1 contrast for normal text, 3:1 for large text
+  - "WCAG 2.1 AAA" - Enhanced compliance, 7:1 contrast for normal text, 4.5:1 for large text
+  - "Basic" - Semantic HTML only, no strict contrast requirements
+- **Usage:** Informs contrast validation in design-system.md, component requirements, code review criteria
+- **Why this matters:** Accessibility requirements affect color choices, component design, and testing requirements
+
+**Question 8 (MANDATORY if Q4=Yes AND new project):** "Does the application need dark mode support?"
+- **Trigger:** Only ask if Q4 = "Yes" AND (no existing `package.json` OR no dark mode detected)
+- **Auto-detection:** Check for existing dark mode:
+  - `dark:` classes in existing components → Skip, note "Detected: dark mode classes in use"
+  - CSS variables with `.dark` class in globals.css → Skip, note "Detected: dark mode CSS variables"
+  - Theme provider (next-themes, etc.) in layout → Skip, note "Detected: theme provider configured"
+  - If **dark mode found** → Skip question, note existing configuration
+  - If **not found** → Ask question
+- Header: "Dark Mode"
+- Options:
+  - "Light + Dark (Recommended)" - Full theme support with system preference detection
+  - "Light only" - Single light theme, no dark mode
+  - "Dark only" - Single dark theme (for specific apps like developer tools)
+- **Usage:** Informs design-system.md color tokens, CSS architecture, component variants
+- **Why this matters:** Dark mode requires dual color palettes and affects contrast calculations
+
+**Question 9 (MANDATORY if Q4=Yes AND new project):** "What is the primary brand color?"
+- **Trigger:** Only ask if Q4 = "Yes" AND (no existing `package.json` OR no brand colors detected)
+- **Auto-detection:** Check for existing brand colors:
+  - `tailwind.config.*` with custom `primary` color → Skip, note "Detected: primary color in Tailwind config"
+  - CSS variable `--primary` or `--color-primary` in globals.css → Skip, note "Detected: primary color CSS variable"
+  - If **brand color found** → Skip question, note existing configuration
+  - If **not found** → Ask question
+- Header: "Brand Color"
+- Options:
+  - "Blue" - Professional, trustworthy (finance, enterprise, healthcare)
+  - "Purple" - Creative, innovative (tech startups, design tools)
+  - "Green" - Growth, sustainability (fintech, eco, wellness)
+  - "Orange" - Energy, action (marketplaces, social, food)
+  - "Custom (specify hex)" - Custom brand color (user provides hex code)
+- **Usage:** Informs design-system.md primary palette, derived colors, semantic mappings
+- **Why this matters:** Brand color defines the primary visual identity and derived color palette
+
+**Question 10 (MANDATORY if Q4=Yes AND new project):** "What typography style fits the brand?"
+- **Trigger:** Only ask if Q4 = "Yes" AND (no existing `package.json` OR no custom fonts detected)
+- **Auto-detection:** Check for existing typography:
+  - Font imports in `layout.tsx` or `_app.tsx` → Skip, note "Detected: [font] configured"
+  - `@fontsource/*` packages in package.json → Skip, note "Detected: [font] in dependencies"
+  - Google Fonts in `next/font/google` imports → Skip, note "Detected: [font] from Google Fonts"
+  - If **fonts found** → Skip question, note existing configuration
+  - If **not found** → Ask question
+- Header: "Typography"
+- Options:
+  - "Modern Tech (Geist) - Recommended" - Clean, technical feel, excellent for SaaS/developer tools
+  - "Contemporary (Satoshi)" - Friendly, approachable, good for consumer apps
+  - "Editorial (Cabinet Grotesk)" - Bold, statement-making, good for marketing/media
+  - "Professional (General Sans)" - Neutral, enterprise-grade, good for B2B
+- **Usage:** Informs design-system.md typography scale, font loading strategy, component styles
+- **Why this matters:** Typography affects readability, brand perception, and page load performance
+- **Note:** Avoid generic fonts (Inter, Roboto, Arial) per frontend standards
+
+**Question 11 (MANDATORY if scope=fullstack):** "How will the frontend communicate with backend services?"
 - **Trigger:** Only ask if topology scope = "Fullstack" (from Q1.1)
 - Header: "API Pattern"
 - Options:
@@ -183,21 +250,25 @@ Topology Configuration:
   - BFF → Data aggregation uses `ring:frontend-bff-engineer-typescript`, UI uses `ring:frontend-engineer`
 - **CANNOT be skipped for fullstack features**
 
-**UI Configuration Summary:** After Q4/Q5/Q6/Q7, display:
+**UI Configuration Summary:** After Q4-Q11, display:
 ```
 UI Configuration:
 - Has UI: Yes/No
 - UI Library: [choice] (confirmed by user)
 - Styling: [choice] (confirmed by user)
+- Accessibility: [WCAG AA | WCAG AAA | Basic] (for new projects)
+- Dark Mode: [Light + Dark | Light only | Dark only] (for new projects)
+- Brand Color: [Blue | Purple | Green | Orange | #hex] (for new projects)
+- Typography: [Geist | Satoshi | Cabinet Grotesk | General Sans] (for new projects)
 - API Pattern: [direct | bff | other] (only for fullstack)
 ```
 
-**GATE BLOCKER:** If Q4 = "Yes" but Q5 or Q6 were not answered, DO NOT proceed to Gate 0. Return and ask the missing questions.
+**GATE BLOCKER:** If Q4 = "Yes" but Q5 or Q6 were not answered, DO NOT proceed to Gate 0. Return and ask the missing questions. For new projects with UI, Q7-Q10 are also required.
 
 This configuration is passed to all subsequent gates and used by:
 - **Gate 0 (Research):** product-designer searches for patterns in the chosen library
 - **Gate 1 (PRD/UX):** wireframes use component names from the library
-- **Gate 2 (TRD):** dependencies section lists the UI library and styling framework
+- **Gate 2 (TRD):** architecture considers UI library constraints
 - **Gate 3 (Tasks):** implementation tasks reference specific components
 
 After getting the feature name (and auth/license/UI requirements if applicable), create the directory structure and run the 4-gate workflow:
