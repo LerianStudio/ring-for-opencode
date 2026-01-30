@@ -268,6 +268,126 @@ mkdir -p "{frontend.path}/docs/pre-dev/{feature}"
 
 **Action:** 80+ autonomous | 50-79 present options | <50 ask discovery questions
 
+## Design System Generation (For New Projects with UI)
+
+**MANDATORY:** If feature has UI (Q4=Yes) AND project is new (no existing design system), generate `design-system.md` based on Q7-Q10 responses.
+
+**Trigger Conditions:**
+- Q4 = "Yes" (feature has UI)
+- No existing `globals.css` with CSS variables OR no `tailwind.config.*` with custom colors
+- Q7-Q10 were answered (not auto-detected from existing config)
+
+**design-system.md Template:**
+
+```markdown
+# Design System - {Feature Name}
+
+## Configuration Source
+- Accessibility: {Q7 response}
+- Dark Mode: {Q8 response}
+- Brand Color: {Q9 response}
+- Typography: {Q10 response}
+
+## Color Palette
+
+### Primary
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--primary` | {derived from Q9} | {lighter for dark} | Main actions, links |
+| `--primary-foreground` | #ffffff | {dark text} | Text on primary |
+| `--primary-hover` | {darker shade} | {lighter shade} | Hover states |
+
+### Neutral
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--background` | #ffffff | #0f172a | Page background |
+| `--foreground` | #0f172a | #f8fafc | Primary text |
+| `--muted` | #f1f5f9 | #1e293b | Secondary backgrounds |
+| `--muted-foreground` | #64748b | #94a3b8 | Secondary text |
+| `--border` | #e2e8f0 | #334155 | Borders, dividers |
+
+### Semantic
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--success` | #16a34a | #22c55e | Success states |
+| `--warning` | #ca8a04 | #eab308 | Warning states |
+| `--error` | #dc2626 | #ef4444 | Error states |
+
+## Contrast Validation ({Q7 level})
+
+| Combination | Required Ratio | Actual | Pass |
+|-------------|----------------|--------|------|
+| foreground on background | {4.5:1 or 7:1} | {calculated} | ✅/❌ |
+| primary on background | {4.5:1 or 7:1} | {calculated} | ✅/❌ |
+| muted-foreground on background | {4.5:1 or 7:1} | {calculated} | ✅/❌ |
+
+## Typography
+
+### Font Stack
+- Display: {Q10 choice}, sans-serif
+- Body: {Q10 choice}, sans-serif
+- Mono: 'Geist Mono', ui-monospace, monospace
+
+### Scale
+| Token | Size | Line Height | Usage |
+|-------|------|-------------|-------|
+| text-xs | 12px | 16px | Captions |
+| text-sm | 14px | 20px | Secondary |
+| text-base | 16px | 24px | Body |
+| text-lg | 18px | 28px | Large body |
+| text-xl | 20px | 28px | Small headings |
+| text-2xl | 24px | 32px | Section headings |
+| text-3xl | 30px | 36px | Page headings |
+
+## Spacing Scale (4px base)
+
+| Token | Value |
+|-------|-------|
+| spacing-1 | 4px |
+| spacing-2 | 8px |
+| spacing-3 | 12px |
+| spacing-4 | 16px |
+| spacing-6 | 24px |
+| spacing-8 | 32px |
+
+## Accessibility Requirements
+
+- **Level:** {Q7 response}
+- **Minimum contrast:** {4.5:1 for AA, 7:1 for AAA}
+- **Focus indicators:** 2px solid ring required
+- **Touch targets:** Minimum 44x44px
+- **Reduced motion:** Respect prefers-reduced-motion
+```
+
+**Color Derivation from Q9 (Brand Color):**
+
+| Q9 Choice | --primary (Light) | --primary (Dark) |
+|-----------|-------------------|------------------|
+| Blue | hsl(217, 91%, 60%) | hsl(217, 91%, 65%) |
+| Purple | hsl(262, 83%, 58%) | hsl(262, 83%, 63%) |
+| Green | hsl(142, 76%, 36%) | hsl(142, 71%, 45%) |
+| Orange | hsl(25, 95%, 53%) | hsl(25, 95%, 58%) |
+| Custom | User-provided hex | Lightened 5% |
+
+**Typography Mapping from Q10:**
+
+| Q10 Choice | Font Family |
+|------------|-------------|
+| Modern Tech (Geist) | 'Geist', sans-serif |
+| Contemporary (Satoshi) | 'Satoshi', sans-serif |
+| Editorial (Cabinet Grotesk) | 'Cabinet Grotesk', sans-serif |
+| Professional (General Sans) | 'General Sans', sans-serif |
+
+**design-system.md Placement:**
+
+| Structure | Location |
+|-----------|----------|
+| single-repo | `docs/pre-dev/{feature}/design-system.md` |
+| monorepo | `{frontend.path}/docs/pre-dev/{feature}/design-system.md` |
+| multi-repo | `{frontend.path}/docs/pre-dev/{feature}/design-system.md` |
+
+**GATE BLOCKER:** If feature has UI and project is new, design-system.md MUST exist before proceeding to TRD. The TRD will reference these tokens.
+
 ## Output & After Approval
 
 **Outputs (paths depend on topology.structure):**
@@ -277,6 +397,7 @@ mkdir -p "{frontend.path}/docs/pre-dev/{feature}"
 | prd.md | `docs/pre-dev/{feature}/` | `docs/pre-dev/{feature}/` | Both repos |
 | ux-criteria.md | `docs/pre-dev/{feature}/` | `{frontend.path}/docs/pre-dev/{feature}/` | Frontend repo |
 | wireframes/ | `docs/pre-dev/{feature}/` | `{frontend.path}/docs/pre-dev/{feature}/` | Frontend repo |
+| design-system.md | `docs/pre-dev/{feature}/` | `{frontend.path}/docs/pre-dev/{feature}/` | Frontend repo (new projects) |
 
 1. ✅ Lock the PRD - no changes without formal amendment
 2. ✅ Lock ux-criteria.md - defines UX acceptance for implementation

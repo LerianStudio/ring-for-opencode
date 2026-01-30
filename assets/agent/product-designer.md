@@ -213,6 +213,46 @@ Feature HAS UI if PRD contains any of:
 UI Configuration (from pre-dev command):
 - UI Library: {ui_library}
 - Styling: {styling}
+- Accessibility: {accessibility_level}  // WCAG AA, WCAG AAA, or Basic
+- Dark Mode: {dark_mode}                // Light + Dark, Light only, Dark only
+- Brand Color: {brand_color}            // Blue, Purple, Green, Orange, or hex
+- Typography: {typography}              // Geist, Satoshi, Cabinet Grotesk, General Sans
+```
+
+**Design System Configuration (for new projects):**
+
+When Q7-Q10 are provided (new projects), use semantic color tokens instead of raw Tailwind colors:
+
+| Instead of | Use |
+|------------|-----|
+| `bg-blue-600` | `bg-primary` |
+| `text-gray-900` | `text-foreground` |
+| `text-gray-500` | `text-muted-foreground` |
+| `border-gray-200` | `border-border` |
+| `bg-red-500` | `bg-error` |
+| `bg-green-500` | `bg-success` |
+
+**Contrast Validation:**
+
+Based on accessibility level (Q7), validate all text/background combinations:
+
+| Level | Normal Text | Large Text (18px+) |
+|-------|------------|-------------------|
+| WCAG AA | 4.5:1 minimum | 3:1 minimum |
+| WCAG AAA | 7:1 minimum | 4.5:1 minimum |
+| Basic | No requirement | No requirement |
+
+**Dark Mode Wireframes:**
+
+If Q8 = "Light + Dark", wireframes MUST show both variants:
+```yaml
+states:
+  light:
+    background: "bg-background"  # white
+    text: "text-foreground"      # dark
+  dark:
+    background: "bg-background"  # dark slate
+    text: "text-foreground"      # light
 ```
 
 **How to use UI configuration:**

@@ -19,6 +19,9 @@ Skills are loaded on-demand via the native `skill` tool. See `assets/skill/` for
 - `ring:executing-plans` - Batch task execution with checkpoints
 - `ring:using-pm-team` - Pre-dev planning workflow (4-gate & 9-gate tracks)
 
+### Technology-Specific Skills
+- `ring:react-best-practices` - React/Next.js performance optimization (57 rules across 8 categories)
+
 ### Development Workflow
 1. Use `ring:brainstorming` (or `ring:pre-dev-feature`/`ring:pre-dev-full`) to plan
 2. Use `ring:test-driven-development` for implementation
