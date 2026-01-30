@@ -218,9 +218,9 @@ if [[ -d "$SCRIPT_DIR/scripts" ]]; then
   copy_tree_no_delete "scripts" "$SCRIPT_DIR"
 fi
 
-# Copy skill/command/agent/standards/templates from assets with placeholder expansion
-echo "Copying skill/command/agent/standards/templates directories..."
-for d in skill command agent standards templates; do
+# Copy skill/command/agent/standards/templates/themes from assets with placeholder expansion
+echo "Copying skill/command/agent/standards/templates/themes directories..."
+for d in skill command agent standards templates themes; do
   if [[ -d "$SOURCE_ASSETS/$d" ]]; then
     copy_tree_with_expansion "$d" "$SOURCE_ASSETS"
   fi
@@ -378,8 +378,9 @@ echo "=========================================="
 echo ""
 echo "Installed components:"
 echo "  - RingUnifiedPlugin (unified plugin with hook-based architecture)"
-echo "  - Skills, commands, agents, standards, and templates from assets/"
+echo "  - Skills, commands, agents, standards, templates, and themes from assets/"
 echo "  - JSON schemas for IDE autocomplete"
+echo "  - Lerian theme (use '/theme' command to select 'lerian')"
 echo ""
 echo "Backup location (if any): $BACKUP_DIR"
 echo ""
