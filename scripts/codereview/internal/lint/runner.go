@@ -1,5 +1,7 @@
 package lint
 
+//go:generate mockgen -source=runner.go -destination=mock_linter_test.go -package=lint Linter
+
 import "context"
 
 // Language represents a programming language.

@@ -26,133 +26,278 @@ metadata:
 
 Final validation gate requiring explicit user approval. Present evidence that each acceptance criterion is met and obtain APPROVED or REJECTED decision.
 
-**Core principle:** Passing tests and code review do not guarantee requirements are met. User validation confirms implementation matches intent.
+**Core principle:** Passing tests and code review DO NOT guarantee requirements are met. User validation confirms implementation matches intent.
+
+## Pressure Resistance
+
+See [shared-patterns/shared-pressure-resistance.md](../shared-patterns/shared-pressure-resistance.md) for universal pressure scenarios.
+
+**Gate 5-specific note:** User MUST respond with "APPROVED" or "REJECTED: [reason]". No other responses accepted. Silence ≠ approval.
 
 ## Self-Approval Prohibition
+
+<forbidden>
+- Same agent approving code it implemented
+- Role switching to self-approve (e.g., ring:backend-engineer → ring:code-reviewer)
+- Interpreting silence as approval
+- Proceeding without explicit APPROVED/REJECTED
+</forbidden>
 
 **HARD GATE:** The agent that implemented code CANNOT approve validation for that same code.
 
 | Scenario | Allowed? | Action |
 |----------|----------|--------|
-| Different agent/human approves | YES | Proceed |
-| Same agent self-approves | NO | STOP - requires external approval |
+| Different agent/human approves | YES | Proceed with approval |
+| Same agent self-approves | no | STOP - requires external approval |
 | User explicitly approves | YES | User approval always valid |
+
+**If you implemented the code, you CANNOT approve it. Wait for user or different reviewer.**
+
+**Important:** "Different agent" means different human/entity. The same human using different agent roles (ring:backend-engineer-* → ring:code-reviewer) is STILL self-approval and PROHIBITED.
+
+See [CLAUDE.md](https://raw.githubusercontent.com/LerianStudio/ring/main/CLAUDE.md) for the canonical validation policy.
+
+---
 
 ## Severity Calibration
 
-| Severity | Criteria | Action Required |
-|----------|----------|-----------------|
-| **CRITICAL** | AC completely unmet | MUST fix before approval |
-| **HIGH** | AC partially met or degraded | MUST fix before approval |
-| **MEDIUM** | Edge case gap | User decides |
-| **LOW** | Quality issue, requirement met | User decides |
+**When presenting validation results to user, issues are categorized by severity:**
 
-## Approval Format (MANDATORY)
+| Severity | Criteria | Examples | Action Required |
+|----------|----------|----------|-----------------|
+| **CRITICAL** | Acceptance criterion completely unmet | AC-1: "User can login" but login doesn't work at all | MUST fix before approval. Return to Gate 0. |
+| **HIGH** | Acceptance criterion partially met or degraded | AC-2: "Response < 200ms" but actually 800ms | MUST fix before approval. Return to Gate 0. |
+| **MEDIUM** | Edge case or non-critical requirement gap | AC-3 met for happy path, fails for empty input | SHOULD fix before approval. User decides. |
+| **LOW** | Quality issue, requirement technically met | Code works but is hard to understand/maintain | MAY fix or document. User decides. |
 
-User MUST respond with exactly one of:
-- **"APPROVED"** - All criteria verified, proceed
-- **"REJECTED: [reason]"** - Issues found, fix and revalidate
+**Severity Assignment Rules:**
+- Unmet acceptance criterion = CRITICAL (requirement not satisfied)
+- Degraded performance/quality vs criterion = HIGH (requirement barely met)
+- Edge case failures = MEDIUM (main path works, edges don't)
+- Quality/maintainability with working code = LOW (works but suboptimal)
 
-**NOT acceptable:**
-- "Looks good" (vague)
-- "👍" (ambiguous)
-- Silence (not a response)
-- "Approved with minor issues" (partial = REJECTED)
+**Why This Matters:**
+- User needs to understand impact severity when deciding APPROVED vs REJECTED
+- CRITICAL/HIGH = automatic REJECTED recommendation
+- MEDIUM/LOW = user judgment call with context
+
+**Example Validation Checklist with Severity:**
+```markdown
+## Validation Results
+
+| AC # | Criterion | Evidence | Status | Severity |
+|------|-----------|----------|--------|----------|
+| AC-1 | User can login | ✅ Tests pass, manual verification | MET | - |
+| AC-2 | Response < 200ms | ⚠️ Measured 350ms average | not MET | HIGH |
+| AC-3 | Input validation | ⚠️ Works for valid input, crashes on empty | PARTIAL | MEDIUM |
+| AC-4 | Error messages clear | ✅ All errors have user-friendly messages | MET | - |
+
+**Overall Validation:** REJECTED (1 HIGH issue: AC-2 response time)
+
+**Recommendation:** Fix AC-2 (HIGH) before approval. AC-3 (MEDIUM) user can decide.
+```
+
+---
+
+## Common Rationalizations - REJECTED
+
+See [shared-patterns/shared-anti-rationalization.md](../shared-patterns/shared-anti-rationalization.md) for universal anti-rationalizations (including Validation section).
+
+**Gate 5-specific rationalizations:**
+
+| Excuse | Reality |
+|--------|---------|
+| "Async over sync - work in parallel" | Validation is a GATE, not async task. STOP means STOP. |
+| "Continue other tasks while waiting" | Other tasks may conflict. Validation blocks all related work. |
+| "User delegated approval to X" | Delegation ≠ stakeholder approval. Only original requester can approve. |
+| "I implemented it, I know requirements" | Knowledge ≠ approval authority. Implementer CANNOT self-approve. |
+| "I'll switch to QA role to approve" | Role switching is STILL self-approval. PROHIBITED. |
+
+## Red Flags - STOP
+
+See [shared-patterns/shared-red-flags.md](../shared-patterns/shared-red-flags.md) for universal red flags (including Validation section).
+
+If you catch yourself thinking any of those patterns, STOP immediately. Wait for explicit "APPROVED" or "REJECTED".
+
+---
 
 ## Ambiguous Response Handling
 
-| Response | Status | Action |
-|----------|--------|--------|
-| "Looks good" | AMBIGUOUS | Ask for explicit APPROVED |
-| "Sure" / "Ok" | AMBIGUOUS | Ask for explicit APPROVED |
-| "👍" / "✅" | AMBIGUOUS | Ask for explicit APPROVED |
-| "APPROVED" | VALID | Proceed |
-| "REJECTED: [reason]" | VALID | Return to Gate 0 |
+<block_condition>
+- Response is "Looks good", "Sure", "Ok", "Fine"
+- Response is emoji only (👍, ✅)
+- Response is "Go ahead", "Ship it"
+- Response contains conditional ("APPROVED if X", "APPROVED with caveats")
+</block_condition>
 
-## Workflow Steps
+If any condition matches, ask for explicit APPROVED or REJECTED.
 
-### Step 1: Gather Evidence
-Collect proof per criterion:
-- Test results
-- Demo/screenshots
-- Logs/metrics
-- Manual verification
+**User responses that are not valid approvals:**
 
-### Step 2: Verify Each Criterion
-Execute verification (automated or manual) for each AC.
+| Response | Status | Action Required |
+|----------|--------|-----------------|
+| "Looks good" | ❌ AMBIGUOUS | "To confirm, please respond with APPROVED or REJECTED: [reason]" |
+| "Sure" / "Ok" / "Fine" | ❌ AMBIGUOUS | Ask for explicit APPROVED |
+| "👍" / "✅" | ❌ AMBIGUOUS | Emojis are not formal approval. Ask for APPROVED. |
+| "Go ahead" | ❌ AMBIGUOUS | Ask for explicit APPROVED |
+| "Ship it" | ❌ AMBIGUOUS | Ask for explicit APPROVED |
+| "APPROVED" | ✅ VALID | Proceed to next gate |
+| "REJECTED: [reason]" | ✅ VALID | Document reason, return to Gate 0 |
+| "APPROVED if X" | ❌ CONDITIONAL | Not approved until X is verified. Status = PENDING. |
+| "APPROVED with caveats" | ❌ CONDITIONAL | Not approved. List caveats, verify each, then re-ask. |
+| "APPROVED but fix Y later" | ❌ CONDITIONAL | Not approved. Y must be addressed first. |
 
-### Step 3: Build Checklist
-| AC | Status | Evidence |
-|----|--------|----------|
+**When user gives ambiguous response:**
+```
+"Thank you for the feedback. For formal validation, please confirm with:
+- APPROVED - to proceed with completion
+- REJECTED: [reason] - to return for fixes
 
-### Step 4: Present Validation Request
-```markdown
-VALIDATION REQUEST - [TASK-ID]
-Task: [title], [description], [date]
-
-## Acceptance Criteria
-| Criterion | Status | Evidence |
-|-----------|--------|----------|
-
-## Test Results
-- Total: X
-- Passed: Y
-- Coverage: Z%
-
-## USER DECISION REQUIRED
-[ ] APPROVED - proceed to completion
-[ ] REJECTED: [specify criterion and issue]
+Which is your decision?"
 ```
 
-### Step 5: Handle Decision
+**Never interpret intent. Require explicit keyword.**
 
-**If APPROVED:**
-1. Document approval (Task, Approver, Date)
-2. Update status
-3. Proceed to feedback loop
+---
 
-**If REJECTED:**
-1. Document rejection reason
-2. Create remediation task
-3. Return to Gate 0
+## Awaiting Approval - STOP all WORK
 
-## Awaiting Approval - STOP ALL WORK
+<cannot_skip>
+- STOP all work when validation request is presented
+- Wait for explicit APPROVED or REJECTED
+- Do not proceed with any "quick fixes" while waiting
+</cannot_skip>
 
-When validation request is presented:
-1. **STOP ALL WORK** on this feature
-2. **DO NOT** proceed to documentation or "quick fixes"
-3. **WAIT** for explicit user response
+**When validation request is presented:**
 
-## Anti-Patterns (Never Do)
+1. **STOP all WORK** on this feature, module, and related code
+2. **DO not** proceed to documentation, refactoring, or "quick fixes"
+3. **DO not** work on "unrelated" tasks in the same codebase
+4. **WAIT** for explicit user response
 
+**User unavailability is not permission to:**
+- Assume approval
+- Work on "low-risk" next steps
+- Redefine criteria as "already met"
+- Proceed with "we'll fix issues later"
+
+**Document pending status and WAIT.**
+
+## Approval Format - MANDATORY
+
+<user_decision>
+Valid responses:
+- "APPROVED" → Proceed to next gate
+- "REJECTED: [reason]" → Return for fixes
+</user_decision>
+
+**User MUST respond with exactly one of:**
+
+✅ **"APPROVED"** - All criteria verified, proceed to next gate
+✅ **"REJECTED: [specific reason]"** - Issues found, fix and revalidate
+
+**not acceptable:**
+- ❌ "Looks good" (vague)
+- ❌ "👍" (ambiguous)
+- ❌ Silence (not a response)
+- ❌ "Approved with minor issues" (partial = REJECTED)
+
+**If user provides ambiguous response, ask for explicit APPROVED or REJECTED.**
+
+---
+
+## Prerequisites
+
+Before starting this gate:
+- All tests pass (Gate 3 verified)
+- Code review passed (Gate 4 VERDICT: PASS)
+- Implementation is complete and stable
+
+## Steps 1-4: Evidence Collection and Validation
+
+| Step | Action | Output |
+|------|--------|--------|
+| **1. Gather Evidence** | Collect proof per criterion | Table: Criterion, Evidence Type (Test/Demo/Log/Manual/Metric), Location, Status |
+| **2. Verify** | Execute verification (automated: `npm test --grep "AC-X"`, manual: documented steps with Result + Screenshot) | VERIFIED/FAILED per criterion |
+| **3. Build Checklist** | For each AC: Status + Evidence list + Verification method | Validation Checklist |
+| **4. Present Request** | Task Summary + Validation Table + Test Results + Review Summary + Artifacts | USER DECISION block with APPROVED/REJECTED options |
+
+**Validation Request format:**
+```
+VALIDATION REQUEST - [TASK-ID]
+Task: [title], [description], [date]
+Criteria: Table (Criterion | Status | Evidence)
+Tests: Total/Passed/Failed/Coverage
+Review: VERDICT + issue counts
+Artifacts: Code, Tests, Docs links
+
+USER DECISION REQUIRED:
+[ ] APPROVED - proceed
+[ ] REJECTED - specify: which criterion, what's missing, what's wrong
+```
+
+## Steps 5-6: Handle Decision and Document
+
+| Decision | Actions | Documentation |
+|----------|---------|---------------|
+| **APPROVED** | 1. Document (Task, Approver, Date, Notes) → 2. Update status → 3. Proceed to feedback loop | Validation Approved record |
+| **REJECTED** | 1. Document (Task, Rejector, Date, Criterion failed, Issue, Expected vs Actual) → 2. Create remediation task → 3. Return to Gate 0 → 4. After fix: restart from Gate 3 → 5. Track in feedback loop | Validation Rejected + Remediation Required records |
+
+**Validation Record format:** Date, Validator, Decision, Criteria Summary (X/Y), Evidence Summary (tests/manual/perf), Decision Details, Next Steps
+
+## Validation Best Practices
+
+| Category | Strong Evidence | Weak Evidence (avoid) |
+|----------|-----------------|----------------------|
+| **Evidence Quality** | Automated test + assertion, Screenshot/recording, Log with exact values, Metrics within threshold | "Works on my machine", "Tested manually" (no details), "Should be fine", Indirect evidence |
+| **Verifiable Criteria** | "User can login" → test login + verify session | "System is fast" → needs specific metric |
+| | "Page loads <2s" → measure + show metric | "UX is good" → needs measurable criteria |
+
+## Handling Partial Validation
+
+If some criteria pass but others fail:
+
+1. **Do not partially approve**
+2. Mark entire validation as REJECTED
+3. Document which criteria passed (won't need re-verification)
+4. Document which criteria failed (need fixes)
+5. After fixes, re-verify only failed criteria
+6. Present updated checklist for approval
+
+## Anti-Patterns
+
+**Never:**
 - Skip validation because "tests pass"
 - Auto-approve without user decision
 - Assume criterion is met without evidence
-- Accept vague approval
+- Accept vague approval ("looks good")
 - Proceed while awaiting decision
+- Reuse old evidence for new changes
 
-## Output Schema
+**Always:**
+- Present evidence for every criterion
+- Require explicit APPROVED/REJECTED decision
+- Document rejection reason in detail
+- Track validation metrics
+- Re-verify after any changes
 
-```markdown
-## Validation Summary
-**Task:** [task_id]
-**Status:** PENDING_APPROVAL / APPROVED / REJECTED
+## Execution Report
 
-## Criteria Validation
-| AC | Criterion | Evidence | Status |
-|----|-----------|----------|--------|
+Base metrics per [shared-patterns/output-execution-report.md](../shared-patterns/output-execution-report.md).
 
-## Evidence Summary
-- Automated tests: X
-- Manual verification: Y
-- Performance metrics: Z
+| Metric | Value |
+|--------|-------|
+| Duration | Xm Ys |
+| Criteria Validated | X/Y |
+| Evidence Collected | X automated, Y manual |
+| User Decision | APPROVED/REJECTED |
+| Rejection Reason | [if applicable] |
+| Result | Gate passed / Returned to Gate 0 |
 
-## Decision
-**Validator:** [user]
-**Decision:** APPROVED / REJECTED
-**Reason:** [if rejected]
-**Date:** [timestamp]
+## Edge Cases
 
-## Next Steps
-[Based on decision]
-```
+| Scenario | Action |
+|----------|--------|
+| **User Unavailable** | Document pending → Do not proceed → Set escalation → Block task completion |
+| **Criterion Ambiguity** | STOP → Ask user to clarify → Update AC → Re-verify with new understanding |
+| **New Requirements** | Document as new req → Complete current validation on original AC → Create new task → no scope creep |

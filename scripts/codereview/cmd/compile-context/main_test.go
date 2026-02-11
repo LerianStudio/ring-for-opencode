@@ -431,13 +431,14 @@ func TestRun_VerboseOutput(t *testing.T) {
 		t.Fatalf("Expected success, got error: %v\nStderr: %s", err, stderr.String())
 	}
 
-	// Verbose output should mention directories and generated files
+	// Verbose output should mention directories and generated files (structured logging format)
 	stderrStr := stderr.String()
 	expectedVerbose := []string{
-		"Input directory:",
-		"Output directory:",
-		"Generated context files:",
-		"context-code-reviewer.md",
+		"directories",
+		"input=",
+		"output=",
+		"generated context files",
+		"code-reviewer",
 	}
 
 	for _, expected := range expectedVerbose {

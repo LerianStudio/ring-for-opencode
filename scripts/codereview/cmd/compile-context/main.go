@@ -1,13 +1,18 @@
-// Package main implements the compile-context binary for Phase 5 of the codereview system.
-// It aggregates outputs from previous phases and generates reviewer-specific context files.
+// Package main provides a deprecated wrapper for the compile-context binary.
+// Use 'scr phase context' instead.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 
-	"github.com/lerianstudio/ring/scripts/codereview/internal/context"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/logger"
+	contextphase "github.com/lerianstudio/ring/scripts/codereview/internal/phases/context"
+
+	"github.com/lerianstudio/ring/scripts/codereview/internal/phases"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/recovery"
 )
 
 var version = "dev"
@@ -20,6 +25,10 @@ var (
 )
 
 func main() {
+	os.Exit(recovery.WrapMain(realMain))
+}
+
+func realMain() {
 	flag.Usage = printUsage
 	flag.Parse()
 
@@ -28,59 +37,35 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-}
+	fmt.Fprintln(os.Stderr, "DEPRECATED: compile-context is deprecated, use 'scr phase context' instead")
 
-func run() error {
-	// Validate input directory exists
-	if _, err := os.Stat(*inputDir); err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("input directory does not exist: %s", *inputDir)
-		}
-		return fmt.Errorf("cannot access input directory %s: %w", *inputDir, err)
+	if *verbose {
+		logger.SetDefault(logger.NewLogger(logger.WithLevel(logger.LevelDebug)))
 	}
 
-	// Default output directory to input directory
+	// Map legacy flags to phases.Config
+	// ScopePath is used as input directory, OutputDir is used for output
 	outDir := *outputDir
 	if outDir == "" {
 		outDir = *inputDir
 	}
 
-	if *verbose {
-		fmt.Fprintf(os.Stderr, "Input directory: %s\n", *inputDir)
-		fmt.Fprintf(os.Stderr, "Output directory: %s\n", outDir)
+	cfg := &phases.Config{
+		ScopePath: *inputDir,
+		OutputDir: outDir,
+		Verbose:   *verbose,
 	}
 
-	// Create compiler and execute
-	compiler, err := context.NewCompilerWithValidation(*inputDir, outDir)
-	if err != nil {
-		return fmt.Errorf("compiler initialization failed: %w", err)
+	if err := contextphase.New().Run(context.Background(), cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
 	}
-
-	if err := compiler.Compile(); err != nil {
-		return fmt.Errorf("compilation failed: %w", err)
-	}
-
-	// Print success information
-	if *verbose {
-		reviewers := context.GetReviewerNames()
-		fmt.Fprintf(os.Stderr, "\nGenerated context files:\n")
-		for _, reviewer := range reviewers {
-			fmt.Fprintf(os.Stderr, "  - context-%s.md\n", reviewer)
-		}
-		fmt.Fprintln(os.Stderr)
-	}
-
-	fmt.Println("Context compilation complete.")
-	return nil
 }
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "Context Compiler - Phase 5 of the codereview system\n\n")
+	fmt.Fprintf(os.Stderr, "DEPRECATED: Use 'scr phase context' instead.\n\n")
 	fmt.Fprintf(os.Stderr, "Aggregates outputs from previous phases and generates reviewer-specific\n")
 	fmt.Fprintf(os.Stderr, "context files in Markdown format.\n\n")
 	fmt.Fprintf(os.Stderr, "Expected Phase Outputs (in input directory):\n")

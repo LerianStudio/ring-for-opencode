@@ -30,13 +30,13 @@ const (
 
 // Finding represents a single lint finding.
 type Finding struct {
-	Tool       string   `json:"tool"`
+	Tool       string   `json:"tool" validate:"required"`
 	Rule       string   `json:"rule"`
-	Severity   Severity `json:"severity"`
-	File       string   `json:"file"`
-	Line       int      `json:"line"`
+	Severity   Severity `json:"severity" validate:"required,oneof=critical high warning info"`
+	File       string   `json:"file" validate:"required"`
+	Line       int      `json:"line" validate:"min=1"`
 	Column     int      `json:"column"`
-	Message    string   `json:"message"`
+	Message    string   `json:"message" validate:"required"`
 	Suggestion string   `json:"suggestion,omitempty"`
 	Category   Category `json:"category"`
 }

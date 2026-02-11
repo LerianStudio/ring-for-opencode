@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/lerianstudio/ring/scripts/codereview/internal/logger"
 )
 
 // testBinaryName is the name of the test binary.
@@ -123,12 +125,17 @@ func TestParseSkipList_InvalidPhase(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stderr = w
 
+	// Reset logger to use the new os.Stderr
+	logger.SetDefault(logger.NewLogger(logger.WithOutput(w)))
+
 	result := parseSkipList("scope,unknown-phase,ast")
 
 	if err := w.Close(); err != nil {
 		t.Fatalf("failed to close stderr pipe: %v", err)
 	}
 	os.Stderr = oldStderr
+	// Reset logger back to default stderr
+	logger.SetDefault(logger.NewLogger())
 
 	var buf bytes.Buffer
 	if _, err := buf.ReadFrom(r); err != nil {
@@ -146,8 +153,8 @@ func TestParseSkipList_InvalidPhase(t *testing.T) {
 		t.Error("Unknown phase should still be in skip list")
 	}
 
-	// Should have warning message
-	if !strings.Contains(stderrOutput, "unknown phase") || !strings.Contains(stderrOutput, "unknown-phase") {
+	// Should have warning message (structured log format)
+	if !strings.Contains(stderrOutput, "unknown phase in skip list") || !strings.Contains(stderrOutput, "unknown-phase") {
 		t.Errorf("Expected warning about unknown phase, got: %s", stderrOutput)
 	}
 }

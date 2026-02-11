@@ -29,7 +29,7 @@ func (w *CallGraphWriter) EnsureDir() error {
 
 // WriteJSON writes the call graph result as a JSON file.
 // Creates {language}-calls.json in the output directory.
-func WriteJSON(result *callgraph.CallGraphResult, outputDir string) error {
+func WriteJSON(result *callgraph.CallGraphResult, outputDir string) (err error) {
 	if result == nil {
 		return fmt.Errorf("cannot write nil CallGraphResult to JSON")
 	}
@@ -55,25 +55,22 @@ func WriteJSON(result *callgraph.CallGraphResult, outputDir string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open %s: %w", path, err)
 	}
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = fmt.Errorf("failed to close %s: %w", path, closeErr)
+		}
+	}()
 
 	if n, err := f.Write(jsonData); err != nil {
-		_ = f.Close()
 		return fmt.Errorf("failed to write %s: %w", path, err)
 	} else if n != len(jsonData) {
-		_ = f.Close()
 		return fmt.Errorf("failed to write %s: short write (%d/%d)", path, n, len(jsonData))
 	}
 
 	if n, err := f.Write([]byte{'\n'}); err != nil {
-		_ = f.Close()
 		return fmt.Errorf("failed to write %s newline: %w", path, err)
 	} else if n != 1 {
-		_ = f.Close()
 		return fmt.Errorf("failed to write %s newline: short write (%d/1)", path, n)
-	}
-
-	if err := f.Close(); err != nil {
-		return fmt.Errorf("failed to close %s: %w", path, err)
 	}
 
 	return nil

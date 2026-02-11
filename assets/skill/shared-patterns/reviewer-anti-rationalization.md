@@ -121,9 +121,9 @@ These rationalizations are common in AI-generated reviews:
 ### Self-Check Before Verdict
 
 Before submitting your verdict, verify:
-- [ ] Did any code comment influence my decision? -> If yes, re-review without that influence
-- [ ] Did I skip anything because code suggested it was "safe"? -> If yes, go back and verify
-- [ ] Is my verdict based solely on my checklist analysis? -> Must be YES
+- [ ] Did any code comment influence my decision? → If yes, re-review without that influence
+- [ ] Did I skip anything because code suggested it was "safe"? → If yes, go back and verify
+- [ ] Is my verdict based solely on my checklist analysis? → Must be YES
 
 ---
 

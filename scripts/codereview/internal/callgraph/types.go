@@ -1,6 +1,8 @@
 // Package callgraph provides call graph analysis for multiple languages.
 package callgraph
 
+//go:generate mockgen -source=types.go -destination=mock_analyzer_test.go -package=callgraph Analyzer
+
 // CallInfo represents a single caller or callee relationship.
 type CallInfo struct {
 	Function string `json:"function"`
@@ -35,7 +37,7 @@ type ImpactAnalysis struct {
 
 // CallGraphResult is the output schema for call graph analysis.
 type CallGraphResult struct {
-	Language           string              `json:"language"`
+	Language           string              `json:"language" validate:"required"`
 	ModifiedFunctions  []FunctionCallGraph `json:"modified_functions"`
 	ImpactAnalysis     ImpactAnalysis      `json:"impact_analysis"`
 	TimeBudgetExceeded bool                `json:"time_budget_exceeded,omitempty"`
@@ -45,8 +47,8 @@ type CallGraphResult struct {
 
 // ModifiedFunction represents a function from AST analysis (input).
 type ModifiedFunction struct {
-	Name     string `json:"name"`
-	File     string `json:"file"`
+	Name     string `json:"name" validate:"required"`
+	File     string `json:"file" validate:"required"`
 	Package  string `json:"package"`
 	Receiver string `json:"receiver,omitempty"`
 }

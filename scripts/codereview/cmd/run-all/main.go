@@ -19,6 +19,8 @@ import (
 
 	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/git"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/logger"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/recovery"
 )
 
 // scopeJSON represents the structure of scope.json from Phase 0.
@@ -329,8 +331,12 @@ type PhaseResult struct {
 }
 
 func main() {
+	os.Exit(recovery.WrapMain(realMain))
+}
+
+func realMain() {
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		logger.Error("error", "error", err)
 		os.Exit(1)
 	}
 }
@@ -366,11 +372,11 @@ func parseFlags() *config {
 		}
 	})
 	if cfg.unstaged && (filesSelected || baseSet || headSet) {
-		fmt.Fprintln(os.Stderr, "Error: --unstaged cannot be used with --files/--files-from or --base/--head")
+		logger.Error("--unstaged cannot be used with --files/--files-from or --base/--head")
 		os.Exit(2)
 	}
 	if filesSelected && (baseSet || headSet) {
-		fmt.Fprintln(os.Stderr, "Error: --files/--files-from cannot be used with --base/--head")
+		logger.Error("--files/--files-from cannot be used with --base/--head")
 		os.Exit(2)
 	}
 
@@ -557,6 +563,10 @@ func validateBinDir(binDir string) error {
 func run() error {
 	cfg := parseFlags()
 
+	if cfg.verbose {
+		logger.SetDefault(logger.NewLogger(logger.WithLevel(logger.LevelDebug)))
+	}
+
 	// Handle --version flag
 	if cfg.showVersion {
 		fmt.Printf("run-all version %s\n", version)
@@ -695,7 +705,7 @@ func parseSkipList(skip string) map[string]bool {
 	}
 	for phase := range skipSet {
 		if !knownPhases[phase] {
-			fmt.Fprintf(os.Stderr, "Warning: unknown phase '%s' in skip list\n", phase)
+			logger.Warn("unknown phase in skip list", "phase", phase)
 		}
 	}
 

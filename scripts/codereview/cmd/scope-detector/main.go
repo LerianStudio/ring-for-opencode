@@ -1,16 +1,18 @@
-// Package main provides the scope-detector CLI binary for code review scope analysis.
-// It analyzes git diffs to detect changed files, determine project language,
-// and output structured JSON for downstream code review tools.
+// Package main provides the scope-detector CLI binary (deprecated wrapper).
+// Use 'scr phase scope' instead.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
-	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
-	"github.com/lerianstudio/ring/scripts/codereview/internal/output"
-	"github.com/lerianstudio/ring/scripts/codereview/internal/scope"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/logger"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/phases"
+	scopephase "github.com/lerianstudio/ring/scripts/codereview/internal/phases/scope"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/recovery"
 )
 
 // version is set via ldflags during build.
@@ -33,6 +35,12 @@ func init() {
 }
 
 func main() {
+	os.Exit(recovery.WrapMain(realMain))
+}
+
+func realMain() {
+	fmt.Fprintln(os.Stderr, "DEPRECATED: scope-detector is deprecated, use 'scr phase scope' instead")
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: scope-detector [options]\n\n")
 		fmt.Fprintf(os.Stderr, "Analyzes git diff to detect changed files and project language.\n\n")
@@ -48,8 +56,12 @@ func main() {
 	}
 	flag.Parse()
 
+	if *verbose {
+		logger.SetDefault(logger.NewLogger(logger.WithLevel(logger.LevelDebug)))
+	}
+
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		logger.Error("error", "error", err)
 		os.Exit(1)
 	}
 }
@@ -72,116 +84,53 @@ func run() error {
 		}
 	}
 
-	// Create detector
-	detector := scope.NewDetector(wd)
+	// Handle stdout output specially since the library always writes to file
+	writeToStdout := *outputPath == ""
 
-	// Detect scope based on refs or explicit files
-	var result *scope.ScopeResult
-	var err error
-
-	patterns, patternsErr := resolveFilePatterns(*filesFlag, *filesFrom)
-	if patternsErr != nil {
-		return patternsErr
+	// Build phases.Config from flags
+	cfg := &phases.Config{
+		WorkDir:   wd,
+		Verbose:   *verbose,
+		BaseRef:   *baseRef,
+		HeadRef:   *headRef,
+		Unstaged:  *unstaged,
+		Files:     *filesFlag,
+		FilesFrom: *filesFrom,
 	}
 
-	if len(patterns) > 0 {
-		if *baseRef != "" || *headRef != "" || *unstaged {
-			return fmt.Errorf("--files/--files-from cannot be used with --base/--head or --unstaged")
-		}
-		expanded, expandErr := scope.ExpandFilePatterns(wd, patterns)
-		if expandErr != nil {
-			return expandErr
-		}
-		if len(expanded) == 0 {
-			fmt.Fprintln(os.Stderr, "Warning: no files matched the provided patterns")
-			result = &scope.ScopeResult{
-				BaseRef:          "",
-				HeadRef:          "",
-				Language:         scope.LanguageUnknown.String(),
-				Languages:        []string{},
-				ModifiedFiles:    []string{},
-				AddedFiles:       []string{},
-				DeletedFiles:     []string{},
-				TotalFiles:       0,
-				TotalAdditions:   0,
-				TotalDeletions:   0,
-				PackagesAffected: []string{},
-			}
-			err = nil
-		} else {
-			result, err = detector.DetectFromFiles("", expanded)
-		}
-	} else if *unstaged {
-		if *baseRef != "" || *headRef != "" {
-			return fmt.Errorf("--unstaged cannot be used with --base/--head")
-		}
-		result, err = detector.DetectUnstagedChanges()
-	} else if *baseRef == "" && *headRef == "" {
-		// No refs specified: detect all uncommitted changes (staged + unstaged)
-		result, err = detector.DetectAllChanges()
-	} else {
-		// Refs specified: compare specific refs
-		result, err = detector.DetectFromRefs(*baseRef, *headRef)
-	}
-
-	if err != nil {
-		return fmt.Errorf("failed to detect scope: %w", err)
-	}
-
-	// Verbose output
-	if *verbose {
-		fmt.Fprintln(os.Stderr, "=== Scope Detector (Verbose) ===")
-		fmt.Fprintf(os.Stderr, "Working directory: %s\n", wd)
-		if *unstaged {
-			fmt.Fprintln(os.Stderr, "Mode: unstaged + untracked")
-		} else if *baseRef == "" {
-			fmt.Fprintln(os.Stderr, "Base ref: (empty - detecting all uncommitted changes)")
-		} else {
-			fmt.Fprintf(os.Stderr, "Base ref: %s\n", *baseRef)
-		}
-		if *unstaged {
-			fmt.Fprintln(os.Stderr, "Head ref: working tree")
-		} else if *headRef == "" {
-			fmt.Fprintln(os.Stderr, "Head ref: (empty - using working tree)")
-		} else {
-			fmt.Fprintf(os.Stderr, "Head ref: %s\n", *headRef)
-		}
-		fmt.Fprintf(os.Stderr, "Files found: %d\n", result.TotalFiles)
-		fmt.Fprintf(os.Stderr, "Language detected: %s\n", result.Language)
-		fmt.Fprintln(os.Stderr, "================================")
-	}
-
-	// Check for no changes
-	if result.TotalFiles == 0 {
-		fmt.Fprintln(os.Stderr, "No changes detected")
-		// Still output empty result for consistency
-	}
-
-	// Create output wrapper
-	// Defensive: NewScopeOutput returns nil only if result is nil, which cannot happen here
-	// after successful detection. Kept for safety against future refactoring.
-	scopeOutput := output.NewScopeOutput(result)
-	if scopeOutput == nil {
-		return fmt.Errorf("failed to create scope output: nil result")
-	}
-
-	// Write output
-	if *outputPath != "" {
-		validatedOutput, err := fileutil.ValidatePath(*outputPath, ".")
+	if writeToStdout {
+		// Use a temp file, then read and write to stdout
+		tmpDir, err := os.MkdirTemp("", "scope-detector-*")
 		if err != nil {
-			return fmt.Errorf("invalid output path: %w", err)
+			return fmt.Errorf("failed to create temp directory: %w", err)
 		}
-		// Write to file
-		if err := scopeOutput.WriteToFile(validatedOutput); err != nil {
-			return fmt.Errorf("failed to write output file: %w", err)
+		defer os.RemoveAll(tmpDir)
+
+		cfg.ScopePath = filepath.Join(tmpDir, "scope.json")
+
+		// Run the phase
+		ctx := context.Background()
+		if err := scopephase.New().Run(ctx, cfg); err != nil {
+			return err
 		}
-		fmt.Fprintf(os.Stderr, "Scope written to %s\n", validatedOutput)
-	} else {
-		// Write to stdout
-		if err := scopeOutput.WriteToStdout(); err != nil {
-			return fmt.Errorf("failed to write to stdout: %w", err)
+
+		// Read the output and write to stdout
+		data, err := os.ReadFile(cfg.ScopePath)
+		if err != nil {
+			return fmt.Errorf("failed to read scope output: %w", err)
 		}
+		_, err = os.Stdout.Write(data)
+		return err
 	}
 
+	// Write to file directly
+	cfg.ScopePath = *outputPath
+
+	ctx := context.Background()
+	if err := scopephase.New().Run(ctx, cfg); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(os.Stderr, "Scope written to %s\n", *outputPath)
 	return nil
 }

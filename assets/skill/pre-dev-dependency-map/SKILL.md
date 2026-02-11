@@ -48,22 +48,18 @@ Read `docs/pre-dev/{feature-name}/trd.md` and extract: `deployment.model`, `tech
 
 **If TRD metadata missing:** BLOCKER → Go back to TRD (Gate 3) and complete Step 0.4
 
-### Step 0.2: Load Ring Standards from Local Files
+### Step 0.2: Load Ring Standards via WebFetch
 
-Use the Read tool to load the relevant standards from `{OPENCODE_CONFIG}/standards/`:
-
-| Standard | Local Path | Purpose |
-|----------|------------|---------|
-| **golang.md** | `{OPENCODE_CONFIG}/standards/golang.md` | Go coding patterns |
-| **typescript.md** | `{OPENCODE_CONFIG}/standards/typescript.md` | TypeScript patterns |
-| **frontend.md** | `{OPENCODE_CONFIG}/standards/frontend.md` | Frontend patterns |
-| **devops.md** | `{OPENCODE_CONFIG}/standards/devops.md` | DevOps patterns |
-| **sre.md** | `{OPENCODE_CONFIG}/standards/sre.md` | Observability, logging |
+| Standard | URL | Purpose |
+|----------|-----|---------|
+| **golang.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md` | Go coding patterns |
+| **typescript.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md` | TypeScript patterns |
+| **frontend.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/frontend.md` | Frontend patterns |
+| **devops.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/devops.md` | DevOps patterns |
+| **sre.md** | `https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/sre.md` | Observability, logging |
 
 **Ring Standards** = coding patterns, observability, logging, error handling (shared across ALL projects)
 **PROJECT_RULES.md** = specific technologies, versions, database choices (specific to THIS project)
-
-**If PROJECT_RULES.md does not exist:** This gate CREATES it as output (Step 0.3). If you need a starting template, check `{OPENCODE_CONFIG}/templates/PROJECT_RULES.md`.
 
 ### Step 0.3: Generate PROJECT_RULES.md (OUTPUT)
 

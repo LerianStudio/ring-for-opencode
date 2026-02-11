@@ -1,8 +1,8 @@
-# Universal todowrite tool integration
+# Universal TodoWrite Integration
 
 Add this requirement to skill starts:
 
-## todowrite tool requirement
+## TodoWrite Requirement
 
 **BEFORE starting this skill:**
 

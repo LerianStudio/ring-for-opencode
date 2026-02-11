@@ -20,12 +20,12 @@ Code review requires technical evaluation, not emotional performance.
 
 ## The Response Pattern
 
-**WHEN receiving feedback:** READ (complete, no reaction) -> UNDERSTAND (restate or ask) -> VERIFY (check codebase reality) -> EVALUATE (technically sound for THIS codebase?) -> RESPOND (technical acknowledgment or pushback) -> IMPLEMENT (one at a time, test each)
+**WHEN receiving feedback:** READ (complete, no reaction) → UNDERSTAND (restate or ask) → VERIFY (check codebase reality) → EVALUATE (technically sound for THIS codebase?) → RESPOND (technical acknowledgment or pushback) → IMPLEMENT (one at a time, test each)
 
 ## Forbidden Responses
 
 **NEVER:**
-- "You're absolutely right!" (explicit violation)
+- "You're absolutely right!" (explicit CLAUDE.md violation)
 - "Great point!" / "Excellent feedback!" (performative)
 - "Let me implement that now" (before verification)
 
@@ -39,13 +39,11 @@ Code review requires technical evaluation, not emotional performance.
 
 **IF any item is unclear:** STOP - do not implement anything yet. ASK for clarification. Items may be related - partial understanding = wrong implementation.
 
-**Example:** "Fix 1-6" - You understand 1,2,3,6, unclear on 4,5.
-- Wrong: Implement 1,2,3,6 now.
-- Correct: "Understand 1,2,3,6. Need clarification on 4 and 5 before proceeding."
+**Example:** "Fix 1-6" - You understand 1,2,3,6, unclear on 4,5. ❌ Implement 1,2,3,6 now. ✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before proceeding."
 
 ## Source-Specific Handling
 
-### From Human Partner
+### From your human partner
 - **Trusted** - implement after understanding
 - **Still ask** if scope unclear
 - **No performative agreement**
@@ -57,19 +55,19 @@ Code review requires technical evaluation, not emotional performance.
 
 - **If suggestion seems wrong:** Push back with technical reasoning
 - **If can't easily verify:** "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
-- **If conflicts with partner's prior decisions:** Stop and discuss first
+- **If conflicts with your human partner's prior decisions:** Stop and discuss first
 
-**Rule:** "External feedback - be skeptical, but check carefully"
+**your human partner's rule:** "External feedback - be skeptical, but check carefully"
 
 ## YAGNI Check for "Professional" Features
 
 **IF reviewer suggests "implementing properly":** grep codebase for actual usage. Unused? "This endpoint isn't called. Remove it (YAGNI)?" Used? Then implement properly.
 
-**Rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
+**your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
 
 ## Implementation Order
 
-**FOR multi-item feedback:** (1) Clarify anything unclear FIRST (2) Implement: Blocking issues -> Simple fixes -> Complex fixes (3) Test each fix individually (4) Verify no regressions
+**FOR multi-item feedback:** (1) Clarify anything unclear FIRST (2) Implement: Blocking issues → Simple fixes → Complex fixes (3) Test each fix individually (4) Verify no regressions
 
 ## When To Push Back
 
@@ -79,33 +77,26 @@ Push back when:
 - Violates YAGNI (unused feature)
 - Technically incorrect for this stack
 - Legacy/compatibility reasons exist
-- Conflicts with architectural decisions
+- Conflicts with your human partner's architectural decisions
 
 **How to push back:**
 - Use technical reasoning, not defensiveness
 - Ask specific questions
 - Reference working tests/code
-- Involve partner if architectural
+- Involve your human partner if architectural
+
+**Signal if uncomfortable pushing back out loud:** "Strange things are afoot at the Circle K"
 
 ## Acknowledging Correct Feedback
 
-- Correct: "Fixed. [Brief description]"
-- Correct: "Good catch - [issue]. Fixed in [location]."
-- Correct: [Just fix it and show in code]
-- Wrong: "You're absolutely right!"
-- Wrong: "Great point!"
-- Wrong: "Thanks for [anything]"
-- Wrong: ANY gratitude expression
+✅ "Fixed. [Brief description]" | ✅ "Good catch - [issue]. Fixed in [location]." | ✅ [Just fix it and show in code]
+❌ "You're absolutely right!" | ❌ "Great point!" | ❌ "Thanks for [anything]" | ❌ ANY gratitude expression
 
-**Why no thanks:** Actions speak. Just fix it. The code shows you heard the feedback.
+**Why no thanks:** Actions speak. Just fix it. The code shows you heard the feedback. About to write "Thanks"? DELETE IT. State the fix instead.
 
 ## Gracefully Correcting Your Pushback
 
-If you pushed back and were wrong:
-- Correct: "You were right - I checked [X] and it does [Y]. Implementing now."
-- Wrong: Long apology, defending why you pushed back, over-explaining.
-
-State the correction factually and move on.
+If you pushed back and were wrong: ✅ "You were right - I checked [X] and it does [Y]. Implementing now." ❌ Long apology, defending why you pushed back, over-explaining. State the correction factually and move on.
 
 ## Common Mistakes
 
@@ -118,6 +109,15 @@ State the correction factually and move on.
 | Avoiding pushback | Technical correctness > comfort |
 | Partial implementation | Clarify all items first |
 | Can't verify, proceed anyway | State limitation, ask for direction |
+
+## Real Examples
+
+| Type | Response |
+|------|----------|
+| **Performative (Bad)** | "Remove legacy code" → ❌ "You're absolutely right! Let me remove that..." |
+| **Technical (Good)** | "Remove legacy code" → ✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat." |
+| **YAGNI (Good)** | "Implement proper metrics" → ✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)?" |
+| **Unclear (Good)** | "Fix items 1-6" → ✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing." |
 
 ## The Bottom Line
 

@@ -1,5 +1,7 @@
 package ast
 
+//go:generate mockgen -source=extractor.go -destination=mock_extractor_test.go -package=ast Extractor
+
 import (
 	"context"
 	"fmt"

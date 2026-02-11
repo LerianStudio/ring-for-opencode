@@ -29,8 +29,11 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Output directory for release binaries
 OUTPUT_DIR="${SCRIPT_DIR}/bin/releases"
 
-# List of all codereview binaries to build
-BINARIES=(
+# Unified CLI binary (primary)
+PRIMARY_BINARY="scr"
+
+# Legacy binaries (backward compatibility)
+LEGACY_BINARIES=(
     "run-all"
     "scope-detector"
     "static-analysis"
@@ -40,6 +43,9 @@ BINARIES=(
     "compile-context"
 )
 
+# All binaries to build
+BINARIES=("$PRIMARY_BINARY" "${LEGACY_BINARIES[@]}")
+
 # Target platforms: os/arch
 PLATFORMS=(
     "darwin/amd64"
@@ -48,8 +54,16 @@ PLATFORMS=(
     "linux/arm64"
 )
 
+# Version info
+VERSION="${VERSION:-$(git describe --tags --always --dirty 2>/dev/null || echo "dev")}"
+COMMIT="${COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")}"
+BUILD_DATE="${BUILD_DATE:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}"
+
 # Build flags for smaller binaries (strip debug symbols)
 LDFLAGS="-s -w"
+
+# Extended ldflags for scr binary (includes version info)
+SCR_LDFLAGS="-s -w -X main.Version=${VERSION} -X main.GitCommit=${COMMIT} -X main.BuildDate=${BUILD_DATE}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -199,8 +213,14 @@ build_platform() {
 
         echo -n "  Building ${binary}... "
 
+        # Use extended ldflags for scr binary
+        local build_ldflags="$LDFLAGS"
+        if [[ "$binary" == "scr" ]]; then
+            build_ldflags="$SCR_LDFLAGS"
+        fi
+
         if GOOS="$os" GOARCH="$arch" go build \
-            -ldflags="$LDFLAGS" \
+            -ldflags="$build_ldflags" \
             -o "$output_path" \
             "$src_dir" 2>/dev/null; then
 

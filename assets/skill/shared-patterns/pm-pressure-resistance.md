@@ -38,3 +38,4 @@ When multiple pressures combine, they do NOT multiply exceptions:
 - Combined pressures cannot waive gates
 - Past compliance does not grant future exceptions
 - User authorization does not override HARD GATES
+

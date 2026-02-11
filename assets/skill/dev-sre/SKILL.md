@@ -32,7 +32,7 @@ This skill VALIDATES that observability was correctly implemented by developers:
 - Code instrumentation coverage (90%+ required)
 - Context propagation for distributed tracing
 
-## Role Clarification
+## CRITICAL: Role Clarification
 
 **Developers IMPLEMENT observability. SRE VALIDATES it.**
 
@@ -48,118 +48,404 @@ This skill VALIDATES that observability was correctly implemented by developers:
 3. SRE re-validates after fixes
 4. Max 3 iterations, then escalate to user
 
-## Required Input
+---
 
-- `unit_id`: Task/subtask being validated
-- `language`: go / typescript / python
-- `service_type`: api / worker / batch / cli / library
-- `implementation_agent`: Agent that performed Gate 0
-- `implementation_files`: Files created/modified in Gate 0
+## Step 1: Validate Input
 
-## Dispatch SRE Agent
+<verify_before_proceed>
+- unit_id exists
+- language is valid (go|typescript|python)
+- service_type is valid (api|worker|batch|cli|library)
+- implementation_agent exists
+- implementation_files is not empty
+</verify_before_proceed>
+
+```text
+REQUIRED INPUT (from ring:dev-cycle orchestrator):
+- unit_id: [task/subtask being validated]
+- language: [go|typescript|python]
+- service_type: [api|worker|batch|cli|library]
+- implementation_agent: [agent that did Gate 0]
+- implementation_files: [list of files from Gate 0]
+
+OPTIONAL INPUT:
+- external_dependencies: [HTTP clients, gRPC clients, queues]
+- gate0_handoff: [summary from Gate 0]
+- gate1_handoff: [summary from Gate 1]
+
+if any REQUIRED input is missing:
+  → STOP and report: "Missing required input: [field]"
+  → Return to orchestrator with error
+```
+
+## Step 2: Initialize Validation State
+
+```text
+validation_state = {
+  iteration: 1,
+  max_iterations: 3,
+  sre_result: null,
+  issues: [],
+  instrumentation_coverage: null
+}
+```
+
+## Step 3: Dispatch SRE Agent for Validation
+
+<dispatch_required agent="ring:sre">
+Validate observability implementation for unit_id.
+</dispatch_required>
 
 ```yaml
 Task:
   subagent_type: "ring:sre"
   description: "Validate observability for [unit_id]"
   prompt: |
-    VALIDATE Observability Implementation
+    ⛔ VALIDATE Observability Implementation
 
-    ## Context
-    - Language: [language]
-    - Service Type: [service_type]
-    - Files to Validate: [implementation_files]
+    ## Input Context
+    - **Unit ID:** [unit_id]
+    - **Language:** [language]
+    - **Service Type:** [service_type]
+    - **Implementation Agent:** [implementation_agent]
+    - **Files to Validate:** [implementation_files]
+    - **External Dependencies:** [external_dependencies or "None"]
+
+    ## Standards Reference
+    WebFetch: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/sre.md
+
+    ## Your Role
+    - VALIDATE that observability is implemented correctly
+    - Do not implement - only verify and report
+    - Check structured JSON logging
+    - Check OpenTelemetry instrumentation coverage
+    - Check context propagation for external calls
 
     ## Validation Checklist
 
-    ### 0. FORBIDDEN Logging Patterns (Check FIRST)
-    | Language | FORBIDDEN | Search For |
-    |----------|-----------|------------|
-    | Go | fmt.Println, log.Printf | grep in *.go |
-    | TypeScript | console.log | grep in *.ts |
+    ### 0. FORBIDDEN Logging Patterns (CRITICAL - Check FIRST)
 
-    If ANY FORBIDDEN pattern found: Severity CRITICAL, Verdict FAIL
+    Any occurrence = CRITICAL severity, automatic FAIL verdict.
 
-    ### 1. Structured Logging
-    - Uses lib-commons logger (Go) or lib-common-js (TypeScript)
-    - JSON format with timestamp, level, message
-    - trace_id correlation in logs
+    <forbidden>
+    - fmt.Println() in Go code
+    - fmt.Printf() in Go code
+    - log.Println() in Go code
+    - log.Printf() in Go code
+    - log.Fatal() in Go code
+    - println() in Go code
+    - console.log() in TypeScript
+    - console.error() in TypeScript
+    - console.warn() in TypeScript
+    </forbidden>
+    
+    **MUST search for and report all occurrences of FORBIDDEN patterns:**
+    
+    | Language | FORBIDDEN Pattern | Search For |
+    |----------|-------------------|------------|
+    | Go | `fmt.Println()` | `fmt.Println` in *.go files |
+    | Go | `fmt.Printf()` | `fmt.Printf` in *.go files |
+    | Go | `log.Println()` | `log.Println` in *.go files |
+    | Go | `log.Printf()` | `log.Printf` in *.go files |
+    | Go | `log.Fatal()` | `log.Fatal` in *.go files |
+    | Go | `println()` | `println(` in *.go files |
+    | TypeScript | `console.log()` | `console.log` in *.ts files |
+    | TypeScript | `console.error()` | `console.error` in *.ts files |
+    | TypeScript | `console.warn()` | `console.warn` in *.ts files |
+    
+    **If any FORBIDDEN pattern found:**
+    - Severity: **CRITICAL**
+    - Verdict: **FAIL** (automatic, no exceptions)
+    - Each occurrence MUST be listed with file:line
+    
+    ### 1. Structured Logging (lib-commons)
+    - [ ] Uses `libCommons.NewTrackingFromContext(ctx)` for logger (Go)
+    - [ ] Uses `initializeLogger()` from lib-common-js (TypeScript)
+    - [ ] JSON format with timestamp, level, message, service
+    - [ ] trace_id correlation in logs
+    - [ ] **no FORBIDDEN patterns** (see check 0 above)
 
     ### 2. Instrumentation Coverage (90%+ required)
-    Count spans in Handlers, Services, Repositories
+    For [language], check these patterns:
+
+    **Go (lib-commons):**
+    ```go
+    logger, tracer, _, _ := libCommons.NewTrackingFromContext(ctx)
+    ctx, span := tracer.Start(ctx, "layer.operation")
+    defer span.End()
+    ```
+
+    **TypeScript:**
+    ```typescript
+    const span = tracer.startSpan('layer.operation');
+    try { /* work */ } finally { span.end(); }
+    ```
+
+    Count spans in:
+    - Handlers: grep "tracer.Start" in *handler*.go or *controller*.ts
+    - Services: grep "tracer.Start" in *service*.go or *service*.ts
+    - Repositories: grep "tracer.Start" in *repo*.go or *repository*.ts
 
     ### 3. Context Propagation
-    For external calls: InjectHTTPContext, InjectGRPCContext
+    For external calls, verify:
+    - HTTP: InjectHTTPContext (Go) or equivalent
+    - gRPC: InjectGRPCContext (Go) or equivalent
+    - Queues: PrepareQueueHeaders (Go) or equivalent
 
-    ## Required Output
+    ## Required Output Format
 
     ### Validation Summary
     | Check | Status | Evidence |
     |-------|--------|----------|
-    | Structured Logging | ✅/❌ | [file:line] |
-    | Tracing Enabled | ✅/❌ | [file:line] |
+    | Structured Logging | ✅/❌ | [file:line or "not FOUND"] |
+    | Tracing Enabled | ✅/❌ | [file:line or "not FOUND"] |
     | Instrumentation ≥90% | ✅/❌ | [X%] |
+    | Context Propagation | ✅/❌/N/A | [file:line or "N/A"] |
 
     ### Instrumentation Coverage Table
     | Layer | Instrumented | Total | Coverage |
     |-------|--------------|-------|----------|
     | Handlers | X | Y | Z% |
     | Services | X | Y | Z% |
+    | Repositories | X | Y | Z% |
+    | HTTP Clients | X | Y | Z% |
+    | gRPC Clients | X | Y | Z% |
     | **TOTAL** | X | Y | **Z%** |
 
     ### Issues Found (if any)
-    - Severity: CRITICAL/HIGH/MEDIUM/LOW
-    - File: [path:line]
-    - Fix Required By: [implementation_agent]
+    For each issue:
+    - **Severity:** CRITICAL/HIGH/MEDIUM/LOW
+    - **Category:** [Logging|Tracing|Instrumentation|Propagation]
+    - **Description:** [what's wrong]
+    - **File:** [path:line]
+    - **Expected:** [what should exist]
+    - **Fix Required By:** [implementation_agent]
 
     ### Verdict
-    **ALL CHECKS PASSED:** YES/NO
-    **Instrumentation Coverage:** [X%]
+    - **all CHECKS PASSED:** ✅ YES / ❌ no
+    - **Instrumentation Coverage:** [X%]
+    - **If no, blocking issues:** [list]
 ```
 
-## Severity Calibration
+## Step 4: Parse SRE Agent Output
 
-| Severity | Scenario | Action |
-|----------|----------|--------|
-| **CRITICAL** | Missing ALL observability | Return to Gate 0 |
-| **CRITICAL** | fmt.Println instead of JSON logs | Return to Gate 0 |
-| **HIGH** | Instrumentation 50-89% | Fix and re-validate |
-| **MEDIUM** | Missing context propagation | Fix and re-validate |
-| **LOW** | Minor logging improvements | Note for future |
+```text
+Parse agent output:
 
-## Output Schema
+1. Extract Validation Summary table
+2. Extract Instrumentation Coverage table
+3. Extract Issues Found list
+4. Extract Verdict
 
-```markdown
+validation_state.sre_result = {
+  logging_ok: [true/false],
+  tracing_ok: [true/false],
+  instrumentation_coverage: [percentage],
+  context_propagation_ok: [true/false/na],
+  issues: [list of issues],
+  verdict: [PASS/FAIL]
+}
+```
+
+## Step 5: Handle Validation Result
+
+```text
+if validation_state.sre_result.verdict == "PASS" 
+   and validation_state.sre_result.instrumentation_coverage >= 90:
+  → Go to Step 8 (Success)
+
+if validation_state.sre_result.verdict == "FAIL"
+   or validation_state.sre_result.instrumentation_coverage < 90:
+  → Go to Step 6 (Dispatch Fix)
+
+if validation_state.iteration >= validation_state.max_iterations:
+  → Go to Step 9 (Escalate)
+```
+
+## Step 6: Dispatch Fix to Implementation Agent
+
+```yaml
+Task:
+  subagent_type: "[implementation_agent from input]"  # e.g., "ring:backend-engineer-golang"
+  description: "Fix observability issues for [unit_id]"
+  prompt: |
+    ⛔ FIX REQUIRED - Observability Issues Found
+
+    ## Context
+    - **Unit ID:** [unit_id]
+    - **Iteration:** [validation_state.iteration] of [validation_state.max_iterations]
+    - **Your Previous Implementation:** [implementation_files]
+
+    ## Issues to Fix (from SRE Validation)
+    [paste issues from validation_state.sre_result.issues]
+
+    ## Current Instrumentation Coverage
+    [paste Instrumentation Coverage table from SRE output]
+    **Required:** ≥90%
+    **Current:** [validation_state.sre_result.instrumentation_coverage]%
+
+    ## Standards Reference
+    For Go: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md
+    For TS: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md
+
+    Focus on: Telemetry & Observability section
+
+    ## Required Fixes
+
+    ### If Logging Issues:
+    - Replace fmt.Println/console.log with structured logger
+    - Add trace_id to log context
+    - Use JSON format
+
+    ### If Instrumentation Coverage < 90%:
+    - Add spans to all handlers: `tracer.Start(ctx, "handler.name")`
+    - Add spans to all services: `tracer.Start(ctx, "service.domain.operation")`
+    - Add spans to all repositories: `tracer.Start(ctx, "db.operation")`
+    - Add `defer span.End()` after each span creation
+
+    ### If Context Propagation Issues:
+    - Add InjectHTTPContext for outgoing HTTP calls
+    - Add InjectGRPCContext for outgoing gRPC calls
+    - Add PrepareQueueHeaders for queue publishing
+
+    ## Required Output
+    - Files modified with fixes
+    - New Instrumentation Coverage calculation
+    - Confirmation all issues addressed
+```
+
+## Step 7: Re-Validate After Fix
+
+```text
+validation_state.iteration += 1
+
+if validation_state.iteration > validation_state.max_iterations:
+  → Go to Step 9 (Escalate)
+
+→ Go back to Step 3 (Dispatch SRE Agent)
+```
+
+## Step 8: Success - Prepare Output
+
+```text
+Generate skill output:
+
 ## Validation Result
-**Status:** PASS/FAIL/NEEDS_FIXES
-**Iterations:** [N]
-**Instrumentation Coverage:** [X%]
+**Status:** PASS
+**Iterations:** [validation_state.iteration]
+**Instrumentation Coverage:** [validation_state.sre_result.instrumentation_coverage]%
 
 ## Instrumentation Coverage
-| Layer | Instrumented | Total | Coverage |
-|-------|--------------|-------|----------|
-| Handlers | X | Y | Z% |
-| Services | X | Y | Z% |
-| Repositories | X | Y | Z% |
-| **TOTAL** | X | Y | **Z%** |
+[paste final Instrumentation Coverage table]
 
 ## Issues Found
-[List or "None"]
+None (all resolved)
 
 ## Handoff to Next Gate
 - SRE validation: COMPLETE
 - Logging: ✅ Structured JSON with trace_id
 - Tracing: ✅ OpenTelemetry instrumented
+- Instrumentation: ✅ [X]% coverage
 - Ready for Gate 3 (Testing): YES
 ```
 
+## Step 9: Escalate - Max Iterations Reached
+
+```text
+Generate skill output:
+
+## Validation Result
+**Status:** FAIL
+**Iterations:** [validation_state.iteration] (MAX REACHED)
+**Instrumentation Coverage:** [validation_state.sre_result.instrumentation_coverage]%
+
+## Instrumentation Coverage
+[paste final Instrumentation Coverage table]
+
+## Issues Found
+[list remaining unresolved issues]
+
+## Handoff to Next Gate
+- SRE validation: FAILED
+- Remaining issues: [count]
+- Ready for Gate 3 (Testing): no
+- **Action Required:** User must manually resolve remaining issues
+
+⛔ ESCALATION: Max iterations (3) reached. User intervention required.
+```
+
+---
+
+## Severity Calibration
+
+| Severity | Scenario | Gate 2 Status | Action |
+|----------|----------|---------------|--------|
+| **CRITICAL** | Missing all observability (no structured logs) | FAIL | ❌ Return to Gate 0 |
+| **CRITICAL** | fmt.Println/echo instead of JSON logs | FAIL | ❌ Return to Gate 0 |
+| **CRITICAL** | Instrumentation coverage < 50% | FAIL | ❌ Return to Gate 0 |
+| **CRITICAL** | "DEFERRED" appears in validation output | FAIL | ❌ Return to Gate 0 |
+| **HIGH** | Instrumentation coverage 50-89% | NEEDS_FIXES | ⚠️ Fix and re-validate |
+| **MEDIUM** | Missing context propagation | NEEDS_FIXES | ⚠️ Fix and re-validate |
+| **LOW** | Minor logging improvements | PASS | ✅ Note for future |
+
+---
+
+## Blocker Criteria - STOP and Report
+
+<block_condition>
+If any condition is true, STOP and dispatch fix or escalate to user.
+- Service lacks JSON-structured logs
+- Instrumentation coverage < 50%
+- Max iterations (3) reached
+</block_condition>
+
+| Decision Type | Examples | Action |
+|---------------|----------|--------|
+| **HARD BLOCK** | Service lacks JSON structured logs | **STOP** - Dispatch fix to implementation agent |
+| **HARD BLOCK** | Instrumentation coverage < 50% | **STOP** - Dispatch fix to implementation agent |
+| **HARD BLOCK** | Max iterations reached | **STOP** - Escalate to user |
+
+---
+
+### Cannot Be Overridden
+
+<cannot_skip>
+- Gate 2 execution (no MVP exemptions)
+- 90% instrumentation coverage minimum
+- JSON structured logs requirement
+</cannot_skip>
+
+| Requirement | Cannot Be Waived By | Rationale |
+|-------------|---------------------|-----------|
+| Gate 2 execution | CTO, PM, "MVP" arguments | Observability prevents production blindness |
+| 90% instrumentation coverage | "We'll add spans later" | Later = never. Instrument during implementation. |
+| JSON structured logs | "Plain text is enough" | Plain text is unsearchable in production |
+
 ## Pressure Resistance
 
-| User Says | Response |
-|-----------|----------|
+See [shared-patterns/shared-pressure-resistance.md](../shared-patterns/shared-pressure-resistance.md) for universal pressure scenarios.
+
+| User Says | Your Response |
+|-----------|---------------|
 | "Skip SRE validation" | "Observability is MANDATORY. Dispatching SRE agent now." |
 | "90% coverage is too high" | "90% is the Ring Standard minimum. Cannot lower." |
 | "Will add instrumentation later" | "Instrumentation is part of implementation. Fix now." |
+
+---
+
+## Anti-Rationalization Table
+
+See [shared-patterns/shared-anti-rationalization.md](../shared-patterns/shared-anti-rationalization.md) for universal anti-rationalizations.
+
+### Gate 2-Specific Anti-Rationalizations
+
+| Rationalization | Why It's WRONG | Required Action |
+|-----------------|----------------|-----------------|
+| "OpenTelemetry library is installed" | Installation ≠ Instrumentation | **Verify spans exist in code** |
+| "Middleware handles tracing" | Middleware = root span only | **Add child spans in all layers** |
+| "Small function doesn't need span" | Size is irrelevant | **Add span to every function** |
+| "Only external calls need tracing" | Internal ops need tracing too | **Instrument all layers** |
+| "Feature complete, observability later" | Observability IS completion | **Fix NOW before Gate 3** |
 
 ## Component Type Requirements
 
@@ -169,3 +455,34 @@ Task:
 | **Background Worker** | REQUIRED | REQUIRED | 90%+ |
 | **CLI Tool** | REQUIRED | N/A | N/A |
 | **Library** | N/A | N/A | N/A |
+
+---
+
+## Execution Report Format
+
+```markdown
+## Validation Result
+**Status:** [PASS|FAIL|NEEDS_FIXES]
+**Iterations:** [N]
+**Duration:** [Xm Ys]
+
+## Instrumentation Coverage
+| Layer | Instrumented | Total | Coverage |
+|-------|--------------|-------|----------|
+| Handlers | X | Y | Z% |
+| Services | X | Y | Z% |
+| Repositories | X | Y | Z% |
+| HTTP Clients | X | Y | Z% |
+| gRPC Clients | X | Y | Z% |
+| **TOTAL** | X | Y | **Z%** |
+
+**Coverage Status:** [PASS (≥90%) | NEEDS_FIXES (50-89%) | FAIL (<50%)]
+
+## Issues Found
+- [List by severity or "None"]
+
+## Handoff to Next Gate
+- SRE validation status: [complete|needs_fixes|failed]
+- Instrumentation coverage: [X%]
+- Ready for testing: [YES|no]
+```

@@ -12,38 +12,6 @@ metadata:
 
 # Test-Driven Development (TDD)
 
-## Related Skills
-
-**Complementary:** ring:testing-anti-patterns
-
-## Compliance Rules
-
-| ID | Description | Check Type | Severity |
-|----|-------------|------------|----------|
-| test_file_exists | Test file must exist before implementation file | file_exists | blocking |
-| test_must_fail_first | Test must produce failure output before implementation | command_output_contains | blocking |
-
-## Prerequisites
-
-| Name | Check | Failure Message | Severity |
-|------|-------|-----------------|----------|
-| test_framework_installed | npm list jest/vitest, which pytest, go list testing | No test framework found | blocking |
-| can_run_tests | npm test --version, pytest --version, go test -v | Cannot run tests | warning |
-
-## Skill Composition
-
-**Works well with:**
-- ring:requesting-code-review: After completing RED-GREEN-REFACTOR cycle for feature
-
-**Typical workflow:**
-1. Write failing test (RED)
-2. If test reveals unexpected behavior -> debug and fix root cause
-3. Return to TDD: minimal implementation (GREEN)
-4. Refactor (REFACTOR)
-5. Request code review
-
----
-
 ## Overview
 
 Write the test first. Watch it fail. Write minimal code to pass.
@@ -364,10 +332,10 @@ Never fix bugs without a test.
 ## Required Patterns
 
 This skill uses these universal patterns:
-- **State Tracking:** See `shared-patterns/state-tracking.md`
-- **Failure Recovery:** See `shared-patterns/failure-recovery.md`
-- **Exit Criteria:** See `shared-patterns/exit-criteria.md`
-- **todowrite tool:** See `shared-patterns/todowrite-integration.md`
+- **State Tracking:** See `skills/shared-patterns/state-tracking.md`
+- **Failure Recovery:** See `skills/shared-patterns/failure-recovery.md`
+- **Exit Criteria:** See `skills/shared-patterns/exit-criteria.md`
+- **TodoWrite:** See `skills/shared-patterns/todowrite-integration.md`
 
 Apply ALL patterns when using this skill.
 

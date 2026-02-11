@@ -13,13 +13,6 @@ metadata:
 
 # Interviewing User for Requirements
 
-## Related Skills
-
-**Similar:** ring:brainstorming
-**Uses:** ring:doubt-triggered-questions
-
----
-
 ## Overview
 
 Proactively surface and resolve ambiguities by systematically interviewing the user BEFORE implementation begins. This prevents wasted effort from incorrect assumptions.
@@ -30,13 +23,13 @@ Proactively surface and resolve ambiguities by systematically interviewing the u
 
 ## Quick Reference
 
-| Phase | Key Activities | Output |
-|-------|---------------|--------|
-| **1. Context Analysis** | Analyze task, identify ambiguities | Ambiguity inventory |
-| **2. Question Clustering** | Group questions by category | Prioritized question list |
-| **3. Structured Interview** | Ask questions using question tool | User responses |
-| **4. Understanding Summary** | Synthesize and confirm | Validated Understanding |
-| **5. Proceed or Iterate** | User confirms or clarifies | Green light to proceed |
+| Phase | Key Activities | Tool | Output |
+|-------|---------------|------|--------|
+| **1. Context Analysis** | Analyze task, identify ambiguities | Internal | Ambiguity inventory |
+| **2. Question Clustering** | Group questions by category | Internal | Prioritized question list |
+| **3. Structured Interview** | Ask questions using AskUserQuestion | AskUserQuestion | User responses |
+| **4. Understanding Summary** | Synthesize and confirm | Text output | Validated Understanding |
+| **5. Proceed or Iterate** | User confirms or clarifies | User input | Green light to proceed |
 
 ## The Process
 
@@ -83,19 +76,40 @@ Group questions by category and prioritize:
 | **P3** | Preferences | Affects style, not correctness |
 
 **Question Budget:**
-- **Maximum 4 questions per question tool call** (tool limitation)
+- **Maximum 4 questions per AskUserQuestion call** (tool limitation)
 - **Maximum 3 rounds of questions** (respect user's time)
 - **Prefer fewer, higher-quality questions**
 
 ### Phase 3: Structured Interview
 
-Use `question tool` tool with well-structured options:
+Use `AskUserQuestion` tool with well-structured options:
 
 **Question Quality Checklist:**
 - [ ] Shows what I already know (evidence of exploration)
 - [ ] Explains why I'm uncertain (the genuine conflict)
 - [ ] Provides 2-4 concrete options with descriptions
 - [ ] Options are mutually exclusive or clearly labeled as multi-select
+
+**Example - Good Question:**
+```
+header: "Auth Method"
+question: "The codebase has both session-based auth (UserService) and JWT (APIService). Which should this new endpoint use?"
+options:
+  - label: "Session-based (Recommended)"
+    description: "Matches existing user-facing endpoints, simpler cookie handling"
+  - label: "JWT tokens"
+    description: "Matches API patterns, better for external integrations"
+  - label: "Support both"
+    description: "Maximum flexibility, more implementation complexity"
+```
+
+**Example - Bad Question:**
+```
+question: "What authentication should I use?"
+options:
+  - label: "Option 1"
+  - label: "Option 2"
+```
 
 ### Phase 4: Understanding Summary
 
@@ -142,6 +156,28 @@ Understanding is NOT confirmed until user explicitly says:
 
 **If not confirmed:** Return to Phase 3 with targeted follow-up questions.
 
+## Question Categories
+
+### Architecture Questions
+- "Which pattern should this follow: [A] or [B]?"
+- "Where should this logic live: [Service A], [Service B], or new service?"
+- "Should this be synchronous or asynchronous?"
+
+### Behavior Questions
+- "When [edge case], should the system [A] or [B]?"
+- "What should happen if [failure scenario]?"
+- "Should users be able to [optional capability]?"
+
+### Constraint Questions
+- "Is there a performance requirement for this?"
+- "Does this need to support [specific scenario]?"
+- "Are there backward compatibility requirements?"
+
+### Preference Questions
+- "Do you prefer [verbose but explicit] or [concise but implicit]?"
+- "Should I prioritize [speed] or [maintainability]?"
+- "Any naming conventions I should follow?"
+
 ## When to Auto-Trigger This Skill
 
 Claude SHOULD invoke this skill automatically when:
@@ -156,7 +192,7 @@ Claude should NOT auto-trigger when:
 - Task is a simple bug fix with clear reproduction
 - User provided detailed specifications
 - Following an existing plan
-- Single question would suffice
+- Single question would suffice (use doubt-triggered-questions instead)
 
 ## Anti-Patterns
 
@@ -166,7 +202,7 @@ Claude should NOT auto-trigger when:
 | Open-ended questions only | Hard to answer, vague responses | Provide concrete options |
 | Too many questions at once | Overwhelming | Max 4 per round, max 3 rounds |
 | Asking about things user already said | Shows you weren't listening | Re-read conversation first |
-| Asking preferences when conventions exist | Codebase already answers | Follow existing patterns |
+| Asking preferences when conventions exist | CLAUDE.md/codebase already answers | Follow existing patterns |
 | Skipping summary phase | User can't correct misunderstandings | Always present Validated Understanding |
 
 ## Integration with Other Skills
@@ -176,6 +212,13 @@ Claude should NOT auto-trigger when:
 | `ring:doubt-triggered-questions` | Use for single questions during work; use ring:interviewing-user for systematic upfront gathering |
 | `ring:brainstorming` | Interview first to gather requirements, THEN brainstorm solutions |
 | `ring:writing-plans` | Interview first to clarify scope, THEN create plan |
+
+## Required Patterns
+
+This skill uses these universal patterns:
+- **State Tracking:** See `skills/shared-patterns/state-tracking.md`
+- **Failure Recovery:** See `skills/shared-patterns/failure-recovery.md`
+- **Exit Criteria:** See `skills/shared-patterns/exit-criteria.md`
 
 ## Exit Criteria
 
@@ -192,7 +235,7 @@ Interview is complete when ALL of these are true:
 | Principle | Application |
 |-----------|-------------|
 | **Explore before asking** | 30 seconds of exploration can save a question |
-| **Structured choices** | Use question tool with 2-4 concrete options |
+| **Structured choices** | Use AskUserQuestion with 2-4 concrete options |
 | **Show your work** | Include what you found and why you're uncertain |
 | **Respect time** | Max 3 rounds, max 4 questions per round |
 | **Confirm understanding** | Always present summary for validation |

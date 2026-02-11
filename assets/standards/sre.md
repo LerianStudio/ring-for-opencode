@@ -1,8 +1,11 @@
 # SRE Standards
 
+> **⚠️ MAINTENANCE:** This file is indexed in `dev-team/skills/shared-patterns/standards-coverage-table.md`.
+> When adding/removing `## ` sections, follow FOUR-FILE UPDATE RULE in CLAUDE.md: (1) edit standards file, (2) update TOC, (3) update standards-coverage-table.md, (4) update agent file.
+
 This file defines the specific standards for Site Reliability Engineering and observability.
 
-> **Project Rules**: Check if `docs/PROJECT_RULES.md` exists in the target project. If it exists, load it for project-specific technology choices and configurations. If it doesn't exist, ask the user: "Would you like me to create a PROJECT_RULES.md file using the Ring template? This helps document your project's specific tech stack, integrations, and deployment model."
+> **Reference**: Always consult `docs/PROJECT_RULES.md` for common project standards.
 
 ---
 
@@ -68,7 +71,7 @@ This file defines the specific standards for Site Reliability Engineering and ob
 | Level | Usage | Examples |
 |-------|-------|----------|
 | **ERROR** | Failures requiring attention | Database connection failed, API error |
-| **WARN** | Potential issues | Retry attempt, rate limit approaching |
+| **WARN** | Potential issues | Retry attempt, connection pool low |
 | **INFO** | Normal operations | Request completed, user logged in |
 | **DEBUG** | Detailed debugging | Query parameters, internal state |
 | **TRACE** | Very detailed (rarely used) | Full request/response bodies |
@@ -241,7 +244,7 @@ ctx := otel.GetTextMapPropagator().Extract(
 
 All Go services **MUST** integrate OpenTelemetry using `lib-commons/v2`. This ensures consistent observability patterns across all Lerian Studio services.
 
-> **Reference**: See `{OPENCODE_CONFIG}/standards/golang.md` for complete lib-commons integration patterns.
+> **Reference**: See `dev-team/docs/standards/golang.md` for complete lib-commons integration patterns.
 
 ### Required Imports
 
@@ -338,7 +341,6 @@ func NewRouter(lg libLog.Logger, tl *libOpentelemetry.Telemetry, ...) *fiber.App
 
     // MUST be first middleware - injects tracer+logger into context
     f.Use(tlMid.WithTelemetry(tl))
-    f.Use(cors.New())
     f.Use(libHTTP.WithHTTPLogging(libHTTP.WithCustomLogger(lg)))
 
     // ... define routes ...
@@ -563,7 +565,6 @@ export function createRouter(
     // Create logging middleware - injects logger into request
     const logMid = createLoggingMiddleware(logger);
     app.use(logMid);
-    app.use(cors());
     app.use(express.json());
 
     // ... define routes ...

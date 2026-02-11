@@ -13,12 +13,6 @@ metadata:
 
 # Brainstorming Ideas Into Designs
 
-## Related Skills
-
-**Similar:** ring:writing-plans
-
----
-
 ## Overview
 
 Transform rough ideas into fully-formed designs through structured questioning and alternative exploration.
@@ -32,10 +26,10 @@ Transform rough ideas into fully-formed designs through structured questioning a
 | Phase | Key Activities | Tool Usage | Output |
 |-------|---------------|------------|--------|
 | **Prep: Autonomous Recon** | Inspect repo/docs/commits, form initial model | Native tools (ls, cat, git log, etc.) | Draft understanding to confirm |
-| **1. Understanding** | Share findings, ask only for missing context | question tool for real decisions | Purpose, constraints, criteria (confirmed) |
-| **2. Exploration** | Propose 2-3 approaches | question tool for approach selection | Architecture options with trade-offs |
+| **1. Understanding** | Share findings, ask only for missing context | AskUserQuestion for real decisions | Purpose, constraints, criteria (confirmed) |
+| **2. Exploration** | Propose 2-3 approaches | AskUserQuestion for approach selection | Architecture options with trade-offs |
 | **3. Design Presentation** | Present in 200-300 word sections | Open-ended questions | Complete design with validation |
-| **4. Design Documentation** | Write design document | ring:writing-clearly-and-concisely skill | Design doc in docs/plans/ |
+| **4. Design Documentation** | Write design document | writing-clearly-and-concisely skill | Design doc in docs/plans/ |
 | **5. Worktree Setup** | Set up isolated workspace | ring:using-git-worktrees skill | Ready development environment |
 | **6. Planning Handoff** | Create implementation plan | ring:writing-plans skill | Detailed task breakdown |
 
@@ -74,7 +68,7 @@ Hit limit? Do research instead of asking.
 ### Phase 1: Understanding
 - Share your synthesized understanding first, then invite corrections or additions.
 - Ask one focused question at a time, only for gaps you cannot close yourself.
-- **Use question tool** only when you need the human to make a decision among real alternatives.
+- **Use AskUserQuestion tool** only when you need the human to make a decision among real alternatives.
 - Gather: Purpose, constraints, success criteria (confirmed or amended by your partner)
 
 **Example summary + targeted question:**
@@ -100,11 +94,11 @@ Based on the README and yesterday's commit, we're expanding localization to dash
 ### Phase 2: Exploration
 - Propose 2-3 different approaches
 - For each: Core architecture, trade-offs, complexity assessment, and your recommendation
-- **Use question tool** to present approaches when you truly need a judgement call
+- **Use AskUserQuestion tool** to present approaches when you truly need a judgement call
 - Lead with the option you prefer and explain why; invite disagreement if your partner sees it differently
 - Own prioritization: if the repo makes priorities clear, state them and proceed rather than asking
 
-**Example using question tool:**
+**Example using AskUserQuestion:**
 ```
 Question: "Which architectural approach should we use?"
 Options:
@@ -161,9 +155,9 @@ When your human partner confirms (any affirmative response):
 
 ## Question Patterns
 
-### When to Use question tool
+### When to Use AskUserQuestion Tool
 
-**Use question tool when:**
+**Use AskUserQuestion when:**
 - You need your partner to make a judgement call among real alternatives
 - You have a recommendation and can explain why it's your preference
 - Prioritization is ambiguous and cannot be inferred from existing materials
@@ -184,7 +178,7 @@ When your human partner confirms (any affirmative response):
 Frame them to confirm or expand your current understanding rather than reopening settled topics.
 
 **Example decision flow:**
-- "What authentication method?" → Use question tool (2-4 options)
+- "What authentication method?" → Use AskUserQuestion (2-4 options)
 - "Does this design handle your use case?" → Open-ended (validation)
 
 ## When to Revisit Earlier Phases
@@ -201,10 +195,10 @@ Frame them to confirm or expand your current understanding rather than reopening
 ## Required Patterns
 
 This skill uses these universal patterns:
-- **State Tracking:** See `shared-patterns/state-tracking.md`
-- **Failure Recovery:** See `shared-patterns/failure-recovery.md`
-- **Exit Criteria:** See `shared-patterns/exit-criteria.md`
-- **todowrite tool:** See `shared-patterns/todowrite-integration.md`
+- **State Tracking:** See `skills/shared-patterns/state-tracking.md`
+- **Failure Recovery:** See `skills/shared-patterns/failure-recovery.md`
+- **Exit Criteria:** See `skills/shared-patterns/exit-criteria.md`
+- **TodoWrite:** See `skills/shared-patterns/todowrite-integration.md`
 
 Apply ALL patterns when using this skill.
 
@@ -213,7 +207,7 @@ Apply ALL patterns when using this skill.
 | Principle | Application |
 |-----------|-------------|
 | **One question at a time** | Phase 1: Single targeted question only for gaps you can't close yourself |
-| **Structured choices** | Use question tool for 2-4 options with trade-offs |
+| **Structured choices** | Use AskUserQuestion tool for 2-4 options with trade-offs |
 | **YAGNI ruthlessly** | Remove unnecessary features from all designs |
 | **Explore alternatives** | Always propose 2-3 approaches before settling |
 | **Incremental validation** | Present design in sections, validate each |

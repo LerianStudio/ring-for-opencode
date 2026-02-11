@@ -1,5 +1,7 @@
 package dataflow
 
+//go:generate mockgen -source=types.go -destination=mock_analyzer_test.go -package=dataflow Analyzer
+
 // SourceType categorizes where untrusted data originates
 type SourceType string
 

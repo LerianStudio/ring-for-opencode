@@ -76,24 +76,24 @@ Even in minimal mode, these checks are MANDATORY:
 
 ```
 Is it documentation/comments only?
-├── YES -> Minimal review (verify no executable content)
-└── NO -> Continue
+├── YES → Minimal review (verify no executable content)
+└── NO → Continue
 
 Is it formatting/whitespace only?
-├── YES -> Minimal review (verify via git diff)
-└── NO -> Continue
+├── YES → Minimal review (verify via git diff)
+└── NO → Continue
 
 Is it generated/lock files only?
-├── YES -> Minimal review (check for vulnerabilities)
-└── NO -> Continue
+├── YES → Minimal review (check for vulnerabilities)
+└── NO → Continue
 
 Is it in critical category (auth, DB, state machine)?
-├── YES -> FULL REVIEW REQUIRED
-└── NO -> Continue
+├── YES → FULL REVIEW REQUIRED
+└── NO → Continue
 
 Does it touch code in my domain?
-├── YES -> FULL REVIEW REQUIRED
-└── NO -> Minimal review
+├── YES → FULL REVIEW REQUIRED
+└── NO → Minimal review
 ```
 
 ---

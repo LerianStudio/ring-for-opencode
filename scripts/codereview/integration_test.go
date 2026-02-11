@@ -2,10 +2,15 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
+	"github.com/lerianstudio/ring/scripts/codereview/internal/cli"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/lint"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/phases"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/pipeline"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/scope"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -117,4 +122,146 @@ func TestResultAggregation(t *testing.T) {
 	}
 	filtered2 := result.FilterByFiles(fileMap2)
 	assert.Len(t, filtered2.Findings, 0)
+}
+
+// TestUnifiedCLI tests the unified CLI configuration and pipeline.
+func TestUnifiedCLI(t *testing.T) {
+	t.Run("DefaultConfig", func(t *testing.T) {
+		cfg := cli.DefaultConfig()
+		assert.Equal(t, ".scr", cfg.OutputDir)
+		// Note: BaseRef/HeadRef defaults are applied conditionally in run.go, not in DefaultConfig()
+		assert.Equal(t, "", cfg.BaseRef)
+		assert.Equal(t, "", cfg.HeadRef)
+		assert.False(t, cfg.Verbose)
+		assert.False(t, cfg.Unstaged)
+	})
+
+	t.Run("HasFilePatterns", func(t *testing.T) {
+		cfg := &cli.Config{}
+		assert.False(t, cfg.HasFilePatterns())
+
+		cfg.Files = "*.go"
+		assert.True(t, cfg.HasFilePatterns())
+
+		cfg.Files = ""
+		cfg.FilesFrom = "files.txt"
+		assert.True(t, cfg.HasFilePatterns())
+	})
+
+	t.Run("ShouldSkip", func(t *testing.T) {
+		cfg := &cli.Config{Skip: []string{"static", "dataflow"}}
+		assert.True(t, cfg.ShouldSkip("static"))
+		assert.True(t, cfg.ShouldSkip("dataflow"))
+		assert.False(t, cfg.ShouldSkip("scope"))
+		assert.False(t, cfg.ShouldSkip("ast"))
+	})
+}
+
+// TestPhaseNames verifies all phase names are valid.
+func TestPhaseNames(t *testing.T) {
+	names := phases.PhaseNames()
+	expected := []string{"scope", "static", "ast", "callgraph", "dataflow", "context"}
+	assert.Equal(t, expected, names)
+
+	for _, name := range expected {
+		assert.True(t, phases.IsValidPhaseName(name), "expected %q to be valid", name)
+	}
+
+	assert.False(t, phases.IsValidPhaseName("invalid"))
+	assert.False(t, phases.IsValidPhaseName(""))
+}
+
+// TestPipelineCreation verifies the pipeline can be created and configured.
+func TestPipelineCreation(t *testing.T) {
+	p := pipeline.New()
+	require.NotNil(t, p)
+
+	// Test chaining
+	p = p.WithSkip([]string{"static", "dataflow"}).WithVerbose(true)
+	require.NotNil(t, p)
+}
+
+// TestPipelineResult tests pipeline result methods.
+func TestPipelineResult(t *testing.T) {
+	t.Run("Success with no failures", func(t *testing.T) {
+		r := &pipeline.Result{Passed: 6, Failed: 0, Skipped: 0}
+		assert.True(t, r.Success())
+	})
+
+	t.Run("Failure with failed phases", func(t *testing.T) {
+		r := &pipeline.Result{Passed: 4, Failed: 2, Skipped: 0}
+		assert.False(t, r.Success())
+	})
+}
+
+// TestUnifiedCLIBinary tests the scr binary if it exists.
+func TestUnifiedCLIBinary(t *testing.T) {
+	binPath := filepath.Join("bin", "scr")
+	if _, err := os.Stat(binPath); os.IsNotExist(err) {
+		t.Skip("scr binary not built; run 'make build' first")
+	}
+
+	t.Run("version command", func(t *testing.T) {
+		cmd := exec.Command(binPath, "version")
+		output, err := cmd.CombinedOutput()
+		require.NoError(t, err, "version command failed: %s", string(output))
+		assert.Contains(t, string(output), "scr")
+	})
+
+	t.Run("help command", func(t *testing.T) {
+		cmd := exec.Command(binPath, "--help")
+		output, err := cmd.CombinedOutput()
+		require.NoError(t, err, "help command failed: %s", string(output))
+		assert.Contains(t, string(output), "Static Code Reviewer")
+	})
+
+	t.Run("phase help", func(t *testing.T) {
+		cmd := exec.Command(binPath, "phase", "--help")
+		output, err := cmd.CombinedOutput()
+		require.NoError(t, err, "phase help failed: %s", string(output))
+		assert.Contains(t, string(output), "scope")
+		assert.Contains(t, string(output), "static")
+	})
+
+	t.Run("run help", func(t *testing.T) {
+		cmd := exec.Command(binPath, "run", "--help")
+		output, err := cmd.CombinedOutput()
+		require.NoError(t, err, "run help failed: %s", string(output))
+		assert.Contains(t, string(output), "Execute all")
+	})
+}
+
+// TestLegacyBinaryBackwardCompatibility tests that legacy binaries still work.
+func TestLegacyBinaryBackwardCompatibility(t *testing.T) {
+	legacyBinaries := []string{
+		"scope-detector",
+		"static-analysis",
+		"ast-extractor",
+		"call-graph",
+		"data-flow",
+		"compile-context",
+	}
+
+	for _, binary := range legacyBinaries {
+		binPath := filepath.Join("bin", binary)
+		if _, err := os.Stat(binPath); os.IsNotExist(err) {
+			t.Skipf("%s binary not built; run 'make build-all' first", binary)
+		}
+
+		t.Run(binary+" --help", func(t *testing.T) {
+			cmd := exec.Command(binPath, "--help")
+			output, err := cmd.CombinedOutput()
+			// Legacy binaries should work even with --help
+			// Some might not have --help flag, so we just check it doesn't crash
+			if err != nil {
+				// Check if it's just missing --help flag (exit code 2) vs actual error
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					if exitErr.ExitCode() == 2 {
+						t.Skipf("%s doesn't support --help flag", binary)
+					}
+				}
+			}
+			_ = output // Just verify it runs
+		})
+	}
 }

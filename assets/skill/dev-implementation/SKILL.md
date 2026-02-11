@@ -27,13 +27,11 @@ metadata:
 
 This skill executes the implementation phase of the development cycle:
 - Selects the appropriate specialized agent based on task content
-- Applies project standards from docs/PROJECT_RULES.md (if exists, otherwise uses Ring defaults)
-- Follows TDD methodology (RED -> GREEN -> REFACTOR)
+- Applies project standards from docs/PROJECT_RULES.md
+- Follows TDD methodology (RED → GREEN → REFACTOR)
 - Documents implementation decisions
 
-**If PROJECT_RULES.md not found:** Use Ring Standards from `{OPENCODE_CONFIG}/standards/`. Optionally offer to create PROJECT_RULES.md from `{OPENCODE_CONFIG}/templates/PROJECT_RULES.md`.
-
-## Role Clarification
+## CRITICAL: Role Clarification
 
 **This skill ORCHESTRATES. Agents IMPLEMENT.**
 
@@ -42,79 +40,295 @@ This skill executes the implementation phase of the development cycle:
 | **This Skill** | Select agent, prepare prompts, track state, validate outputs |
 | **Implementation Agent** | Write tests, write code, follow standards |
 
-## Required Input
+---
 
-- `unit_id`: Task/subtask being implemented
-- `requirements`: Acceptance criteria or task description
-- `language`: go / typescript / python
-- `service_type`: api / worker / batch / cli / frontend / bff
+## Step 1: Validate Input
 
-## Agent Selection
+<verify_before_proceed>
+- unit_id exists
+- requirements exists
+- language is valid (go|typescript|python)
+- service_type is valid (api|worker|batch|cli|frontend|bff)
+</verify_before_proceed>
 
-| Language | Service Type | Agent |
-|----------|--------------|-------|
-| Go | API, Worker, Batch, CLI | `ring:backend-engineer-golang` |
-| TypeScript | API, Worker | `ring:backend-engineer-typescript` |
-| TypeScript | Frontend | `ring:frontend-engineer` |
-| React/CSS | Design, Styling | `ring:frontend-designer` |
+```text
+REQUIRED INPUT (from ring:dev-cycle orchestrator):
+- unit_id: [task/subtask being implemented]
+- requirements: [acceptance criteria or task description]
+- language: [go|typescript|python]
+- service_type: [api|worker|batch|cli|frontend|bff]
 
-## Gate 0.1: TDD-RED (Write Failing Test)
+OPTIONAL INPUT:
+- technical_design: [path to design doc]
+- existing_patterns: [patterns to follow]
+- project_rules_path: [default: docs/PROJECT_RULES.md]
+
+if any REQUIRED input is missing:
+  → STOP and report: "Missing required input: [field]"
+  → Return to orchestrator with error
+```
+
+## Step 2: Validate Prerequisites
+
+<block_condition>
+- PROJECT_RULES.md does not exist at project_rules_path
+</block_condition>
+
+If condition is true, STOP and return error to orchestrator.
+
+```text
+1. Check PROJECT_RULES.md exists:
+   Read tool → project_rules_path (default: docs/PROJECT_RULES.md)
+   
+   if not found:
+     → STOP with blocker: "Cannot implement without project standards"
+     → Return error to orchestrator
+
+2. Select implementation agent based on language:
+   
+   | Language | Service Type | Agent |
+   |----------|--------------|-------|
+   | go | api, worker, batch, cli | ring:backend-engineer-golang |
+   | typescript | api, worker | ring:backend-engineer-typescript |
+   | typescript | frontend, bff | frontend-bff-engineer-typescript |
+   
+   Store: selected_agent = [agent name]
+```
+
+## Step 3: Initialize Implementation State
+
+```text
+implementation_state = {
+  unit_id: [from input],
+  agent: selected_agent,
+  tdd_red: {
+    status: "pending",
+    test_file: null,
+    failure_output: null
+  },
+  tdd_green: {
+    status: "pending",
+    implementation_files: [],
+    pass_output: null
+  },
+  files_created: [],
+  files_modified: [],
+  commit_sha: null
+}
+```
+
+## Step 4: Gate 0.1 - TDD-RED (Write Failing Test)
+
+<dispatch_required agent="[selected_agent]">
+Write failing test for unit_id following TDD-RED methodology.
+</dispatch_required>
 
 ```yaml
 Task:
-  subagent_type: "[selected_agent]"
+  subagent_type: "[selected_agent]"  # e.g., "ring:backend-engineer-golang"
   description: "TDD-RED: Write failing test for [unit_id]"
   prompt: |
-    TDD-RED PHASE: Write a FAILING Test
+    ⛔ TDD-RED PHASE: Write a FAILING Test
 
-    ## Requirements
-    [requirements]
+    ## Input Context
+    - **Unit ID:** [unit_id]
+    - **Requirements:** [requirements]
+    - **Language:** [language]
+    - **Service Type:** [service_type]
+
+    ## Project Standards
+    Read and follow: [project_rules_path]
+
+    ## Ring Standards Reference
+    For Go: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md
+    For TS: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md
 
     ## Your Task
     1. Write a test that captures the expected behavior
     2. The test MUST FAIL (no implementation exists yet)
     3. Run the test and capture the FAILURE output
 
-    ## Required Output
+    ## Requirements for Test
+    - Follow project naming conventions from PROJECT_RULES.md
+    - Use table-driven tests (Go) or describe/it blocks (TS)
+    - Test the happy path and edge cases
+    - Include meaningful assertion messages
+
+    ## Required Output Format
+
     ### Test File
     **Path:** [path/to/test_file]
+    
+    ```[language]
+    [test code]
+    ```
+
+    ### Test Execution
+    **Command:** [test command]
+    **Result:** FAIL (expected)
 
     ### Failure Output (MANDATORY)
     ```
-    [actual test failure output]
+    [paste actual test failure output here]
     ```
 
-    HARD GATE: Without failure output, TDD-RED is NOT complete.
+    ⛔ HARD GATE: You MUST include actual failure output.
+    Without failure output, TDD-RED is not complete.
 ```
 
-## Gate 0.2: TDD-GREEN (Implementation)
+## Step 5: Validate TDD-RED Output
 
-**PREREQUISITE:** TDD-RED completed with failure output
+<block_condition>
+- failure_output is missing
+- failure_output does not contain "FAIL"
+</block_condition>
+
+If any condition is true, re-dispatch agent with clarification.
+
+```text
+Parse agent output:
+
+1. Extract test file path
+2. Extract failure output
+
+if failure_output is missing or does not contain "FAIL":
+  → STOP: "TDD-RED incomplete - no failure output captured"
+  → Re-dispatch agent with clarification
+
+if failure_output contains "FAIL":
+  → implementation_state.tdd_red = {
+      status: "completed",
+      test_file: [extracted path],
+      failure_output: [extracted output]
+    }
+  → Proceed to Step 6
+```
+
+## Step 6: Gate 0.2 - TDD-GREEN (Implementation)
+
+**PREREQUISITE:** `implementation_state.tdd_red.status == "completed"`
+
+<dispatch_required agent="[selected_agent]">
+Implement code to make test pass following TDD-GREEN methodology.
+</dispatch_required>
 
 ```yaml
 Task:
   subagent_type: "[selected_agent]"
-  description: "TDD-GREEN: Implement code to pass test"
+  description: "TDD-GREEN: Implement code to pass test for [unit_id]"
   prompt: |
-    TDD-GREEN PHASE: Make the Test PASS
+    ⛔ TDD-GREEN PHASE: Make the Test PASS
 
-    ## TDD-RED Results
-    - Test File: [test_file]
-    - Failure Output: [failure_output]
+    ## Input Context
+    - **Unit ID:** [unit_id]
+    - **Requirements:** [requirements]
+    - **Language:** [language]
+    - **Service Type:** [service_type]
+
+    ## TDD-RED Results (from previous phase)
+    - **Test File:** [implementation_state.tdd_red.test_file]
+    - **Failure Output:**
+    ```
+    [implementation_state.tdd_red.failure_output]
+    ```
+
+    ## Project Standards
+    Read and follow: [project_rules_path]
+
+    ## Ring Standards Reference
+    For Go: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md
+    For TS: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md
+
+    ## ⛔ CRITICAL: all Ring Standards Apply (no DEFERRAL)
+    See Ring Standards for mandatory requirements:
+    - Structured JSON logging with trace_id correlation
+    - OpenTelemetry instrumentation (spans in every function)
+    - Error handling (no panic, wrap with context)
+    - Context propagation
+
+    **⛔ HARD GATE:** If you output "DEFERRED" for any Ring Standard → Implementation is INCOMPLETE.
 
     ## Your Task
     1. Write MINIMAL code to make the test pass
-    2. Follow ALL Ring Standards (logging, tracing, error handling)
-    3. Run the test and capture the PASS output
+    2. Follow all Ring Standards (logging, tracing, error handling)
+    3. **Instrument all code with telemetry** (100% of handlers, services, repositories)
+    4. Run the test and capture the PASS output
 
-    ## Required Output
+    ## ⛔ MANDATORY: Telemetry Instrumentation (NON-NEGOTIABLE)
+
+    <cannot_skip>
+    - 90%+ instrumentation coverage required
+    - WebFetch standards file before implementation
+    - Follow exact patterns from standards
+    - Output Standards Coverage Table with evidence
+    </cannot_skip>
+
+    **every function that does work MUST be instrumented with telemetry.**
+    This is not optional. This is not "nice to have". This is REQUIRED.
+
+    ### What "Instrumented" Means
+    1. **Extract logger/tracer from context** (not create new ones)
+    2. **Create a child span** for the operation
+    3. **Defer span.End()** immediately
+    4. **Use structured logging** correlated with trace
+    5. **Handle errors with span attribution** (business vs technical)
+
+    ### Language-Specific Patterns (MANDATORY)
+
+    **⛔ HARD GATE: Agent MUST WebFetch standards file BEFORE writing any code.**
+
+    | Language | Standards File | REQUIRED Sections to WebFetch |
+    |----------|----------------|-------------------------------|
+    | **Go** | `golang.md` | "Telemetry & Observability (MANDATORY)", "Child Spans", "Context Propagation", "Anti-Patterns" |
+    | **TypeScript** | `typescript.md` | "Observability", "Telemetry Patterns", "Context Propagation", "Anti-Patterns" |
+
+    **⛔ NON-NEGOTIABLE: Agent MUST implement EXACTLY the patterns from standards. no deviations. no shortcuts.**
+
+    | Requirement | Enforcement |
+    |-------------|-------------|
+    | WebFetch standards file | MANDATORY before implementation |
+    | Follow exact patterns | REQUIRED - copy structure from standards |
+    | Output Standards Coverage Table | REQUIRED - with file:line evidence |
+    | 90%+ instrumentation coverage | HARD GATE - implementation REJECTED if below |
+
+    ### ⛔ FORBIDDEN Patterns (HARD BLOCK)
+    
+    **Agent MUST WebFetch standards and check Anti-Patterns table. Violations = REJECTED.**
+
+    - **Go:** `golang.md` → "Anti-Patterns" table - MUST check all rows
+    - **TypeScript:** `typescript.md` → "Anti-Patterns" table - MUST check all rows
+
+    **If agent uses any forbidden pattern → Implementation is INVALID. Start over.**
+
+    ### Verification (MANDATORY)
+    
+    **Agent MUST output Standards Coverage Table per `standards-coverage-table.md`.**
+    
+    - all sections MUST show ✅ or N/A
+    - any ❌ = Implementation REJECTED
+    - Missing table = Implementation INCOMPLETE
+
+    ## Required Output Format
+
     ### Implementation Files
     | File | Action | Lines |
     |------|--------|-------|
+    | [path] | Created/Modified | +/-N |
+
+    ### Code
+    **Path:** [path/to/implementation_file]
+    
+    ```[language]
+    [implementation code]
+    ```
+
+    ### Test Execution
+    **Command:** [test command]
+    **Result:** PASS
 
     ### Pass Output (MANDATORY)
     ```
-    [actual test pass output]
+    [paste actual test pass output here]
     ```
 
     ### Standards Compliance
@@ -122,27 +336,64 @@ Task:
     - OpenTelemetry Spans: ✅/❌
     - Error Handling: ✅/❌
     - Context Propagation: ✅/❌
+
+    ### Commit
+    **SHA:** [commit hash after implementation]
 ```
 
-## Output Schema
+## Step 7: Validate TDD-GREEN Output
 
-```markdown
+```text
+Parse agent output:
+
+1. Extract implementation files
+2. Extract pass output
+3. Extract standards compliance
+4. Extract commit SHA
+
+if pass_output is missing or does not contain "PASS":
+  → STOP: "TDD-GREEN incomplete - test not passing"
+  → Re-dispatch agent with error details
+
+if any standards compliance is ❌:
+  → STOP: "Standards not met - [list failing standards]"
+  → Re-dispatch agent to fix
+
+if pass_output contains "PASS" and all standards ✅:
+  → implementation_state.tdd_green = {
+      status: "completed",
+      implementation_files: [extracted files],
+      pass_output: [extracted output],
+      commit_sha: [extracted SHA]
+    }
+  → Proceed to Step 8
+```
+
+## Step 8: Prepare Output
+
+```text
+Generate skill output:
+
 ## Implementation Summary
-**Status:** PASS/FAIL/PARTIAL
+**Status:** PASS
 **Unit ID:** [unit_id]
 **Agent:** [selected_agent]
-**Commit:** [sha]
+**Commit:** [commit_sha]
 
 ## TDD Results
 | Phase | Status | Output |
 |-------|--------|--------|
-| RED | ✅/❌ | [summary] |
-| GREEN | ✅/❌ | [summary] |
+| RED | ✅ | [first line of failure_output] |
+| GREEN | ✅ | [first line of pass_output] |
 
 ## Files Changed
 | File | Action | Lines |
 |------|--------|-------|
-| [path] | Created/Modified | +/-N |
+[table from implementation_files]
+
+**Files Created:** [count]
+**Files Modified:** [count]
+**Tests Added:** [count]
 
 ## Standards Compliance
 - Structured Logging: ✅
@@ -156,21 +407,84 @@ Task:
 - Tests pass: ✅
 - Standards met: ✅
 - Ready for Gate 1 (DevOps): YES
+- Environment needs: [list any new deps, env vars, services]
 ```
+
+---
 
 ## Pressure Resistance
 
-| User Says | Response |
-|-----------|----------|
+See [shared-patterns/shared-pressure-resistance.md](../shared-patterns/shared-pressure-resistance.md) for universal pressure scenarios.
+
+| User Says | Your Response |
+|-----------|---------------|
 | "Skip TDD, just implement" | "TDD is MANDATORY. Dispatching agent for RED phase." |
 | "Code exists, just add tests" | "DELETE existing code. TDD requires test-first." |
 | "Add observability later" | "Observability is part of implementation. Agent MUST add it now." |
 
-## Anti-Rationalization
+---
 
-| Rationalization | Why Wrong | Required Action |
-|-----------------|-----------|-----------------|
+## Anti-Rationalization Table
+
+See [shared-patterns/shared-anti-rationalization.md](../shared-patterns/shared-anti-rationalization.md) for universal anti-rationalizations.
+
+### Gate 0-Specific Anti-Rationalizations
+
+| Rationalization | Why It's WRONG | Required Action |
+|-----------------|----------------|-----------------|
 | "Test passes on first run" | Passing test ≠ TDD. Test MUST fail first. | **Rewrite test to fail first** |
 | "Skip RED, go straight to GREEN" | RED proves test validity | **Execute RED phase first** |
 | "I'll add observability later" | Later = never. Observability is part of GREEN. | **Add logging + tracing NOW** |
-| "DEFERRED to later tasks" | DEFERRED = FAILED. Standards are not deferrable. | **Implement ALL standards NOW** |
+| "Minimal code = no logging" | Minimal = pass test. Logging is a standard, not extra. | **Include observability** |
+| "DEFERRED to later tasks" | DEFERRED = FAILED. Standards are not deferrable. | **Implement all standards NOW** |
+| "Using raw OTel is fine" | lib-commons wrappers are MANDATORY for consistency | **Use libCommons.NewTrackingFromContext** |
+| "c.JSON() works the same" | Direct Fiber breaks response standardization | **Use libHTTP.OK(), libHTTP.WithError()** |
+| "This function is too simple for spans" | Simple ≠ exempt. all functions need spans. | **Add span to every function** |
+| "Telemetry adds overhead" | Observability is non-negotiable for production | **Instrument 100% of code paths** |
+
+## Agent Selection Guide
+
+| Language | Service Type | Condition | Agent |
+|----------|--------------|-----------|-------|
+| Go | API, Worker, Batch, CLI | - | `ring:backend-engineer-golang` |
+| TypeScript | API, Worker | - | `ring:backend-engineer-typescript` |
+| TypeScript | Frontend, BFF | No product-designer outputs | `ring:frontend-bff-engineer-typescript` |
+| TypeScript | Frontend | ux-criteria.md exists | `ring:ui-engineer` |
+| React/CSS | Design, Styling | - | `ring:frontend-designer` |
+
+**ui-engineer Selection:**
+When implementing frontend features with product-designer outputs (ux-criteria.md, user-flows.md, wireframes/), use `ring:ui-engineer` instead of `ring:frontend-bff-engineer-typescript`. The ui-engineer specializes in translating design specifications into production code while ensuring all UX criteria are satisfied.
+
+---
+
+## Execution Report Format
+
+```markdown
+## Implementation Summary
+**Status:** [PASS|FAIL|PARTIAL]
+**Unit ID:** [unit_id]
+**Agent:** [agent]
+**Duration:** [Xm Ys]
+
+## TDD Results
+| Phase | Status | Output |
+|-------|--------|--------|
+| RED | ✅/❌ | [summary] |
+| GREEN | ✅/❌ | [summary] |
+
+## Files Changed
+| File | Action | Lines |
+|------|--------|-------|
+| [path] | [Created/Modified] | [+/-N] |
+
+## Standards Compliance
+- Structured Logging: ✅/❌
+- OpenTelemetry Spans: ✅/❌
+- Error Handling: ✅/❌
+- Context Propagation: ✅/❌
+
+## Handoff to Next Gate
+- Implementation status: [COMPLETE|PARTIAL]
+- Ready for Gate 1: [YES|no]
+- Environment needs: [list]
+```

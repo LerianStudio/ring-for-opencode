@@ -25,10 +25,10 @@ Cancel the current development cycle.
 3. **Cleanup**: Marks cycle as `cancelled` in state file
 4. **Report**: Generates partial feedback report with completed tasks
 
-## Confirmation Prompt
+## Example
 
 ```
-Cancel Development Cycle?
+⚠️ Cancel Development Cycle?
 
 Cycle ID: 2024-01-15-143000
 Progress: 3/5 tasks completed
@@ -41,17 +41,17 @@ This will:
 [Confirm Cancel] [Keep Running]
 ```
 
-## After Confirmation
+After confirmation:
 
 ```
-Cycle Cancelled
+🛑 Cycle Cancelled
 
 Cycle ID: 2024-01-15-143000
 Status: cancelled
 Completed: 3/5 tasks
 
-State saved to: docs/ring:dev-cycle/current-cycle.json
-Partial report: .ring/dev-team/feedback/cycle-2024-01-15-partial.md
+State saved to: docs/ring:dev-cycle/current-cycle.json (or docs/ring:dev-refactor/current-cycle.json)
+Partial report: docs/dev-team/feedback/cycle-2024-01-15-partial.md
 
 To resume later:
   /ring:dev-cycle --resume
@@ -60,7 +60,7 @@ To resume later:
 ## When No Cycle is Running
 
 ```
-No development cycle to cancel.
+ℹ️ No development cycle to cancel.
 
 Check status with:
   /ring:dev-status
@@ -76,8 +76,6 @@ Check status with:
 
 ---
 
-**Now checking for active cycle to cancel...**
+Now checking for active cycle to cancel...
 
 Read state from: `docs/ring:dev-cycle/current-cycle.json` or `docs/ring:dev-refactor/current-cycle.json`
-
-Pass arguments: $ARGUMENTS

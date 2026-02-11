@@ -39,9 +39,10 @@ Jumping from PRD to TRD without mapping creates:
 
 | Phase | Activities |
 |-------|------------|
-| **1. Feature Analysis** | Load approved PRD (Gate 1); extract all features; identify user journeys; map feature interactions and dependencies |
+| **1. Feature Analysis** | Load approved PRD (Gate 1) and ux-criteria.md; extract all features; identify user journeys; map feature interactions and dependencies |
 | **2. Feature Mapping** | Categorize (Core/Supporting/Enhancement/Integration); group into domains; map user journeys; identify integration points; define boundaries; visualize relationships; prioritize by value |
 | **3. Gate 2 Validation** | All PRD features mapped; categories defined; domains logical; journeys complete; integration points identified; boundaries clear; priorities support phased delivery; no technical details |
+| **4. UX Design** | Dispatch `product-designer` to create detailed user flows (Mermaid) and wireframe specifications (YAML) |
 
 ## Explicit Rules
 
@@ -102,7 +103,44 @@ If you catch yourself writing any of these in a Feature Map, **STOP**:
 | **Integration Points** | All interactions identified; data/event exchange points marked; directional deps clear; circular deps resolved |
 | **Priority & Phasing** | MVP features identified; rationale documented; incremental value delivery; deps don't block MVP |
 
-**Gate Result:** ✅ PASS → TRD | ⚠️ CONDITIONAL (clarify boundaries) | ❌ FAIL (poor groupings/missing features)
+**Gate Result:** ✅ PASS → UX Design → TRD | ⚠️ CONDITIONAL (clarify boundaries) | ❌ FAIL (poor groupings/missing features)
+
+## Phase 4: UX Design (Large Track Only)
+
+**After Feature Map passes Gate 2 validation, dispatch product-designer for UX design:**
+
+```
+Task(
+  subagent_type="ring:product-designer",
+  model="opus",
+  prompt="Create detailed UX design based on PRD, ux-criteria.md, and feature-map.md at docs/pre-dev/{feature}/. Mode: ux-design. Create: user-flows.md with Mermaid diagrams for all user journeys (happy path, error paths, edge cases), wireframes/ directory with YAML specs for all screens, UI state documentation for all interactive elements."
+)
+```
+
+**UX Design Outputs:**
+- `docs/pre-dev/{feature}/user-flows.md` - Detailed user flows with Mermaid diagrams
+- `docs/pre-dev/{feature}/wireframes/` - Directory with YAML wireframe specs per screen
+
+**UX Design Checklist:**
+
+| Check | Required |
+|-------|----------|
+| All user journeys from feature-map have flows | Yes |
+| Happy path documented for each flow | Yes |
+| Error paths documented for each flow | Yes |
+| Edge cases identified and documented | Yes |
+| Wireframe spec for each unique screen | Yes |
+| All UI states defined (loading, error, empty, success) | Yes |
+| Responsive behavior documented | Yes |
+| Accessibility requirements in specs | Yes |
+
+**If UX Design fails:**
+- Missing flow → Add flow for user journey
+- Missing state → Add state definition
+- Incomplete wireframe → Enhance spec with missing components
+- Accessibility gaps → Add a11y requirements
+
+**Note:** This phase is for Large Track only (2+ day features). Small Track skips to TRD directly.
 
 ## Feature Map Template Structure
 
@@ -115,10 +153,82 @@ Output to `docs/pre-dev/{feature-name}/feature-map.md` with these sections:
 | **Domain Groupings** | Per domain: Purpose, Features list, Boundaries (Owns/Consumes/Provides), Integration Points (→/←) |
 | **User Journeys** | Per journey: User Type, Goal, Path (steps with features, integrations, success/failure), Cross-Domain Interactions |
 | **Feature Interaction Map** | ASCII/text diagram with relationships, Dependency Matrix table (Feature, Depends On, Blocks, Optional) |
+| **Backend Integration Points** | (Fullstack only) API dependencies per feature, data flow direction, BFF requirements |
 | **Phasing Strategy** | Per phase: Goal, Timeline, Features, User Value, Success Criteria, Triggers for next phase |
 | **Scope Boundaries** | In Scope, Out of Scope (with rationale), Assumptions, Constraints |
 | **Risk Assessment** | Feature Complexity Risks table, Integration Risks table |
 | **Gate 2 Validation** | Date, validator, checklist, approval, next step |
+
+## Backend Integration Points (Fullstack Features)
+
+**⛔ MANDATORY:** If `topology.scope: fullstack`, this section MUST be included.
+
+### When This Applies
+
+Check research.md frontmatter:
+```yaml
+topology:
+  scope: fullstack  # ← This triggers backend integration documentation
+```
+
+### Backend Integration Documentation
+
+**Add to feature-map.md under `## Backend Integration Points`:**
+
+```markdown
+## Backend Integration Points
+
+### Overview
+- **Topology:** Fullstack
+- **API Pattern:** [direct | bff]
+- **Backend Services:** List of backend services this feature depends on
+
+### Per-Feature API Dependencies
+
+| Feature | Backend Dependency | Data Direction | Notes |
+|---------|-------------------|----------------|-------|
+| F-001: User Dashboard | User Service | Read | Profile data |
+| F-001: User Dashboard | Order Service | Read | Recent orders |
+| F-002: Create Order | Order Service | Write | New order |
+| F-002: Create Order | Inventory Service | Read | Stock check |
+
+### Data Flow Summary
+
+| Frontend Component | → | BFF/API | → | Backend Service |
+|-------------------|---|---------|---|-----------------|
+| DashboardPage | → | /api/dashboard | → | User + Order Services |
+| OrderForm | → | /api/orders | → | Order + Inventory Services |
+
+### BFF Requirements Matrix
+
+| Feature | Needs BFF? | Reason |
+|---------|-----------|--------|
+| F-001 | Yes | Aggregates 2 services |
+| F-002 | Yes | Needs inventory validation |
+| F-003 | No | Single service, simple read |
+```
+
+### Integration Risk Identification
+
+**Document risks related to backend dependencies:**
+
+```markdown
+### Integration Risks
+
+| Feature | Backend Dependency | Risk | Mitigation |
+|---------|-------------------|------|------------|
+| F-001 | Order Service | Service unavailable | Graceful degradation |
+| F-002 | Inventory Service | Stale stock data | Real-time check before submit |
+```
+
+### Rationalization Table for Backend Integration
+
+| Excuse | Reality |
+|--------|---------|
+| "Backend integration is TRD concern" | TRD designs architecture. Feature Map identifies integration POINTS. Different scope. |
+| "We'll figure out APIs during implementation" | Late API discovery causes frontend/backend misalignment. Document early. |
+| "Feature Map is business only" | Integration points are business-level data flows. WHERE data comes from matters. |
+| "API pattern is already in research.md" | Pattern is high-level. Feature Map documents per-feature specifics. |
 
 ## Common Violations
 
@@ -141,12 +251,16 @@ Output to `docs/pre-dev/{feature-name}/feature-map.md` with these sections:
 
 ## Output & After Approval
 
-**Output to:** `docs/pre-dev/{feature-name}/feature-map.md`
+**Outputs:**
+- `docs/pre-dev/{feature-name}/feature-map.md` - Feature relationship map
+- `docs/pre-dev/{feature-name}/user-flows.md` - Detailed user flows (from product-designer, Large Track only)
+- `docs/pre-dev/{feature-name}/wireframes/` - Wireframe specifications (from product-designer, Large Track only)
 
 1. ✅ Lock Feature Map - scope and relationships are now reference
-2. 🎯 Use as input for TRD (next phase)
-3. 🚫 Never add technical architecture retroactively
-4. 📋 Keep business features separate from technical components
+2. ✅ Lock user-flows.md and wireframes/ - UX specs for implementation (Large Track)
+3. 🎯 Use all as input for TRD (next phase)
+4. 🚫 Never add technical architecture retroactively
+5. 📋 Keep business features separate from technical components
 
 ## The Bottom Line
 

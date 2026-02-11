@@ -148,7 +148,7 @@ Before approving code, verify implementation shows evidence of reading:
 ### Stateless Struct Pattern (Go)
 
 ```go
-// BAD: OVER-ENGINEERED: Struct with no fields
+// ❌ OVER-ENGINEERED: Struct with no fields
 type ScopeMatcher struct{}
 
 func (s *ScopeMatcher) Match(scope string, pattern string) bool {
@@ -159,7 +159,7 @@ func (s *ScopeMatcher) Match(scope string, pattern string) bool {
 matcher := &ScopeMatcher{}
 result := matcher.Match(scope, pattern)
 
-// GOOD: SIMPLE: Plain function
+// ✅ SIMPLE: Plain function
 func MatchScope(scope string, pattern string) bool {
     return strings.HasPrefix(scope, pattern)
 }
@@ -291,5 +291,5 @@ All code review agents MUST:
 
 **Integration:**
 ```markdown
-See [shared-patterns/ai-slop-detection.md]({OPENCODE_CONFIG}/skill/shared-patterns/ai-slop-detection.md) for AI slop detection checklist.
+See [shared-patterns/ai-slop-detection.md](../skills/shared-patterns/ai-slop-detection.md) for AI slop detection checklist.
 ```

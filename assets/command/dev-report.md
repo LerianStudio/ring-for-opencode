@@ -30,6 +30,8 @@ View the feedback report from the last development cycle.
 
 ## Report Contents
 
+The feedback report includes:
+
 ### Summary
 - Total tasks processed
 - Success/partial/failed counts
@@ -43,7 +45,7 @@ View the feedback report from the last development cycle.
 - Issues encountered
 
 ### Analysis
-- Gates with most rework
+- Gates with most retrabalho
 - Recurring failure patterns
 - Improvement suggestions
 
@@ -55,34 +57,43 @@ View the feedback report from the last development cycle.
 ## Example Output
 
 ```
-Development Cycle Report
+📊 Development Cycle Report
 
 Date: 2024-01-15
 Duration: 2h 45m
 
-Summary
--------
-Tasks: 5 total
-  SUCCESS: 4 (80%)
-  PARTIAL: 1 (20%)
-  FAILED: 0 (0%)
-
-Assertiveness: 87.4% (target: 85%)
+┌──────────────────────────────────────────┐
+│ Summary                                   │
+├──────────────────────────────────────────┤
+│ Tasks: 5 total                           │
+│   ✅ SUCCESS: 4 (80%)                    │
+│   ⚠️ PARTIAL: 1 (20%)                    │
+│   ❌ FAILED: 0 (0%)                      │
+│                                          │
+│ Assertiveness: 87.4% (target: 85%)       │
+└──────────────────────────────────────────┘
 
 Top Issues:
-1. Gate 3 (testing): 3 tasks needed extra iterations
-2. Gate 4 (review): Security findings in 2 tasks
+1. Gate 5 (testing): 3 tasks needed extra iterations
+2. Gate 6 (review): Security findings in 2 tasks
 
 Recommendations:
-- Skill ring:dev-testing: Add test planning phase
-- Agent ring:backend-*: Reinforce input validation
+→ Skill ring:dev-unit-testing: Add test planning phase
+→ Agent backend-*: Reinforce input validation
 
-Full report: .ring/dev-team/feedback/cycle-2024-01-15.md
+Full report: docs/dev-team/feedback/cycle-2024-01-15.md
 ```
 
 ## Report Location
 
-Reports are saved to: `.ring/dev-team/feedback/cycle-YYYY-MM-DD.md`
+Reports are saved to: `docs/dev-team/feedback/cycle-YYYY-MM-DD.md`
+
+## Available Reports
+
+List all reports:
+```bash
+ls docs/dev-team/feedback/
+```
 
 ## Related Commands
 
@@ -94,8 +105,23 @@ Reports are saved to: `.ring/dev-team/feedback/cycle-YYYY-MM-DD.md`
 
 ---
 
-**Now loading the most recent feedback report...**
+Now loading the most recent feedback report...
 
-Search for reports in: `.ring/dev-team/feedback/cycle-*.md`
+Search for reports in: `docs/dev-team/feedback/cycle-*.md`
 
-Pass arguments: $ARGUMENTS
+---
+
+## MANDATORY: Load Full Skill
+
+**This command MUST load the skill for complete workflow execution.**
+
+```
+Use Skill tool: ring:dev-feedback-loop
+```
+
+The skill contains the complete workflow with:
+- Metrics collection from ring:dev-cycle
+- Pattern analysis
+- Improvement recommendations
+- Report generation format
+- Historical comparison

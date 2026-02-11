@@ -88,7 +88,7 @@ This feedback mechanism is OPTIONAL but recommended for teams wanting to track r
 
 **Where to Store Feedback:**
 - Project-specific: `docs/review-feedback/[date]-[reviewer].md`
-- Or integrated into PR/commit notes
+- Or integrated into PR/ring:commit notes
 
 ---
 
@@ -111,5 +111,5 @@ Reviewers should reference this pattern in their output:
 ---
 
 *Quality feedback for this review can be recorded using the template in
-[reviewer-quality-feedback.md]({OPENCODE_CONFIG}/skill/shared-patterns/reviewer-quality-feedback.md)*
+[reviewer-quality-feedback.md](../skills/shared-patterns/reviewer-quality-feedback.md)*
 ```

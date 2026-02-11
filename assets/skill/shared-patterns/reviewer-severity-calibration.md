@@ -94,8 +94,8 @@ Each reviewer applies these levels to their domain:
 ## Anti-Downgrade Rules
 
 You MUST NOT downgrade severity:
-- Because "it's unlikely to happen" -> CRITICAL stays CRITICAL
-- Because "tests will catch it" -> Tests supplement review, not replace it
-- Because "it's a small codebase" -> Size is irrelevant to severity
-- Because "the author is experienced" -> Experience doesn't waive verification
-- To avoid conflict or be "nice" -> Accuracy is non-negotiable
+- Because "it's unlikely to happen" → CRITICAL stays CRITICAL
+- Because "tests will catch it" → Tests supplement review, not replace it
+- Because "it's a small codebase" → Size is irrelevant to severity
+- Because "the author is experienced" → Experience doesn't waive verification
+- To avoid conflict or be "nice" → Accuracy is non-negotiable

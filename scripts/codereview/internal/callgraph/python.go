@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/logger"
 )
 
 // Resource protection limits for Python analysis.
@@ -243,18 +244,26 @@ func (p *PythonAnalyzer) runPythonHelperCommand(ctx context.Context, pythonBinar
 	output, readErr := io.ReadAll(limitedStdout)
 	if readErr != nil {
 		if cmd.Process != nil {
-			_ = cmd.Process.Kill()
+			if killErr := cmd.Process.Kill(); killErr != nil {
+				logger.Debug("failed to kill process after read error", "error", killErr)
+			}
 		}
-		_ = cmd.Wait()
+		if waitErr := cmd.Wait(); waitErr != nil {
+			logger.Debug("process wait after kill (read error)", "error", waitErr)
+		}
 		return nil, readErr
 	}
 
 	// If we hit the limit, STOP: do not keep reading (risk hang). Kill + Wait to reap.
 	if len(output) > pyMaxOutputSize {
 		if cmd.Process != nil {
-			_ = cmd.Process.Kill()
+			if killErr := cmd.Process.Kill(); killErr != nil {
+				logger.Debug("failed to kill process after output size limit", "error", killErr)
+			}
 		}
-		_ = cmd.Wait()
+		if waitErr := cmd.Wait(); waitErr != nil {
+			logger.Debug("process wait after kill (output size limit)", "error", waitErr)
+		}
 		return nil, &pyHelperOutputTooLargeError{size: len(output), limit: pyMaxOutputSize}
 	}
 

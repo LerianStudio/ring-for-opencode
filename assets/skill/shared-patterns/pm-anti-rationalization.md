@@ -37,3 +37,4 @@ These rationalizations are ALWAYS wrong, regardless of context:
 | "We can figure out details later" | Vague plans cause issues | **Define ALL tasks upfront** |
 | "Team knows the codebase" | Assumptions are dangerous | **Document file paths explicitly** |
 | "Previous project used this approach" | Each project is unique | **Analyze THIS project's needs** |
+

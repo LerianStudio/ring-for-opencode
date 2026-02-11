@@ -23,22 +23,24 @@ This skill runs lint checks on the codebase, analyzes the results to identify in
 These constraints are NON-NEGOTIABLE and must be communicated to ALL dispatched agents:
 
 ```
-DO NOT CREATE AUTOMATED SCRIPTS TO FIX LINT ISSUES
-DO NOT CREATE DOCUMENTATION OR README FILES
-DO NOT ADD COMMENTS EXPLAINING THE FIXES
-FIX EACH ISSUE DIRECTLY BY EDITING THE SOURCE CODE
-MAKE MINIMAL CHANGES - ONLY WHAT'S NEEDED FOR LINT
+┌─────────────────────────────────────────────────────────────────┐
+│  DO NOT CREATE AUTOMATED SCRIPTS TO FIX LINT ISSUES             │
+│  DO NOT CREATE DOCUMENTATION OR README FILES                    │
+│  DO NOT ADD COMMENTS EXPLAINING THE FIXES                       │
+│  FIX EACH ISSUE DIRECTLY BY EDITING THE SOURCE CODE             │
+│  MAKE MINIMAL CHANGES - ONLY WHAT'S NEEDED FOR LINT             │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Phase 1: Lint Execution
 
 ### Step 1.1: Detect Lint Command
 
-Priority: `make lint` -> `npm run lint` -> `yarn lint` -> `pnpm lint` -> `golangci-lint run` -> `cargo clippy` -> `ruff check .` -> `eslint .`
+Priority: `make lint` → `npm run lint` → `yarn lint` → `pnpm lint` → `golangci-lint run` → `cargo clippy` → `ruff check .` → `eslint .`
 
 ### Step 1.2: Run Lint
 
-`<lint_command> 2>&1 | tee /tmp/lint-output.txt && echo "EXIT_CODE: $?"`
+`<lint_command> 2>&1 | tee /tmp/ring:lint-output.txt && echo "EXIT_CODE: $?"`
 
 ### Step 1.3: Parse Results
 
@@ -108,7 +110,7 @@ After all agents complete, run `<lint_command> 2>&1`.
 - Fixes are mechanical (unused vars, formatting, etc.)
 
 ### DO NOT dispatch when:
-- Single file has issues -> fix directly
+- Single file has issues → fix directly
 - Issues require architectural decisions
 - Fixes would cause breaking changes
 
@@ -139,8 +141,10 @@ After all agents complete, run `<lint_command> 2>&1`.
 
 | Skill | When to use |
 |-------|-------------|
+| `ring:dispatching-parallel-agents` | Pattern basis for this skill |
+| `ring:systematic-debugging` | If lint errors indicate deeper issues |
 | `ring:requesting-code-review` | After lint passes, before merge |
 
 ## Example Session
 
-`/ring:lint` -> Run lint -> 16 issues in 3 areas -> Analyze streams (API: 5, Services: 8, Utils: 3) -> Dispatch 3 parallel agents -> All complete -> Re-run lint -> All pass.
+`/ring:lint` → Run lint → 16 issues in 3 areas → Analyze streams (API: 5, Services: 8, Utils: 3) → Dispatch 3 parallel agents → All complete → Re-run lint → All pass.

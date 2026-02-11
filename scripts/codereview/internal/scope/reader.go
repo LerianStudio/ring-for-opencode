@@ -13,9 +13,9 @@ import (
 
 // ScopeJSON represents the scope.json structure from Phase 0.
 type ScopeJSON struct {
-	BaseRef   string        `json:"base_ref"`
+	BaseRef   string        `json:"base_ref" validate:"required_with=HeadRef"`
 	HeadRef   string        `json:"head_ref"`
-	Language  string        `json:"language"` // Primary detected language
+	Language  string        `json:"language" validate:"required"` // Primary detected language
 	Languages []string      `json:"languages,omitempty"`
 	Files     FilesByStatus `json:"files"`
 	Stats     StatsJSON     `json:"stats"`

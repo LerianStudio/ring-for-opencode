@@ -12,6 +12,10 @@ import (
 
 	"github.com/lerianstudio/ring/scripts/codereview/internal/ast"
 	"github.com/lerianstudio/ring/scripts/codereview/internal/fileutil"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/logger"
+	astphase "github.com/lerianstudio/ring/scripts/codereview/internal/phases/ast"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/phases"
+	"github.com/lerianstudio/ring/scripts/codereview/internal/recovery"
 )
 
 var (
@@ -30,6 +34,12 @@ func init() {
 }
 
 func main() {
+	os.Exit(recovery.WrapMain(realMain))
+}
+
+func realMain() {
+	fmt.Fprintln(os.Stderr, "DEPRECATED: ast-extractor is deprecated, use 'scr phase ast' instead")
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "AST Extractor - Extract semantic diffs from source files\n\n")
@@ -49,30 +59,24 @@ func main() {
 	}
 	flag.Parse()
 
+	if *verbose {
+		logger.SetDefault(logger.NewLogger(logger.WithLevel(logger.LevelDebug)))
+	}
+
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		logger.Error("error", "error", err)
 		os.Exit(1)
 	}
 }
 
-// validateScriptsDir validates the scripts directory path for security.
-// It prevents path traversal attacks and verifies the directory exists.
-func validateScriptsDir(scriptsDir string) error {
-	if scriptsDir == "" {
-		return nil
-	}
-	if strings.Contains(scriptsDir, "..") {
-		return fmt.Errorf("path traversal detected in scripts directory")
-	}
-	_, err := fileutil.ValidateDirectory(scriptsDir, "")
-	return err
-}
-
 func run() error {
-	// Determine script directory for TypeScript/Python extractors
+	workDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
+
 	scriptsPath := *scriptDir
 	if scriptsPath == "" {
-		// Default to relative path from executable
 		exe, err := os.Executable()
 		if err == nil {
 			scriptsPath = filepath.Join(filepath.Dir(exe), "..", "..")
@@ -81,48 +85,109 @@ func run() error {
 		}
 	}
 
-	// Validate scripts directory before use (ALWAYS, not just when flag provided)
+	// Batch mode: delegate to phase library
+	if *batchFile != "" {
+		return runBatchMode(workDir, scriptsPath)
+	}
+
+	// Single file mode: keep existing logic for backward compatibility
+	if *beforeFile == "" && *afterFile == "" {
+		return fmt.Errorf("either -before, -after, or -batch must be specified")
+	}
+
+	return runSingleFileMode(workDir, scriptsPath)
+}
+
+func runBatchMode(workDir, scriptsPath string) error {
+	tmpDir, err := os.MkdirTemp("", "ast-extractor-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cfg := &phases.Config{
+		WorkDir:    workDir,
+		OutputDir:  tmpDir,
+		Verbose:    *verbose,
+		ScriptsDir: scriptsPath,
+		Language:   *language,
+		BatchFile:  *batchFile,
+	}
+
+	phase := astphase.New()
+
+	timeoutDuration := *timeout
+	if timeoutDuration == 0 {
+		timeoutDuration = phase.Timeout()
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
+	defer cancel()
+
+	if err := phase.Run(ctx, cfg); err != nil {
+		return err
+	}
+
+	// Read output from phase and print to stdout
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		return fmt.Errorf("failed to read output directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), "-ast.json") {
+			data, err := os.ReadFile(filepath.Join(tmpDir, entry.Name()))
+			if err != nil {
+				return fmt.Errorf("failed to read output file: %w", err)
+			}
+
+			if *outputFmt == "markdown" {
+				var diffs []ast.SemanticDiff
+				if err := json.Unmarshal(data, &diffs); err != nil {
+					return fmt.Errorf("failed to parse AST output: %w", err)
+				}
+				fmt.Print(ast.RenderMultipleMarkdown(diffs))
+			} else {
+				fmt.Println(string(data))
+			}
+		}
+	}
+
+	return nil
+}
+
+func runSingleFileMode(workDir, scriptsPath string) error {
 	if err := validateScriptsDir(scriptsPath); err != nil {
 		return fmt.Errorf("scripts directory validation failed: %w", err)
 	}
 
 	if *verbose {
-		fmt.Fprintf(os.Stderr, "Scripts directory: %s\n", scriptsPath)
+		logger.Debug("scripts directory", "path", scriptsPath)
 	}
 
-	workDir, workErr := os.Getwd()
-	if workErr != nil {
-		return fmt.Errorf("failed to get working directory: %w", workErr)
+	validator, err := ast.NewPathValidator(workDir)
+	if err != nil {
+		return fmt.Errorf("failed to initialize path validator: %w", err)
 	}
 
-	validator, validatorErr := ast.NewPathValidator(workDir)
-	if validatorErr != nil {
-		return fmt.Errorf("failed to initialize path validator: %w", validatorErr)
-	}
+	before := *beforeFile
+	after := *afterFile
 
-	if *beforeFile != "" {
-		validated, err := validator.ValidatePath(*beforeFile)
+	if before != "" {
+		validated, err := validator.ValidatePath(before)
 		if err != nil {
 			return fmt.Errorf("invalid before file path: %w", err)
 		}
-		*beforeFile = validated
+		before = validated
 	}
-	if *afterFile != "" {
-		validated, err := validator.ValidatePath(*afterFile)
+	if after != "" {
+		validated, err := validator.ValidatePath(after)
 		if err != nil {
 			return fmt.Errorf("invalid after file path: %w", err)
 		}
-		*afterFile = validated
-	}
-	if *batchFile != "" {
-		validated, err := validator.ValidatePath(*batchFile)
-		if err != nil {
-			return fmt.Errorf("invalid batch file path: %w", err)
-		}
-		*batchFile = validated
+		after = validated
 	}
 
-	// Create registry with all extractors
 	registry := ast.NewRegistry()
 	registry.Register(ast.NewGoExtractor())
 	registry.Register(ast.NewTypeScriptExtractor(scriptsPath))
@@ -131,23 +196,11 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
-	// Handle batch mode
-	if *batchFile != "" {
-		return processBatch(ctx, registry, *batchFile)
-	}
-
-	// Single file mode
-	if *beforeFile == "" && *afterFile == "" {
-		return fmt.Errorf("either -before, -after, or -batch must be specified")
-	}
-
-	// Determine file path for language detection
-	filePath := *afterFile
+	filePath := after
 	if filePath == "" {
-		filePath = *beforeFile
+		filePath = before
 	}
 
-	// Get extractor
 	var extractor ast.Extractor
 	var extractErr error
 
@@ -162,18 +215,14 @@ func run() error {
 	}
 
 	if *verbose {
-		fmt.Fprintf(os.Stderr, "Using extractor: %s\n", extractor.Language())
-		fmt.Fprintf(os.Stderr, "Before: %s\n", *beforeFile)
-		fmt.Fprintf(os.Stderr, "After: %s\n", *afterFile)
+		logger.Debug("using extractor", "language", extractor.Language(), "before", before, "after", after)
 	}
 
-	// Extract diff
-	diff, err := extractor.ExtractDiff(ctx, *beforeFile, *afterFile)
+	diff, err := extractor.ExtractDiff(ctx, before, after)
 	if err != nil {
 		return fmt.Errorf("extraction failed: %w", err)
 	}
 
-	// Output result
 	return outputDiff(diff)
 }
 
@@ -190,43 +239,15 @@ func getExtractorByLanguage(lang string, scriptsPath string) (ast.Extractor, err
 	}
 }
 
-func processBatch(ctx context.Context, registry *ast.Registry, batchPath string) error {
-	data, err := fileutil.ReadJSONFileWithLimit(batchPath)
-	if err != nil {
-		return fmt.Errorf("failed to read batch file: %w", err)
+func validateScriptsDir(scriptsDir string) error {
+	if scriptsDir == "" {
+		return nil
 	}
-
-	var pairs []ast.FilePair
-	if err := json.Unmarshal(data, &pairs); err != nil {
-		return fmt.Errorf("failed to parse batch file: %w", err)
+	if strings.Contains(scriptsDir, "..") {
+		return fmt.Errorf("path traversal detected in scripts directory")
 	}
-
-	// Ensure pairs is not nil (can be nil for empty JSON array or null)
-	if pairs == nil {
-		pairs = []ast.FilePair{}
-	}
-
-	if *verbose {
-		fmt.Fprintf(os.Stderr, "Processing %d file pairs\n", len(pairs))
-	}
-
-	diffs, err := registry.ExtractAll(ctx, pairs)
-	if err != nil {
-		return fmt.Errorf("batch extraction failed: %w", err)
-	}
-
-	// Output all diffs
-	if *outputFmt == "markdown" {
-		fmt.Print(ast.RenderMultipleMarkdown(diffs))
-	} else {
-		output, err := json.MarshalIndent(diffs, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal output: %w", err)
-		}
-		fmt.Println(string(output))
-	}
-
-	return nil
+	_, err := fileutil.ValidateDirectory(scriptsDir, "")
+	return err
 }
 
 func outputDiff(diff *ast.SemanticDiff) error {

@@ -24,33 +24,33 @@ Displays:
 ## Example Output
 
 ```
-Development Cycle Status
+📊 Development Cycle Status
 
 Cycle ID: 2024-01-15-143000
 Started: 2024-01-15 14:30:00
 Status: in_progress
 
 Tasks:
-  Completed: 2/5
-  In Progress: 1/5 (AUTH-003)
-  Pending: 2/5
+  ✅ Completed: 2/5
+  🔄 In Progress: 1/5 (AUTH-003)
+  ⏳ Pending: 2/5
 
 Current:
-  Task: AUTH-003 - Implement refresh token
-  Gate: 5/6 (ring:dev-testing)
+  Task: AUTH-003 - Implementar refresh token
+  Gate: 3/10 (ring:dev-unit-testing)
   Iterations: 1
 
 Metrics (completed tasks):
   Average Assertiveness: 89%
   Total Duration: 1h 45m
 
-State file: docs/ring:dev-cycle/current-cycle.json
+State file: docs/ring:dev-cycle/current-cycle.json (or docs/ring:dev-refactor/current-cycle.json)
 ```
 
 ## When No Cycle is Running
 
 ```
-No development cycle in progress.
+ℹ️ No development cycle in progress.
 
 Start a new cycle with:
   /ring:dev-cycle docs/tasks/your-tasks.md
@@ -69,6 +69,6 @@ Or resume an interrupted cycle:
 
 ---
 
-**Now checking cycle status...**
+Now checking cycle status...
 
 Read state from: `docs/ring:dev-cycle/current-cycle.json` or `docs/ring:dev-refactor/current-cycle.json`

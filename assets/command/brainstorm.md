@@ -5,45 +5,115 @@ agent: build
 subtask: false
 ---
 
-Transform rough ideas into fully-formed designs through structured questioning and alternative exploration.
+Transform rough ideas into fully-formed designs through structured questioning and alternative exploration. This command initiates an interactive design session using the Socratic method to refine your concept before implementation.
 
-## Process Phases
+## Usage
 
-### Phase 1: Autonomous Recon
-- Inspect repository structure, documentation, and recent commits
-- Form initial understanding of the codebase context
-- Share findings before asking questions
+```
+/ring:brainstorm [topic]
+```
 
-### Phase 2: Understanding
-- Share synthesized understanding for validation
-- Ask targeted questions (max 3) to fill knowledge gaps
-- Gather: purpose, constraints, success criteria
+## Arguments
 
-### Phase 3: Exploration
-- Propose 2-3 different architectural approaches
-- Present trade-offs for each option
-- Recommend preferred approach with rationale
-- Ask user to select approach
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `topic` | Yes | The feature, product, or system you want to design (e.g., "user authentication", "payment processing", "notification system") |
 
-### Phase 4: Design Presentation
-- Present design in 200-300 word sections
-- Cover: architecture, components, data flow, error handling, testing
-- Validate each section incrementally
-- Require explicit approval ("Approved", "Looks good", "Proceed")
+## Examples
 
-### Phase 5: Documentation
-- Write validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
-- Commit the design document
+### Starting a Feature Design
+```
+/ring:brainstorm OAuth2 integration
+```
+Initiates a design session for adding OAuth2 authentication to your application.
 
-### Phase 6: Next Steps (Optional)
-- If implementing: Create detailed implementation plan
-- Break design into bite-sized executable tasks
+### Architectural Decision
+```
+/ring:brainstorm microservices migration strategy
+```
+Explores approaches for migrating from monolith to microservices architecture.
 
-## Guidelines
+### New Product Concept
+```
+/ring:brainstorm real-time collaboration feature
+```
+Refines requirements and design for a collaborative editing feature.
 
-- Maximum 3 questions per phase
-- Explore codebase before asking questions
-- Design must be explicitly approved before proceeding
-- Responses like "interesting" do NOT count as approval
+## Process
 
-$ARGUMENTS
+The brainstorming session follows these phases:
+
+### 1. Autonomous Recon (Prep)
+- Inspects repository structure, documentation, and recent commits
+- Forms initial understanding of the codebase context
+- Shares findings before asking questions
+
+### 2. Understanding (Phase 1)
+- Shares synthesized understanding for validation
+- Asks targeted questions (max 3) to fill knowledge gaps
+- Gathers: purpose, constraints, success criteria
+
+### 3. Exploration (Phase 2)
+- Proposes 2-3 different architectural approaches
+- Presents trade-offs for each option
+- Recommends preferred approach with rationale
+- Uses `AskUserQuestion` for approach selection
+
+### 4. Design Presentation (Phase 3)
+- Presents design in 200-300 word sections
+- Covers: architecture, components, data flow, error handling, testing
+- Validates each section incrementally
+- Requires explicit approval ("Approved", "Looks good", "Proceed")
+
+### 5. Design Documentation (Phase 4)
+- Writes validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Commits the design document to git
+
+### 6. Worktree Setup (Phase 5, if implementing)
+- Sets up isolated git worktree for development
+- Prepares clean workspace for implementation
+
+### 7. Planning Handoff (Phase 6, if implementing)
+- Creates detailed implementation plan using `ring:writing-plans` skill
+- Breaks design into bite-sized executable tasks
+
+## Related Commands/Skills
+
+| Command/Skill | Relationship |
+|---------------|--------------|
+| `/ring:write-plan` | Use after brainstorming when design is complete |
+| `/ring:execute-plan` | Use after planning to implement the design |
+| `ring:writing-plans` | Underlying skill for creating implementation plans |
+
+## Troubleshooting
+
+### "Design not validated"
+The session requires explicit approval from you before proceeding. Responses like "interesting" or "I see" do not count as approval. Say "approved", "looks good", or "proceed" to advance.
+
+### "Too many questions"
+Each phase has a maximum of 3 questions. If you're being asked more, it indicates insufficient autonomous research. Request the agent to explore the codebase first.
+
+### "Skipping phases"
+The process is phase-locked. You cannot skip ahead until the current phase is complete. If you need to go faster, provide explicit approval at each checkpoint.
+
+### When NOT to use this command
+- Design is already complete and validated - use `/ring:write-plan`
+- Have a detailed plan ready to execute - use `/ring:execute-plan`
+- Just need task breakdown from existing design - use `/ring:write-plan`
+
+---
+
+## MANDATORY: Load Full Skill
+
+**This command MUST load the skill for complete workflow execution.**
+
+```
+Use Skill tool: ring:brainstorming
+```
+
+The skill contains the complete workflow with:
+- Socratic questioning framework
+- Design refinement phases
+- Challenge identification
+- Solution exploration
+- Decision documentation

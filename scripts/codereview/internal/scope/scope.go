@@ -1,6 +1,8 @@
 // Package scope provides language detection and file categorization for code review.
 package scope
 
+//go:generate mockgen -source=scope.go -destination=mock_git_client_test.go -package=scope gitClientInterface
+
 import (
 	"fmt"
 	"path/filepath"
@@ -47,16 +49,16 @@ var extensionToLanguage = map[string]Language{
 
 // ScopeResult contains the analysis of changed files.
 type ScopeResult struct {
-	BaseRef          string   `json:"base_ref"`
+	BaseRef          string   `json:"base_ref" validate:"required"`
 	HeadRef          string   `json:"head_ref"`
-	Language         string   `json:"language"`
+	Language         string   `json:"language" validate:"required"`
 	Languages        []string `json:"languages,omitempty"`
 	ModifiedFiles    []string `json:"modified"`
 	AddedFiles       []string `json:"added"`
 	DeletedFiles     []string `json:"deleted"`
-	TotalFiles       int      `json:"total_files"`
-	TotalAdditions   int      `json:"total_additions"`
-	TotalDeletions   int      `json:"total_deletions"`
+	TotalFiles       int      `json:"total_files" validate:"min=0"`
+	TotalAdditions   int      `json:"total_additions" validate:"min=0"`
+	TotalDeletions   int      `json:"total_deletions" validate:"min=0"`
 	PackagesAffected []string `json:"packages_affected"`
 }
 

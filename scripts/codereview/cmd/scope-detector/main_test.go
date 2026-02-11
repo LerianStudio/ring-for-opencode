@@ -77,9 +77,14 @@ func TestMain_Version(t *testing.T) {
 
 	outputStr := string(output)
 
+	// Verify deprecation warning is present
+	if !strings.Contains(outputStr, "DEPRECATED:") {
+		t.Errorf("Expected deprecation warning, got: %s", outputStr)
+	}
+
 	// Verify version output format
-	if !strings.HasPrefix(outputStr, "scope-detector version ") {
-		t.Errorf("Expected version output to start with 'scope-detector version ', got: %s", outputStr)
+	if !strings.Contains(outputStr, "scope-detector version ") {
+		t.Errorf("Expected version output to contain 'scope-detector version ', got: %s", outputStr)
 	}
 
 	// The default version is "dev" when not built with ldflags

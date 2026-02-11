@@ -25,7 +25,7 @@ sequence:
 
 ## Overview
 
-Write comprehensive implementation subtasks assuming the engineer has zero context for our codebase. Each subtask breaks down into 2-5 minute steps following RED-GREEN-REFACTOR. Provide step-by-step guidance to full task completion with exact commands and explicit verification, without pre-writing all code. **DRY. YAGNI. TDD. Frequent commits.**
+Write comprehensive implementation subtasks assuming the engineer has zero context for our codebase. Each subtask breaks down into 2-5 minute steps following RED-GREEN-REFACTOR. Complete code, exact commands, explicit verification. **DRY. YAGNI. TDD. Frequent commits.**
 
 **Save subtasks to:** `docs/pre-dev/{feature-name}/subtasks/T-[task-id]/ST-[task-id]-[number]-[description].md`
 
@@ -35,7 +35,7 @@ Write comprehensive implementation subtasks assuming the engineer has zero conte
 
 Requiring context creates bottlenecks, onboarding friction, and integration failures.
 
-**Subtasks answer**: Exactly what to change, where, and how to verify success, with precise steps and required code snippets.
+**Subtasks answer**: Exactly what to create/modify, with complete code and verification.
 **Subtasks never answer**: Why the system works this way (context is removed).
 
 ## Bite-Sized Step Granularity
@@ -63,9 +63,9 @@ Requiring context creates bottlenecks, onboarding friction, and integration fail
 
 | Step | Content |
 |------|---------|
-| Step 1: Write failing test | Exact test cases and code snippets; full file only when creating a new file |
+| Step 1: Write failing test | Complete test file with imports |
 | Step 2: Run test to verify fail | Command + expected failure output |
-| Step 3: Write minimal implementation | Exact file edits and code snippets; full file only when necessary |
+| Step 3: Write minimal implementation | Complete implementation file |
 | Step 4: Run test to verify pass | Command + expected success output |
 | Step 5: Update exports (if needed) | Exact modification to index files |
 | Step 6: Verify type checking | Command + expected output |
@@ -75,26 +75,55 @@ Requiring context creates bottlenecks, onboarding friction, and integration fail
 ## Explicit Rules
 
 ### ✅ DO Include in Subtasks
-Exact file paths (absolute or from root), precise edit instructions with code snippets, full file contents only when creating a new file or when a full replacement is required, required imports for any provided snippets, step-by-step TDD cycle (numbered), verification commands (copy-pasteable), expected output (exact), rollback procedures (exact commands), prerequisites (what must exist first)
+Exact file paths (absolute or from root), complete file contents (if creating), complete code snippets (if modifying), all imports and dependencies, step-by-step TDD cycle (numbered), verification commands (copy-pasteable), expected output (exact), rollback procedures (exact commands), prerequisites (what must exist first)
 
 ### ❌ NEVER Include in Subtasks
-Placeholders: "...", "TODO", "implement here"; vague instructions: "update the service", "add validation"; assumptions: "assuming setup is done"; context requirements: "you need to understand X first"; incomplete guidance: "add the rest yourself"; missing imports: "import necessary packages"; undefined success: "make sure it works"; no verification: "test it manually"
+Placeholders: "...", "TODO", "implement here"; vague instructions: "update the service", "add validation"; assumptions: "assuming setup is done"; context requirements: "you need to understand X first"; incomplete code: "add the rest yourself"; missing imports: "import necessary packages"; undefined success: "make sure it works"; no verification: "test it manually"
+
+<cannot_skip>
+
+### ⛔ HARD GATE: lib-commons in Go Code Examples
+
+MUST: For Go projects, code examples use lib-commons instead of custom utilities.
+
+See **[shared-patterns/code-example-standards.md](../shared-patterns/code-example-standards.md)** for:
+- Complete list of what lib-commons provides
+- Forbidden patterns (custom loggers, config loaders, HTTP helpers)
+- Correct import patterns with `lib` prefix aliases
+- Anti-rationalization table
+
+**Quick Reference - DO NOT Create Custom:**
+
+| Category | Use lib-commons |
+|----------|-----------------|
+| Logging | `libLog "github.com/LerianStudio/lib-commons/v2/commons/log"` |
+| Config | `libCommons.SetConfigFromEnvVars()` |
+| HTTP | `libHTTP "github.com/LerianStudio/lib-commons/v2/commons/net/http"` |
+| Telemetry | `libOpentelemetry "github.com/LerianStudio/lib-commons/v2/commons/opentelemetry"` |
+| PostgreSQL | `libPostgres "github.com/LerianStudio/lib-commons/v2/commons/postgres"` |
+
+MUST NOT: Create custom logger, config loader, or HTTP helper in subtasks—use lib-commons.
+
+</cannot_skip>
 
 ## Rationalization Table
 
 | Excuse | Reality |
 |--------|---------|
-| "The developer will figure out imports" | Imports are part of the change. Provide them for any snippet you include. |
+| "The developer will figure out imports" | Imports are context. Provide them explicitly. |
 | "TODO comments are fine for simple parts" | TODOs require decisions. Make them now. |
 | "They'll know which service to update" | They won't. Specify the exact file path. |
 | "The verification steps are obvious" | Obvious ≠ documented. Write exact commands. |
 | "Rollback isn't needed for simple changes" | Simple changes fail too. Always provide rollback. |
 | "This needs system understanding" | Then you haven't removed context. Simplify more. |
-| "I'll provide the template, they fill it" | Templates are incomplete. Provide exact edits and snippets. |
+| "I'll provide the template, they fill it" | Templates are incomplete. Provide full code. |
 | "The subtask description explains it" | Descriptions need interpretation. Give exact steps. |
 | "They can look at similar code for reference" | That's context. Make subtask self-contained. |
 | "This is too detailed, we're not that formal" | Detailed = parallelizable = faster. Be detailed. |
 | "Steps are too small, feels like hand-holding" | Small steps = verifiable progress. Stay small. |
+| "Custom logger is simpler for this example" | Examples teach patterns. Teach lib-commons. |
+| "lib-commons import is too verbose" | Verbosity shows correct dependencies. Keep it. |
+| "I'll use lib-commons in the real code" | Subtask is real code. Use lib-commons now. |
 
 ## Red Flags - STOP
 
@@ -109,6 +138,10 @@ If you catch yourself writing any of these in a subtask, **STOP and rewrite**:
 - Steps longer than 5 minutes
 - Context dependencies: "you need to understand X"
 - No TDD cycle in implementation steps
+- Use `libZap.NewLogger()` instead of custom `func NewLogger()` (Go)
+- Use `libCommons.SetConfigFromEnvVars()` instead of scattered `os.Getenv()` (Go)
+- Use `libHTTP` utilities instead of custom `func JSONResponse()` (Go)
+- Check lib-commons first before creating files in `utils/`, `helpers/`, `pkg/common/` (Go)
 
 **When you catch yourself**: Expand the subtask until it's completely self-contained.
 
@@ -117,7 +150,7 @@ If you catch yourself writing any of these in a subtask, **STOP and rewrite**:
 | Category | Requirements |
 |----------|--------------|
 | **Atomicity** | Each step 2-5 minutes; no system architecture understanding required; assignable to anyone |
-| **Completeness** | All steps explicit; all file paths explicit; required code snippets and imports provided; full files only when needed; TDD cycle followed |
+| **Completeness** | All code provided in full; all file paths explicit; all imports listed; all prerequisites documented; TDD cycle followed |
 | **Verifiability** | Test commands copy-pasteable; expected output exact; commands run from project root |
 | **Reversibility** | Rollback commands provided; rollback doesn't require system knowledge |
 
@@ -128,7 +161,7 @@ If you catch yourself writing any of these in a subtask, **STOP and rewrite**:
 | Factor | Points | Criteria |
 |--------|--------|----------|
 | Step Atomicity | 0-30 | All 2-5 minutes: 30, Most sized right: 20, Too large/vague: 10 |
-| Instruction Completeness | 0-30 | No missing steps or decisions: 30, Minor gaps: 15, Significant gaps: 5 |
+| Code Completeness | 0-30 | Zero placeholders: 30, Mostly complete: 15, Significant TODOs: 5 |
 | Context Independence | 0-25 | Anyone can execute: 25, Minor context: 15, Significant knowledge: 5 |
 | TDD Coverage | 0-15 | All RED-GREEN-REFACTOR: 15, Most have tests: 10, Limited: 5 |
 
@@ -139,20 +172,20 @@ If you catch yourself writing any of these in a subtask, **STOP and rewrite**:
 After creating subtasks, offer execution choice:
 
 **"Subtasks complete. Two execution options:**
-1. **Subagent-Driven** - Fresh subagent per subtask, review between, fast iteration → Use `subagent-driven-development`
+1. **Subagent-Driven** - Fresh subagent per subtask, review between, fast iteration → Use `ring:subagent-driven-development`
 2. **Parallel Session** - New session with ring:executing-plans, batch with checkpoints → Use `ring:executing-plans`
 
 **Which approach?"**
 
 ## The Bottom Line
 
-**If you wrote a subtask with "TODO" or "..." or "add necessary imports", delete it and rewrite with explicit steps and exact edits.**
+**If you wrote a subtask with "TODO" or "..." or "add necessary imports", delete it and rewrite with complete code.**
 
-Subtasks are not code dumps. Subtasks are complete, copy-pasteable steps that lead to a finished implementation following TDD.
+Subtasks are not instructions. Subtasks are complete, copy-pasteable implementations following TDD.
 
-- "Add validation" is not a step. [Exact file path + specific validation edits + test] is a step.
-- "Update the service" is not a step. [Exact file path + exact edits + test] is a step.
-- "Import necessary packages" is not a step. [Exact list of imports for your snippet] is a step.
+- "Add validation" is not a step. [Complete validation code with test] is a step.
+- "Update the service" is not a step. [Exact file path + exact code changes with test] is a step.
+- "Import necessary packages" is not a step. [Complete list of imports] is a step.
 
 Every subtask must be completable by someone who:
 - Just joined the team yesterday
