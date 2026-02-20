@@ -22,8 +22,8 @@ cp -r assets/ /your/project/.opencode/
 | Component | Count | Location |
 |-----------|-------|----------|
 | Agents | 17 | `assets/agent/` |
-| Skills | 34 | `assets/skill/` |
-| Commands | 17 | `assets/command/` |
+| Skills | 36 | `assets/skill/` |
+| Commands | 18 | `assets/command/` |
 | Plugin | 1 (unified) | `plugin/` |
 
 ## Architecture
@@ -91,6 +91,7 @@ Ring uses a unified plugin architecture with four core components:
 | `/ring:execute-plan` | Batch task execution |
 | `/ring:write-plan` | Create implementation plans |
 | `/ring:lint` | Run lint checks with auto-fix |
+| `/ring:md-to-html` | Transform a markdown file into a standalone, styled HTML page |
 | `/ring:explore-codebase` | Deep codebase analysis |
 | `/ring:create-handoff` | Session state handoff |
 | `/ring:resume-handoff` | Resume from handoff |
@@ -126,9 +127,9 @@ Features:
 
 ```
 assets/              # Source assets (installed to user's .opencode/)
-├── agent/           # 15 specialized agents
-├── command/         # 15 slash commands
-├── skill/           # 23 skills with workflows
+├── agent/           # 17 specialized agents
+├── command/         # 18 slash commands
+├── skill/           # 36 skills with workflows
 └── *.schema.json    # JSON schemas for validation
 
 plugin/              # Unified plugin system

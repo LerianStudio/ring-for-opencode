@@ -69,7 +69,8 @@
           "dev-refactor",
           "dev-sre",
           "dev-testing",
-          "dev-validation"
+          "dev-validation",
+          "visual-explainer"
         ]
       }
     },
@@ -91,6 +92,7 @@
           "execute-plan",
           "explore-codebase",
           "lint",
+          "md-to-html",
           "resume-handoff",
           "worktree",
           "write-plan"

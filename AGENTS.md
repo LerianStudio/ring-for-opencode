@@ -18,6 +18,7 @@ Skills are loaded on-demand via the native `skill` tool. See `assets/skill/` for
 - `ring:requesting-code-review` - Parallel 5-reviewer code review
 - `ring:executing-plans` - Batch task execution with checkpoints
 - `ring:using-pm-team` - Pre-dev planning workflow (4-gate & 9-gate tracks)
+- `ring:visual-explainer` - Generate visual HTML diagrams and data tables
 
 ### Development Workflow
 1. Use `ring:brainstorming` (or `ring:pre-dev-feature`/`ring:pre-dev-full`) to plan
@@ -65,6 +66,7 @@ Commands are invoked via `/ring:command-name`.
 - `/ring:execute-plan` - Batch task execution
 - `/ring:write-plan` - Create implementation plans
 - `/ring:lint` - Run lint checks with auto-fix
+- `/ring:md-to-html` - Transform a markdown file into a standalone, styled HTML page
 - `/ring:explore-codebase` - Deep codebase analysis
 - `/ring:create-handoff` - Session state handoff
 - `/ring:resume-handoff` - Resume from handoff
