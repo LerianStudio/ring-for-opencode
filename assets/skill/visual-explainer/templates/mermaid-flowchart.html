@@ -341,8 +341,8 @@
 </div>
 
 <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
   import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk/dist/mermaid-layout-elk.esm.min.mjs';
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -378,16 +378,18 @@
     wrap.classList.toggle('is-zoomed', zoom > 1);
   }
 
+  // biome-ignore lint/correctness/noUnusedVariables: called from HTML onclick attributes
   function zoomDiagram(btn, factor) {
     var wrap = btn.closest('.mermaid-wrap');
     var target = wrap.querySelector('.mermaid');
     var current = parseFloat(target.dataset.zoom || '1');
     var next = Math.min(Math.max(current * factor, 0.3), 5);
     target.dataset.zoom = next;
-    target.style.transform = 'scale(' + next + ')';
+    target.style.transform = `scale(${next})`;
     updateZoomState(wrap);
   }
 
+  // biome-ignore lint/correctness/noUnusedVariables: called from HTML onclick attributes
   function resetZoom(btn) {
     var wrap = btn.closest('.mermaid-wrap');
     var target = wrap.querySelector('.mermaid');
@@ -396,9 +398,9 @@
     updateZoomState(wrap);
   }
 
-  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+  document.querySelectorAll('.mermaid-wrap').forEach((wrap) => {
     // Scroll-to-zoom (Ctrl/Cmd + wheel)
-    wrap.addEventListener('wheel', function(e) {
+    wrap.addEventListener('wheel', (e) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       var target = wrap.querySelector('.mermaid');
@@ -406,13 +408,13 @@
       var factor = e.deltaY < 0 ? 1.1 : 0.9;
       var next = Math.min(Math.max(current * factor, 0.3), 5);
       target.dataset.zoom = next;
-      target.style.transform = 'scale(' + next + ')';
+      target.style.transform = `scale(${next})`;
       updateZoomState(wrap);
     }, { passive: false });
 
     // Drag-to-pan
     var startX, startY, scrollL, scrollT;
-    wrap.addEventListener('mousedown', function(e) {
+    wrap.addEventListener('mousedown', (e) => {
       if (e.target.closest('.zoom-controls')) return;
       var target = wrap.querySelector('.mermaid');
       if (parseFloat(target.dataset.zoom || '1') <= 1) return;
@@ -422,12 +424,12 @@
       scrollL = wrap.scrollLeft;
       scrollT = wrap.scrollTop;
     });
-    window.addEventListener('mousemove', function(e) {
+    window.addEventListener('mousemove', (e) => {
       if (!wrap.classList.contains('is-panning')) return;
       wrap.scrollLeft = scrollL - (e.clientX - startX);
       wrap.scrollTop = scrollT - (e.clientY - startY);
     });
-    window.addEventListener('mouseup', function() {
+    window.addEventListener('mouseup', () => {
       wrap.classList.remove('is-panning');
     });
   });

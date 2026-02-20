@@ -18,15 +18,15 @@ export {
   type LoadCommandsResult,
   loadRingCommands,
 } from "./command-loader.js"
-// Skill loader
-export {
-  countRingSkills,
-  loadRingSkills,
-  type SkillConfig,
-} from "./skill-loader.js"
 // Placeholder utilities
 export {
   expandPlaceholders,
   getOpenCodeConfigDir,
   OPENCODE_CONFIG_PLACEHOLDER,
 } from "./placeholder-utils.js"
+// Skill loader
+export {
+  countRingSkills,
+  loadRingSkills,
+  type SkillConfig,
+} from "./skill-loader.js"

@@ -1,5 +1,4 @@
-import * as fs from "fs"
-import * as path from "path"
+import * as fs from "node:fs"
 import * as ts from "typescript"
 
 interface Param {
@@ -270,7 +269,7 @@ function parseFile(filePath: string): ParsedFile {
         }
         // Extract class methods as functions
         if (ts.isMethodDeclaration(member) && member.name) {
-          const methodName = `${node.name!.text}.${member.name.getText(sourceFile)}`
+          const methodName = `${node.name?.text}.${member.name.getText(sourceFile)}`
           const func: ParsedFunc = {
             name: methodName,
             params: [],

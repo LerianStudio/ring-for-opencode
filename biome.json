@@ -38,7 +38,20 @@
       "!**/.opencode/state",
       "!**/*.md",
       "!**/*.json",
-      "!**/*.schema.json"
+      "!**/*.schema.json",
+      "!**/testdata"
     ]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["assets/skill/visual-explainer/templates/**/*.html"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
+    }
+  ]
 }

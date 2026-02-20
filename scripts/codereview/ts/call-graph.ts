@@ -1,5 +1,5 @@
-import * as fs from "fs"
-import * as path from "path"
+import * as fs from "node:fs"
+import * as path from "node:path"
 import * as ts from "typescript"
 
 const IGNORED_CALLEE_TARGETS = new Set<string>([
@@ -596,7 +596,7 @@ function extractCallInfo(
 function extractNewExpressionInfo(
   node: ts.NewExpression,
   sourceFile: ts.SourceFile,
-  typeChecker: ts.TypeChecker,
+  _typeChecker: ts.TypeChecker,
 ): CallSite | null {
   const { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile))
 
@@ -621,7 +621,7 @@ function extractNewExpressionInfo(
 /**
  * Builds a map of function names to their callers.
  */
-function buildCallerMap(functions: ParsedFunction[], files: string[]): Map<string, CallerInfo[]> {
+function buildCallerMap(functions: ParsedFunction[], _files: string[]): Map<string, CallerInfo[]> {
   const callerMap = new Map<string, CallerInfo[]>()
 
   // Initialize map for all functions
