@@ -1,8 +1,8 @@
 ---
 name: "ring:requesting-code-review"
 description: |
-  Gate 4 of development cycle - dispatches 5 specialized reviewers (code, business-logic,
-  security, test, nil-safety) in parallel for comprehensive code review feedback.
+  Gate 4 of development cycle - dispatches 6 specialized reviewers (code, business-logic,
+  security, test, nil-safety, consequences) in parallel for comprehensive code review feedback.
 license: MIT
 compatibility: opencode
 metadata:
@@ -16,15 +16,16 @@ metadata:
 
 ## Overview
 
-Dispatch all five reviewer subagents in **parallel** for fast, comprehensive feedback:
+Dispatch all six reviewer subagents in **parallel** for fast, comprehensive feedback:
 
 1. **ring:code-reviewer** - Architecture, design patterns, code quality
 2. **ring:business-logic-reviewer** - Domain correctness, business rules, edge cases
 3. **ring:security-reviewer** - Vulnerabilities, authentication, OWASP risks
 4. **ring:test-reviewer** - Test quality, coverage, edge cases, anti-patterns
 5. **ring:nil-safety-reviewer** - Nil/null pointer safety for Go and TypeScript
+6. **ring:consequences-reviewer** - Ripple effects, caller chain impact, downstream breakage
 
-**Core principle:** All 5 reviewers run simultaneously in a single message with 5 Task tool calls.
+**Core principle:** All 6 reviewers run simultaneously in a single message with 6 Task tool calls.
 
 ## CRITICAL: Role Clarification
 
@@ -84,7 +85,7 @@ AFTER AUTO-DETECTION, display context:
 │ Files Changed: [count] files                                    │
 │ Commits: [count] commits                                        │
 │                                                                 │
-│ Dispatching 5 reviewers in parallel...                          │
+│ Dispatching 6 reviewers in parallel...                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -100,7 +101,8 @@ review_state = {
     business_logic_reviewer: {verdict: null, issues: []},
     security_reviewer: {verdict: null, issues: []},
     test_reviewer: {verdict: null, issues: []},
-    nil_safety_reviewer: {verdict: null, issues: []}
+    nil_safety_reviewer: {verdict: null, issues: []},
+    consequences_reviewer: {verdict: null, issues: []}
   },
   aggregated_issues: {
     critical: [],
@@ -303,7 +305,7 @@ fi
 
 ### Step 2.5.5: Read Context Files
 
-If pipeline succeeded, read the 5 context files:
+If pipeline succeeded, read the 6 context files:
 
 | Reviewer | Context File |
 |----------|--------------|
@@ -312,6 +314,7 @@ If pipeline succeeded, read the 5 context files:
 | `ring:business-logic-reviewer` | `docs/codereview/context-business-logic-reviewer.md` |
 | `ring:test-reviewer` | `docs/codereview/context-test-reviewer.md` |
 | `ring:nil-safety-reviewer` | `docs/codereview/context-nil-safety-reviewer.md` |
+| `ring:consequences-reviewer` | `docs/codereview/context-consequences-reviewer.md` |
 
 Store each file's content in `preanalysis_state.context[reviewer_name]`.
 
@@ -326,14 +329,15 @@ preanalysis_state = {
     "ring:security-reviewer": null,
     "ring:business-logic-reviewer": null,
     "ring:test-reviewer": null,
-    "ring:nil-safety-reviewer": null
+    "ring:nil-safety-reviewer": null,
+    "ring:consequences-reviewer": null
   }
 }
 ```
 
-## Step 3: Dispatch All 5 Reviewers in Parallel
+## Step 3: Dispatch All 6 Reviewers in Parallel
 
-**⛔ CRITICAL: All 5 reviewers MUST be dispatched in a SINGLE message with 5 Task calls.**
+**⛔ CRITICAL: All 6 reviewers MUST be dispatched in a SINGLE message with 6 Task calls.**
 
 ```yaml
 # Task 1: Code Reviewer
@@ -601,12 +605,63 @@ Task:
 
     ### Nil Risk Trace
     [For each risk: Source → Propagation → Dereference point]
+
+# Task 6: Consequences Reviewer
+Task:
+  subagent_type: "ring:consequences-reviewer"
+  description: "Consequences review for [unit_id]"
+  prompt: |
+    ## Consequences Review Request
+
+    **Unit ID:** [unit_id]
+    **Base SHA:** [base_sha]
+    **Head SHA:** [head_sha]
+
+    ## What Was Implemented
+    [implementation_summary]
+
+    ## Requirements
+    [requirements]
+
+    ## Pre-Analysis Context
+
+    **Static Analysis Results:**
+    The following findings were automatically extracted by the pre-analysis pipeline.
+    Use these to INFORM your review, not REPLACE your analysis.
+
+    ---
+
+    [IF preanalysis_state.context["ring:consequences-reviewer"] exists AND is not empty:]
+    [INSERT the content of preanalysis_state.context["ring:consequences-reviewer"]]
+    [ELSE:]
+    _No pre-analysis context available. Perform standard review based on git diff._
+
+    ---
+
+    ## Your Focus
+    - Caller chain impact analysis
+    - Consumer contract integrity
+    - Shared state consequences
+    - Downstream breakage risks
+    - Ripple effects across modules
+    - Breaking changes to public APIs
+
+    ## Required Output
+    ### VERDICT: PASS / FAIL
+
+    ### Issues Found
+    | Severity | Description | File:Line | Recommendation |
+    |----------|-------------|-----------|----------------|
+    | [CRITICAL/HIGH/MEDIUM/LOW] | [issue] | [location] | [fix] |
+
+    ### Impact Trace
+    [For each risk: Changed code → Affected callers → Downstream impact]
 ```
 
 ## Step 4: Wait for All Reviewers and Parse Output
 
 ```text
-Wait for all 5 Task calls to complete.
+Wait for all 6 Task calls to complete.
 
 For each reviewer:
 1. Extract VERDICT (PASS/FAIL)
@@ -699,9 +754,9 @@ Task:
 ```text
 After fixes committed:
 1. Get new HEAD_SHA
-2. Go back to Step 3 (dispatch all 5 reviewers again)
+2. Go back to Step 3 (dispatch all 6 reviewers again)
 
-⛔ CRITICAL: Always re-run ALL 5 reviewers after fixes.
+⛔ CRITICAL: Always re-run ALL 6 reviewers after fixes.
 Do NOT cherry-pick reviewers.
 ```
 
@@ -823,7 +878,7 @@ coderabbit auth login --token "cr_xxxxxxxxxxxxx"
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│ ✅ ALL 3 RING REVIEWERS PASSED                                  │
+│ ✅ ALL 6 RING REVIEWERS PASSED                                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │ Checking CodeRabbit CLI availability...                         │
@@ -1549,20 +1604,21 @@ LEGACY FLOW (when validation_scope.mode == "task"):
     │                                                                 │
     └─────────────────────────────────────────────────────────────────┘
     
-    Step 7.5.3a: Re-Run All 5 Ring Reviewers
+    Step 7.5.3a: Re-Run All 6 Ring Reviewers
     ─────────────────────────────────────────
     1. Get new HEAD_SHA after CodeRabbit fixes
-    2. Dispatch all 5 reviewers in parallel (per Step 3):
+    2. Dispatch all 6 reviewers in parallel (per Step 3):
        - ring:code-reviewer
        - ring:business-logic-reviewer
        - ring:security-reviewer
        - ring:test-reviewer
        - ring:nil-safety-reviewer
-    3. Wait for all 5 to complete
+       - ring:consequences-reviewer
+    3. Wait for all 6 to complete
     
     Step 7.5.3b: Handle Ring Reviewer Results
     ─────────────────────────────────────────
-    IF all 5 Ring reviewers PASS:
+    IF all 6 Ring reviewers PASS:
       → Proceed to Step 8 (Success Output)
     
     IF any Ring reviewer finds CRITICAL/HIGH/MEDIUM issues:
@@ -1574,7 +1630,7 @@ LEGACY FLOW (when validation_scope.mode == "task"):
       → After fixes committed:
           → Re-run CodeRabbit: `coderabbit --prompt-only`
           → IF CodeRabbit passes:
-              → Re-run all 5 Ring reviewers (loop back to Step 7.5.3a)
+              → Re-run all 6 Ring reviewers (loop back to Step 7.5.3a)
           → IF CodeRabbit finds issues:
               → Fix CodeRabbit issues first, then re-run Ring reviewers
     
@@ -1602,7 +1658,7 @@ IF CodeRabbit found only MEDIUM/LOW issues:
       Format: // TODO(coderabbit): [issue description]
   
   → After TODO comments added (code changed):
-      → Re-run all 5 Ring reviewers (per Step 7.5.3a above)
+      → Re-run all 6 Ring reviewers (per Step 7.5.3a above)
       → IF Ring reviewers PASS: Proceed to Step 8
       → IF Ring reviewers find issues: Fix and re-run (max 2 iterations)
 
@@ -1875,6 +1931,7 @@ Generate skill output:
 | ring:security-reviewer | ✅ PASS | [count] |
 | ring:test-reviewer | ✅ PASS | [count] |
 | ring:nil-safety-reviewer | ✅ PASS | [count] |
+| ring:consequences-reviewer | ✅ PASS | [count] |
 
 ## Low/Cosmetic Issues (TODO/FIXME added)
 [list with file locations]
@@ -1889,7 +1946,7 @@ Generate skill output:
 ## Handoff to Next Gate
 - Review status: COMPLETE
 - All blocking issues: RESOLVED
-- Reviewers passed: 5/5
+- Reviewers passed: 6/6
 - CodeRabbit findings: [status]
 - Ready for Gate 5 (Validation): YES
 ```
@@ -1920,6 +1977,9 @@ Generate skill output:
 | ring:code-reviewer | [PASS/FAIL] |
 | ring:business-logic-reviewer | [PASS/FAIL] |
 | ring:security-reviewer | [PASS/FAIL] |
+| ring:test-reviewer | [PASS/FAIL] |
+| ring:nil-safety-reviewer | [PASS/FAIL] |
+| ring:consequences-reviewer | [PASS/FAIL] |
 
 ## Handoff to Next Gate
 - Review status: FAILED
@@ -1938,8 +1998,8 @@ See [dev-team/skills/shared-patterns/shared-pressure-resistance.md](../shared-pa
 
 | User Says | Your Response |
 |-----------|---------------|
-| "Skip review, code is simple" | "Simple code can have security issues. Dispatching all 5 reviewers." |
-| "Just run ring:code-reviewer" | "All 5 reviewers run in parallel. No time saved by skipping." |
+| "Skip review, code is simple" | "Simple code can have security issues. Dispatching all 6 reviewers." |
+| "Just run ring:code-reviewer" | "All 6 reviewers run in parallel. No time saved by skipping." |
 | "Fix later, merge now" | "Blocking issues (Critical/High/Medium) MUST be fixed before Gate 5." |
 
 ## Anti-Rationalization Table
@@ -1950,11 +2010,11 @@ See [dev-team/skills/shared-patterns/shared-anti-rationalization.md](../shared-p
 
 | Rationalization | Why It's WRONG | Required Action |
 |-----------------|----------------|-----------------|
-| "Run reviewers one at a time" | Sequential = slow. Parallel = 5x faster. | **Dispatch all 5 in single message** |
+| "Run reviewers one at a time" | Sequential = slow. Parallel = 6x faster. | **Dispatch all 6 in single message** |
 | "Skip security for internal code" | Internal code can have vulnerabilities. | **Include ring:security-reviewer** |
 | "Critical issue is false positive" | Prove it with evidence, don't assume. | **Fix or provide evidence** |
 | "Low issues don't need TODO" | TODOs ensure issues aren't forgotten. | **Add TODO comments** |
-| "4 of 5 reviewers passed" | Gate 4 requires ALL 5. 4/5 = 0/5. | **Re-run ALL 5 reviewers** |
+| "5 of 6 reviewers passed" | Gate 4 requires ALL 6. 5/6 = 0/6. | **Re-run ALL 6 reviewers** |
 | "MEDIUM is not blocking" | MEDIUM = MUST FIX. Same as CRITICAL/HIGH. | **Fix MEDIUM issues NOW** |
 
 ---
@@ -1984,6 +2044,7 @@ See [dev-team/skills/shared-patterns/shared-anti-rationalization.md](../shared-p
 | ring:security-reviewer | ✅/❌ |
 | ring:test-reviewer | ✅/❌ |
 | ring:nil-safety-reviewer | ✅/❌ |
+| ring:consequences-reviewer | ✅/❌ |
 
 ## CodeRabbit External Review (MANDATORY if installed, Optional to install)
 **Status:** [PASS|ISSUES_FOUND|SKIPPED|NOT_INSTALLED]

@@ -40,7 +40,7 @@ Ring is a **unified plugin** for OpenCode that extends the AI assistant with spe
 ├─────────────────────────────────────────────────────────────────┤
 │                    Component Layer (.opencode/)                  │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────┐  │
-│  │  17 Agents │  │ 36 Skills  │  │18 Commands │  │ Patterns │  │
+│  │  18 Agents │  │ 36 Skills  │  │18 Commands │  │ Patterns │  │
 │  └────────────┘  └────────────┘  └────────────┘  └──────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -469,7 +469,7 @@ OpenCode starts session
          ▼
 RingUnifiedPlugin.config() called
          │
-         ├─→ loadRingAgents() → 17 agents injected
+         ├─→ loadRingAgents() → 18 agents injected
          ├─→ loadRingSkills() → 36 skills injected
          └─→ loadRingCommands() → 18 commands injected
          │
@@ -513,13 +513,14 @@ Agent "build" orchestrates workflow
 User types /ring:codereview
          │
          ▼
-Command dispatches 5 reviewers in parallel
+Command dispatches 6 reviewers in parallel
          │
          ├─→ @ring:code-reviewer
          ├─→ @ring:business-logic-reviewer
          ├─→ @ring:security-reviewer
          ├─→ @ring:test-reviewer
-         └─→ @ring:nil-safety-reviewer
+         ├─→ @ring:nil-safety-reviewer
+         └─→ @ring:consequences-reviewer
          │
          ▼
 Results aggregated into unified report

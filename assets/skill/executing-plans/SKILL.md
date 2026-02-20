@@ -137,10 +137,10 @@ User saying "don't wait", "don't ask questions", or "just execute" does NOT skip
 For each task: Check context switch (Step 2.5) → Mark in_progress → Dispatch to agent with working_directory → Follow plan steps exactly → Run verifications → Mark completed
 
 ### Step 4: Run Code Review
-**After each batch, REQUIRED:** Use ring:requesting-code-review (all 5 reviewers in parallel)
+**After each batch, REQUIRED:** Use ring:requesting-code-review (all 6 reviewers in parallel)
 
 **Handle by severity:**
-- **Critical/High/Medium:** Fix immediately (no TODO) → re-run all 5 reviewers → repeat until resolved
+- **Critical/High/Medium:** Fix immediately (no TODO) → re-run all 6 reviewers → repeat until resolved
 - **Low:** Add `TODO(review): [Issue] ([reviewer], [date], Low)`
 - **Cosmetic:** Add `FIXME(nitpick): [Issue] ([reviewer], [date], Cosmetic)`
 
@@ -163,7 +163,7 @@ Use finishing-a-development-branch to verify tests, present options, execute cho
 
 - **MANDATORY:** `AskUserQuestion` for execution mode - NO exceptions
 - Use `*` agents over `general-purpose` when available
-- Run code review after each batch (all 5 parallel)
+- Run code review after each batch (all 6 parallel)
 - Fix Critical/High/Medium immediately (no TODO)
 - Low → TODO, Cosmetic → FIXME
 - Stop when blocked, don't guess

@@ -28,6 +28,7 @@ This document defines the mandatory separation of responsibilities between revie
 │ • ring:security-reviewer     │          │ • ring:frontend-engineer            │
 │ • ring:test-reviewer         │          │ • ring:devops-engineer              │
 │ • ring:nil-safety-reviewer   │          │ • ring:qa-analyst                   │
+│ • ring:consequences-reviewer │          │                                 │
 │                             │          │                                 │
 │ OUTPUT: Report              │          │ OUTPUT: Code changes            │
 │ ACTION: NONE                │          │ ACTION: Edit, Create, Delete    │

@@ -21,7 +21,7 @@ cp -r assets/ /your/project/.opencode/
 
 | Component | Count | Location |
 |-----------|-------|----------|
-| Agents | 17 | `assets/agent/` |
+| Agents | 18 | `assets/agent/` |
 | Skills | 36 | `assets/skill/` |
 | Commands | 18 | `assets/command/` |
 | Plugin | 1 (unified) | `plugin/` |
@@ -39,7 +39,7 @@ Ring uses a unified plugin architecture with four core components:
 | Skill | Description |
 |-------|-------------|
 | `ring:test-driven-development` | RED-GREEN-REFACTOR methodology |
-| `ring:requesting-code-review` | Parallel 5-reviewer system |
+| `ring:requesting-code-review` | Parallel 6-reviewer system |
 | `ring:executing-plans` | Batch task execution with checkpoints |
 | `ring:brainstorming` | Socratic design refinement |
 | `ring:exploring-codebase` | Deep codebase analysis |
@@ -58,6 +58,7 @@ Ring uses a unified plugin architecture with four core components:
 | `@ring:security-reviewer` | Security vulnerabilities, OWASP Top 10 |
 | `@ring:test-reviewer` | Test quality, coverage, anti-patterns |
 | `@ring:nil-safety-reviewer` | Nil/null pointer safety |
+| `@ring:consequences-reviewer` | Ripple effects, caller chain impact, downstream breakage |
 
 ### Specialists
 
@@ -86,7 +87,7 @@ Ring uses a unified plugin architecture with four core components:
 | Command | Description |
 |---------|-------------|
 | `/ring:commit` | Atomic git commits with intelligent grouping |
-| `/ring:codereview` | Parallel 5-reviewer code review |
+| `/ring:codereview` | Parallel 6-reviewer code review |
 | `/ring:brainstorm` | Socratic design refinement |
 | `/ring:execute-plan` | Batch task execution |
 | `/ring:write-plan` | Create implementation plans |
@@ -127,7 +128,7 @@ Features:
 
 ```
 assets/              # Source assets (installed to user's .opencode/)
-├── agent/           # 17 specialized agents
+├── agent/           # 18 specialized agents
 ├── command/         # 18 slash commands
 ├── skill/           # 36 skills with workflows
 └── *.schema.json    # JSON schemas for validation

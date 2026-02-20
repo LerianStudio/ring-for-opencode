@@ -222,7 +222,7 @@ You are breaking ORCHESTRATOR. Use an agent instead.
 
 **Built-in:** `Explore` (navigation), `Plan` (implementation), `general-purpose` (research).
 
-**Ring:** `ring:code-reviewer`, `ring:business-logic-reviewer`, `ring:security-reviewer`, `ring:write-plan`.
+**Ring:** `ring:code-reviewer`, `ring:business-logic-reviewer`, `ring:security-reviewer`, `ring:test-reviewer`, `ring:nil-safety-reviewer`, `ring:consequences-reviewer`, `ring:write-plan`.
 
 ### Decision: Which Agent?
 
@@ -231,7 +231,7 @@ You are breaking ORCHESTRATOR. Use an agent instead.
 | Explore/find/understand/search | **Explore** |
 | Plan implementation, break down features | **Plan** |
 | Multi-step research, complex investigation | **general-purpose** |
-| Code review | ALL THREE in parallel (code, business-logic, security reviewers) |
+| Code review | ALL SIX in parallel (code, business-logic, security, test, nil-safety, consequences reviewers) |
 | Implementation plan document | ring:write-plan |
 | User explicitly said "read [file]" | Direct (ONLY exception) |
 

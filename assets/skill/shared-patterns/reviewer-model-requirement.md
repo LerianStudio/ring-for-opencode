@@ -1,7 +1,7 @@
 # Reviewer Model Requirement
 
 **Version:** 1.0.0
-**Applies to:** All reviewer agents (ring:code-reviewer, ring:business-logic-reviewer, ring:security-reviewer, ring:test-reviewer, ring:nil-safety-reviewer)
+**Applies to:** All reviewer agents (ring:code-reviewer, ring:business-logic-reviewer, ring:security-reviewer, ring:test-reviewer, ring:nil-safety-reviewer, ring:consequences-reviewer)
 
 ---
 
@@ -46,6 +46,7 @@ Task(subagent_type="ring:{reviewer-name}", model="opus", ...)  # REQUIRED
 - **Security Reviewer:** Requires deep vulnerability detection, OWASP Top 10 coverage, and cryptographic evaluation
 - **Test Reviewer:** Requires analyzing test quality, coverage gaps, and test anti-patterns
 - **Nil-Safety Reviewer:** Requires tracing nil propagation through call chains and identifying risk patterns
+- **Consequences Reviewer:** Requires tracing caller chains, consumer contracts, shared state, and implicit dependencies across the codebase
 
 ---
 

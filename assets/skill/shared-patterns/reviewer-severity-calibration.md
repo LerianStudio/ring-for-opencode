@@ -89,6 +89,14 @@ Each reviewer applies these levels to their domain:
 | MEDIUM | Nil risk with partial guards, could be improved |
 | LOW | Style issues, redundant nil checks, defensive improvements |
 
+### Consequences (ring:consequences-reviewer)
+| Severity | Examples |
+|----------|----------|
+| CRITICAL | Breaking change to public API, caller chain crash, data corruption in consumers |
+| HIGH | Implicit contract violation, shared state inconsistency, missing migration path |
+| MEDIUM | Partial ripple effect coverage, undocumented behavioral change |
+| LOW | Minor downstream impact, cosmetic consumer updates needed |
+
 ---
 
 ## Anti-Downgrade Rules

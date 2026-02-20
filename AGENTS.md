@@ -15,7 +15,7 @@ Skills are loaded on-demand via the native `skill` tool. See `assets/skill/` for
 ### Core Skills
 - `ring:test-driven-development` - RED-GREEN-REFACTOR methodology
 - `ring:brainstorming` - Socratic design refinement
-- `ring:requesting-code-review` - Parallel 5-reviewer code review
+- `ring:requesting-code-review` - Parallel 6-reviewer code review
 - `ring:executing-plans` - Batch task execution with checkpoints
 - `ring:using-pm-team` - Pre-dev planning workflow (4-gate & 9-gate tracks)
 - `ring:visual-explainer` - Generate visual HTML diagrams and data tables
@@ -40,6 +40,7 @@ Agents are invoked via @ mention or automatically by primary agents.
 - `@ring:security-reviewer` - Security vulnerabilities, data protection
 - `@ring:test-reviewer` - Test quality, coverage, anti-patterns
 - `@ring:nil-safety-reviewer` - Nil/null pointer safety (Go and TypeScript)
+- `@ring:consequences-reviewer` - Ripple effects, caller chain impact, downstream breakage
 
 ### Specialist Agents (subagents)
 - `@ring:codebase-explorer` - Codebase exploration and analysis
@@ -59,7 +60,7 @@ Agents are invoked via @ mention or automatically by primary agents.
 Commands are invoked via `/ring:command-name`.
 
 - `/ring:commit` - Atomic commits with intelligent grouping
-- `/ring:codereview` - Dispatch all 5 reviewers in parallel
+- `/ring:codereview` - Dispatch all 6 reviewers in parallel
 - `/ring:brainstorm` - Start design refinement session
 - `/ring:pre-dev-feature` - Plan small feature (<2 days, 4 gates)
 - `/ring:pre-dev-full` - Plan large feature (≥2 days, 9 gates)
@@ -80,7 +81,7 @@ Commands are invoked via `/ring:command-name`.
 ## Compliance Rules
 
 - TDD: Test must fail before implementation
-- Review: All 5 reviewers must pass
+- Review: All 6 reviewers must pass
 - Commits: Use conventional commit format
 
 ## Key Principles

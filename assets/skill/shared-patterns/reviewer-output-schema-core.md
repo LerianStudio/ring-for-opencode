@@ -150,6 +150,7 @@ Each reviewer adds domain-specific sections AFTER the core sections:
 | **ring:security-reviewer** | OWASP Top 10 Coverage, Compliance Status |
 | **ring:test-reviewer** | Test Coverage Analysis, Edge Cases Not Tested, Test Anti-Patterns |
 | **ring:nil-safety-reviewer** | Nil Risk Trace, High-Risk Patterns, Recommended Guards |
+| **ring:consequences-reviewer** | Impact Trace, Affected Callers, Breaking Changes |
 
 ---
 

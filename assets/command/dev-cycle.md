@@ -87,7 +87,7 @@ CANNOT override CRITICAL gates. Provides custom context to agents.
 
 CRITICAL: Gates 3, 4, 5 enforce mandatory requirements:
 - MUST enforce 85% coverage (Gate 3 Testing)
-- MUST dispatch all 5 reviewers (Gate 4 Review)
+- MUST dispatch all 6 reviewers (Gate 4 Review)
 - MUST require user approval (Gate 5 Validation)
 
 **Conflict Detection:**
@@ -149,7 +149,7 @@ jq '.custom_prompt' docs/ring:dev-cycle/current-cycle.json  # View
 | 5 | `ring:dev-property-testing` | Property-based tests for invariants |
 | 6 | `ring:dev-integration-testing` | Integration tests with testcontainers |
 | 7 | `ring:dev-chaos-testing` | Chaos tests for failure scenarios |
-| 8 | `ring:requesting-code-review` | Code review (5 reviewers in parallel) |
+| 8 | `ring:requesting-code-review` | Code review (6 reviewers in parallel) |
 | 9 | `ring:dev-validation` | Final validation |
 
 **Note:** Tasks are loaded at initialization, not as a separate gate. All 10 gates are MANDATORY.
@@ -231,6 +231,6 @@ See skill `ring:dev-cycle` for full details. Key rules:
 
 - **all 6 gates execute** - Checkpoints affect pauses, not gates
 - **Gates execute in order** - 0 → 1 → 2 → 3 → 4 → 5
-- **Gate 4 requires all 5 reviewers** - 4/5 = FAIL
+- **Gate 4 requires all 6 reviewers** - 5/6 = FAIL
 - **Coverage threshold** - 85% minimum, no exceptions
 - **State persisted** - Can resume with `--resume` after any interruption

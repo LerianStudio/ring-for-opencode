@@ -329,7 +329,7 @@ Agents to analyze (if executed, not null):
   - devops: ring:devops-engineer
   - ring:sre: ring:sre
   - testing: ring:qa-analyst
-  - review: ring:code-reviewer, ring:business-logic-reviewer, ring:security-reviewer
+  - review: ring:code-reviewer, ring:business-logic-reviewer, ring:security-reviewer, ring:test-reviewer, ring:nil-safety-reviewer, ring:consequences-reviewer
 ```
 
 ### 3.2 Dispatch Prompt Quality Reviewer

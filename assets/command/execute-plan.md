@@ -66,12 +66,13 @@ You will be asked to choose between:
   - Reliability: `ring:sre`
 
 ### Step 4: Run Code Review
-After each batch, all 5 reviewers run in parallel:
+After each batch, all 6 reviewers run in parallel:
 - `ring:code-reviewer` - Architecture and patterns
 - `ring:business-logic-reviewer` - Requirements and edge cases
 - `ring:security-reviewer` - OWASP and auth validation
 - `ring:test-reviewer` - Test coverage and quality
 - `ring:nil-safety-reviewer` - Null/nil safety patterns
+- `ring:consequences-reviewer` - Ripple effects and downstream breakage
 
 **Issue handling by severity:**
 | Severity | Action |

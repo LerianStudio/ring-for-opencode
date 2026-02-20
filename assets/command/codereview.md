@@ -1,10 +1,10 @@
 ---
 name: "ring:codereview"
-description: Run comprehensive parallel code review with all 5 specialized reviewers
+description: Run comprehensive parallel code review with all 6 specialized reviewers
 agent: build
 subtask: false
 ---
-Dispatch all 5 specialized code reviewers in parallel, collect their reports, and provide a consolidated analysis.
+Dispatch all 6 specialized code reviewers in parallel, collect their reports, and provide a consolidated analysis.
 
 ## Review Process
 
@@ -27,20 +27,21 @@ fi
 $BINARY --base=main --head=HEAD --output=docs/codereview --verbose
 ```
 
-**Output:** Creates 5 context files in `docs/codereview/`:
+**Output:** Creates 6 context files in `docs/codereview/`:
 - `context-code-reviewer.md`
 - `context-security-reviewer.md`
 - `context-business-logic-reviewer.md`
 - `context-test-reviewer.md`
 - `context-nil-safety-reviewer.md`
+- `context-consequences-reviewer.md`
 
 ⚠️ **DEGRADED MODE:** If binary not found, display warning and continue. Reviewers will work without pre-analysis context.
 
 ---
 
-### Step 1: Dispatch All Five Reviewers in Parallel
+### Step 1: Dispatch All Six Reviewers in Parallel
 
-**CRITICAL: Use a single message with 5 Task tool calls to launch all reviewers simultaneously.**
+**CRITICAL: Use a single message with 6 Task tool calls to launch all reviewers simultaneously.**
 
 Gather the required context first:
 - WHAT_WAS_IMPLEMENTED: Summary of changes made
@@ -50,7 +51,7 @@ Gather the required context first:
 - DESCRIPTION: Additional context about the changes
 - LANGUAGES: Go, TypeScript, or both (for ring:nil-safety-reviewer)
 
-Then dispatch all 5 reviewers:
+Then dispatch all 6 reviewers:
 
 ```
 Task tool #1 (ring:code-reviewer):
@@ -94,9 +95,17 @@ Task tool #5 (ring:nil-safety-reviewer):
     [Same parameters as above]
     LANGUAGES: [Go|TypeScript|both]
     Focus: Nil sources, propagation paths, missing guards.
+
+Task tool #6 (ring:consequences-reviewer):
+  subagent_type: "ring:consequences-reviewer"
+  model: "opus"
+  description: "Review ripple effects and downstream consequences"
+  prompt: |
+    [Same parameters as above]
+    Focus: Caller chain impact, consumer contract integrity, shared state consequences, downstream breakage.
 ```
 
-**Wait for all five reviewers to complete their work.**
+**Wait for all six reviewers to complete their work.**
 
 ### Step 2: Collect and Aggregate Reports
 
@@ -106,7 +115,7 @@ Each reviewer returns:
 - **Issues:** Categorized by severity (Critical/High/Medium/Low/Cosmetic)
 - **Recommendations:** Specific actionable feedback
 
-Consolidate all issues by severity across all five reviewers.
+Consolidate all issues by severity across all six reviewers.
 
 ### Conflict Resolution
 
@@ -230,6 +239,21 @@ Return a consolidated report in this format:
 
 ---
 
+## Consequences Review (Ripple Effect)
+
+**Verdict:** [PASS | FAIL]
+**Issues:** Critical [N], High [N], Medium [N], Low [N]
+
+### Critical Issues
+[Broken callers, violated contracts, downstream breakage]
+
+### High Issues
+[At-risk callers, stale consumer assumptions]
+
+[Medium/Low issues summary]
+
+---
+
 ## Consolidated Action Items
 
 **MUST FIX (Critical):**
@@ -248,14 +272,14 @@ Return a consolidated report in this format:
 ## Next Steps
 
 **If PASS:**
-- ✅ All 5 reviewers passed
+- ✅ All 6 reviewers passed
 - ✅ Ready for next step (merge/production)
 
 **If FAIL:**
 - ❌ Fix all Critical/High/Medium issues immediately
 - ❌ Add TODO(review) comments for Low issues in code
 - ❌ Add FIXME(nitpick) comments for Cosmetic/Nitpick issues in code
-- ❌ Re-run all 5 reviewers in parallel after fixes
+- ❌ Re-run all 6 reviewers in parallel after fixes
 
 **If NEEDS_DISCUSSION:**
 - 💬 [Specific discussion points across gates]
@@ -273,7 +297,7 @@ These issues MUST be fixed immediately:
 
 Recommended approach:
 - Dispatch fix subagent to address all Critical/High/Medium issues
-- After fixes complete, re-run all 5 reviewers in parallel to verify
+- After fixes complete, re-run all 6 reviewers in parallel to verify
 ```
 
 **Low Issues:**
@@ -302,7 +326,7 @@ If any reviewer fails during execution (timeout, error, incomplete output):
 
 ### Single Reviewer Failure
 
-1. **Do NOT aggregate partial results** - Wait for all 5 reviewers
+1. **Do NOT aggregate partial results** - Wait for all 6 reviewers
 2. **Retry the failed reviewer once:**
    ```
    Task tool (retry failed reviewer):
@@ -344,7 +368,7 @@ Signs that a reviewer produced incomplete output:
 ## Remember
 
 1. **All reviewers are independent** - They run in parallel, not sequentially
-2. **Dispatch all 5 reviewers in parallel** - Single message, 5 Task calls
+2. **Dispatch all 6 reviewers in parallel** - Single message, 6 Task calls
 3. **Specify model: "opus"** - All reviewers need opus for comprehensive analysis
 4. **Wait for all to complete** - Don't aggregate until all reports received
 5. **Consolidate findings by severity** - Group all issues across reviewers
@@ -364,7 +388,7 @@ Use Skill tool: ring:requesting-code-review
 
 The skill contains the complete workflow with:
 - Auto-detection of git context (base_sha, head_sha, files)
-- Parallel dispatch of all 5 reviewers in single message
+- Parallel dispatch of all 6 reviewers in single message
 - Issue aggregation by severity
 - Iteration loop with fix dispatching
 - Escalation handling at max iterations
