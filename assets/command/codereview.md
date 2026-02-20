@@ -4,7 +4,6 @@ description: Run comprehensive parallel code review with all 5 specialized revie
 agent: build
 subtask: false
 ---
-
 Dispatch all 5 specialized code reviewers in parallel, collect their reports, and provide a consolidated analysis.
 
 ## Review Process
@@ -24,11 +23,9 @@ if [ ! -x "$BINARY" ]; then
   BINARY="./default/lib/codereview/bin/${OS}_${ARCH}/run-all"
 fi
 
-# Run help to understand best way to feed files to the pre-analysis app
-$BINARY --help
+# Run pipeline
+$BINARY --base=main --head=HEAD --output=docs/codereview --verbose
 ```
-
-**Scope:** Review what the user desires (unstaged files, HEAD x other branch, etc) and chooses the right params. If in doubt, ask the user.
 
 **Output:** Creates 5 context files in `docs/codereview/`:
 - `context-code-reviewer.md`

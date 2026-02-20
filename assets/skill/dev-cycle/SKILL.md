@@ -151,7 +151,7 @@ Between "WebFetch standards" and "Task(agent)" there MUST be "Skill(sub-skill)".
 5. Update state                   ← Record results
 ```
 
-### Custom Prompt Injection (--prompt flag)
+### Custom Instructions (Optional Second Argument)
 
 **Validation:** See [shared-patterns/custom-prompt-validation.md](../shared-patterns/custom-prompt-validation.md) for max length (500 chars), sanitization rules, gate protection, and conflict handling.
 
@@ -537,7 +537,7 @@ State is persisted to `{state_path}` (either `docs/ring:dev-cycle/current-cycle.
     "type": "string",
     "optional": true,
     "max_length": 500,
-    "description": "User-provided context for agents (from --prompt flag). Max 500 characters. Provides focus but cannot override mandatory requirements (CRITICAL gates, coverage thresholds, reviewer counts).",
+    "description": "User-provided context for agents (from second positional argument). Max 500 characters. Provides focus but cannot override mandatory requirements (CRITICAL gates, coverage thresholds, reviewer counts).",
     "validation": "Max 500 chars (truncated with warning if exceeded); whitespace trimmed; control chars stripped (except newlines). Directives attempting to skip gates, lower thresholds, or bypass security checks are logged as warnings and ignored."
   },
   "status": "in_progress|completed|failed|paused|paused_for_approval|paused_for_testing|paused_for_task_approval|paused_for_integration_testing",
@@ -1547,13 +1547,15 @@ STOP EXECUTION. Do not proceed to Step 1.
 
 ## Step 1: Initialize or Resume
 
-### Prompt-Only Mode (no task file)
+### Instructions-Only Mode (no task file)
 
-**Input:** `--prompt "..."` without a task file path
+**Input:** Custom instructions string without a task file path
 
-When `--prompt` is provided without a tasks file, ring:dev-cycle generates tasks internally:
+**Example:** `/ring:dev-cycle "Implement multi-tenant support with organization_id in all entities"`
 
-1. **Detect prompt-only mode:** No task file argument AND `--prompt` provided
+When custom instructions are provided without a tasks file, ring:dev-cycle generates tasks internally:
+
+1. **Detect instructions-only mode:** No task file argument AND instructions string provided
 2. **Analyze prompt:** Extract intent, scope, and requirements from the prompt
 3. **Explore codebase:** Dispatch `ring:codebase-explorer` to understand project structure
 4. **Generate tasks:** Create task structure internally based on prompt + codebase analysis
@@ -1597,14 +1599,18 @@ Task tool:
 
 ### New Cycle (with task file path)
 
-**Input:** `path/to/tasks.md` or `path/to/pre-dev/{feature}/` with optional `--prompt "..."`
+**Input:** `path/to/tasks.md` or `path/to/pre-dev/{feature}/` with optional second argument for custom instructions
+
+**Examples:**
+- `/ring:dev-cycle tasks.md`
+- `/ring:dev-cycle tasks.md "Focus on error handling"`
 
 1. **Detect input:** File → Load directly | Directory → Load tasks.md + discover subtasks/
 2. **Build order:** Read tasks, check for subtasks (ST-XXX-01, 02...) or TDD autonomous mode
 3. **Determine state path:**
    - if source_file contains `docs/ring:dev-refactor/` → `state_path = "docs/ring:dev-refactor/current-cycle.json"`, `cycle_type = "refactor"`
    - else → `state_path = "docs/ring:dev-cycle/current-cycle.json"`, `cycle_type = "feature"`
-4. **Capture and validate custom prompt:** If `--prompt "..."` provided:
+4. **Capture and validate custom instructions:** If second argument provided:
    - **Sanitize input:** Trim whitespace, strip control characters (except newlines)
    - **Store validated value:** Set `custom_prompt` field (empty string if not provided)
    - **Note:** Directives attempting to skip gates are logged as warnings and ignored at execution time
@@ -1854,7 +1860,7 @@ implementation_input = {
 
 ### Required Artifacts
 
-**See [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:devops-engineer → devops.md" for all required sections.**
+**See [shared-patterns/standards-coverage-table.md](../shared-patterns/standards-coverage-table.md) → "ring:devops-engineer → devops.md" for all required sections.**
 
 **Key artifacts from devops.md:**
 - Containers (Dockerfile + Docker Compose)
@@ -3041,3 +3047,61 @@ Base metrics per [shared-patterns/output-execution-report.md](../shared-patterns
 
 ### State File Location
 `docs/ring:dev-cycle/current-cycle.json` (feature) or `docs/ring:dev-refactor/current-cycle.json` (refactor)
+
+---
+
+## Frontend Handoff
+
+When the backend dev cycle completes, it produces a handoff file for the frontend dev cycle (`ring:dev-cycle-frontend`). This enables the frontend cycle to verify E2E tests exercise the correct API endpoints and use the right type contracts.
+
+### Handoff File
+
+**Path:** `docs/ring:dev-cycle/handoff-frontend.json`
+
+**Generated:** Automatically after Gate 9 (Validation) passes for all tasks.
+
+### Handoff Schema
+
+```json
+{
+  "cycle_id": "string",
+  "generated_at": "ISO-8601",
+  "endpoints": [
+    {
+      "method": "GET|POST|PUT|PATCH|DELETE",
+      "path": "/api/v1/resource",
+      "request_schema": "object or null",
+      "response_schema": "object",
+      "status_codes": [200, 400, 404, 500],
+      "auth_required": true
+    }
+  ],
+  "types_exported": [
+    {
+      "name": "ResourceDTO",
+      "file": "src/types/resource.ts",
+      "fields": ["id", "name", "createdAt"]
+    }
+  ],
+  "contracts": [
+    {
+      "consumer": "frontend",
+      "provider": "backend",
+      "endpoint": "/api/v1/resource",
+      "format": "JSON"
+    }
+  ]
+}
+```
+
+### How Frontend Cycle Uses the Handoff
+
+| Frontend Gate | Handoff Usage |
+|---------------|---------------|
+| Gate 0 (Implementation) | Import types from `types_exported`, call `endpoints` |
+| Gate 5 (E2E Testing) | Verify all `endpoints` are exercised in E2E tests |
+| Gate 6 (Performance) | Measure response times against `endpoints` |
+
+### When No Handoff Exists
+
+If `docs/ring:dev-cycle/handoff-frontend.json` does not exist, the frontend cycle proceeds without it. The frontend engineer defines API contracts inline based on `PROJECT_RULES.md` or user input. This is common for greenfield frontend-only projects.

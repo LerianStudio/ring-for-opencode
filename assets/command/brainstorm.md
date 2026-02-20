@@ -4,7 +4,6 @@ description: Interactive design refinement using Socratic method
 agent: build
 subtask: false
 ---
-
 Transform rough ideas into fully-formed designs through structured questioning and alternative exploration. This command initiates an interactive design session using the Socratic method to refine your concept before implementation.
 
 ## Usage

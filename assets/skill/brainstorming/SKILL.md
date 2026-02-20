@@ -159,7 +159,7 @@ When your human partner confirms (any affirmative response):
 
 **Use AskUserQuestion when:**
 - You need your partner to make a judgement call among real alternatives
-- You have a recommendation and can explain why it's your preference
+- You have a recommendation and can explain why it’s your preference
 - Prioritization is ambiguous and cannot be inferred from existing materials
 
 **Best practices:**
@@ -206,7 +206,7 @@ Apply ALL patterns when using this skill.
 
 | Principle | Application |
 |-----------|-------------|
-| **One question at a time** | Phase 1: Single targeted question only for gaps you can't close yourself |
+| **One question at a time** | Phase 1: Single targeted question only for gaps you can’t close yourself |
 | **Structured choices** | Use AskUserQuestion tool for 2-4 options with trade-offs |
 | **YAGNI ruthlessly** | Remove unnecessary features from all designs |
 | **Explore alternatives** | Always propose 2-3 approaches before settling |

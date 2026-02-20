@@ -211,6 +211,16 @@ Relevance: [why this matters for the new feature]
 
 **file:line references are mandatory** - vague references are not useful.
 
+---
+
+## Standards Compliance Report
+
+**N/A for research agents.**
+
+**Rationale:** The ring:repo-research-analyst agent produces research findings, not implementation output. Standards compliance verification is performed by engineer agents that consume research output.
+
+---
+
 ## Output Format
 
 Your response MUST include these sections:

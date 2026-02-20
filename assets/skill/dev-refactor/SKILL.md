@@ -271,13 +271,7 @@ Do not complete without outputting full report in the format above.
 
 ### Anti-Rationalization Table for Step 3
 
-| Rationalization | Why It's WRONG | Required Action |
-|-----------------|----------------|-----------------|
-| "I'll use Bash find/ls to quickly explore" | Bash cannot analyze patterns, just lists files. ring:codebase-explorer provides architectural analysis. | **Use Task with subagent_type="ring:codebase-explorer"** |
-| "The Explore agent is faster" | "Explore" subagent_type ≠ "ring:codebase-explorer". Different agents. | **Use exact string: "ring:codebase-explorer"** |
-| "I already know the structure from find output" | Knowing file paths ≠ understanding architecture. Agent provides analysis. | **Use Task with subagent_type="ring:codebase-explorer"** |
-| "This is a small codebase, Bash is enough" | Size is irrelevant. The agent provides standardized output format required by Step 4. | **Use Task with subagent_type="ring:codebase-explorer"** |
-| "I'll explore manually then dispatch agents" | Manual exploration skips the codebase-report.md artifact required for Step 4 gate. | **Use Task with subagent_type="ring:codebase-explorer"** |
+See [shared-patterns/anti-rationalization-codebase-explorer.md](../shared-patterns/anti-rationalization-codebase-explorer.md) for the ring:codebase-explorer dispatch anti-rationalization table.
 
 ### FORBIDDEN Actions for Step 3
 
@@ -1061,3 +1055,5 @@ artifacts:
 traceability:
   Ring Standard → Agent Report → FINDING-XXX → REFACTOR-XXX → Implementation
 ```
+
+

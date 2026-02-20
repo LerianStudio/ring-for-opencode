@@ -4,7 +4,6 @@ description: Complete 9-gate pre-dev workflow for large features (≥2 days)
 agent: plan
 subtask: false
 ---
-
 I'm running the **Full Track** pre-development workflow (10 gates) for your feature.
 
 **This track is for features that have ANY of:**
@@ -36,7 +35,7 @@ Use the AskUserQuestion tool to gather:
 
 **After getting the feature name, determine the project topology.**
 
-See [shared-patterns/topology-discovery.md](../skills/shared-patterns/topology-discovery.md) for full pattern.
+See [shared-patterns/topology-discovery.md](../skill/shared-patterns/topology-discovery.md) for full pattern.
 
 **Question 1.1:** "What is the scope of this feature?"
 - Header: "Scope"

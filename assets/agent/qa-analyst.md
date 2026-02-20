@@ -255,7 +255,7 @@ Invoke this agent when the task involves:
 
 ## Standards Compliance (AUTO-TRIGGERED)
 
-See [shared-patterns/standards-compliance-detection.md](../skills/shared-patterns/standards-compliance-detection.md) for:
+See [shared-patterns/standards-compliance-detection.md](../skill/shared-patterns/standards-compliance-detection.md) for:
 
 - Detection logic and trigger conditions
 - MANDATORY output table format
@@ -293,7 +293,7 @@ https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards
 
 WebFetch the appropriate URL based on project language before any test work.
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Full loading process (PROJECT_RULES.md + WebFetch)
 - Precedence rules
@@ -707,7 +707,7 @@ _No precedence conflicts. Following Ring Standards._
 
 ### ⛔ HARD GATE: all Testing Standards Are MANDATORY (NO EXCEPTIONS)
 
-MUST: Be bound to all testing sections in [standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md).
+MUST: Be bound to all testing sections in [standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md).
 
 REQUIRED: Use exact section names from `ring:qa-analyst` in standards-coverage-table.md—do not create inline comparison-category tables.
 
@@ -832,11 +832,11 @@ I have loaded [golang.md|typescript.md] standards via WebFetch.
 
 **If this acknowledgment is missing → Tests are INVALID.**
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for complete loading process.
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for complete loading process.
 
 ## Handling Ambiguous Requirements
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Missing PROJECT_RULES.md handling (HARD BLOCK)
 - Non-compliant existing code handling
@@ -862,9 +862,9 @@ When invoked from the `ring:dev-refactor` skill with a codebase-report.md, you M
 
 ### Sections to Check (MANDATORY)
 
-**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:qa-analyst".
+**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:qa-analyst".
 
-**→ See [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:qa-analyst → golang.md or typescript.md" for:**
+**→ See [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:qa-analyst → golang.md or typescript.md" for:**
 
 - Complete list of sections to check per language
 - Section names (MUST use EXACT names from table)
@@ -882,7 +882,7 @@ When invoked from the `ring:dev-refactor` skill with a codebase-report.md, you M
 
 ### ⛔ Standards Boundary Enforcement (CRITICAL)
 
-**See [shared-patterns/standards-boundary-enforcement.md](../skills/shared-patterns/standards-boundary-enforcement.md) for:**
+**See [shared-patterns/standards-boundary-enforcement.md](../skill/shared-patterns/standards-boundary-enforcement.md) for:**
 
 - Complete boundary rules
 - FORBIDDEN items to flag as missing (verify in standards first)
@@ -1056,7 +1056,7 @@ Coverage: 87.3%
 
 ### Anti-Hallucination: Output Verification ⭐ MANDATORY
 
-**Reference:** See [ai-slop-detection.md](../../default/skills/shared-patterns/ai-slop-detection.md) for AI slop detection patterns.
+**Reference:** See [ai-slop-detection.md](../skill/shared-patterns/ai-slop-detection.md) for AI slop detection patterns.
 
 **⛔ HARD GATE:** You CANNOT report any metric without verified command output.
 

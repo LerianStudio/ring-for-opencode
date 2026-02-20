@@ -4,7 +4,6 @@ description: Create isolated git worktree with interactive setup
 agent: build
 subtask: false
 ---
-
 I'm using the ring:using-git-worktrees skill to set up an isolated workspace for your feature work.
 
 **This command will:**

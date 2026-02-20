@@ -291,5 +291,5 @@ All code review agents MUST:
 
 **Integration:**
 ```markdown
-See [shared-patterns/ai-slop-detection.md](../skills/shared-patterns/ai-slop-detection.md) for AI slop detection checklist.
+See [shared-patterns/ai-slop-detection.md](./ai-slop-detection.md) for AI slop detection checklist.
 ```

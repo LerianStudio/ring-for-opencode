@@ -142,7 +142,7 @@ Invoke this agent when the task involves:
 
 ## Standards Compliance (AUTO-TRIGGERED)
 
-See [shared-patterns/standards-compliance-detection.md](../skills/shared-patterns/standards-compliance-detection.md) for:
+See [shared-patterns/standards-compliance-detection.md](../skill/shared-patterns/standards-compliance-detection.md) for:
 
 - Detection logic and trigger conditions
 - MANDATORY output table format
@@ -181,7 +181,7 @@ https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards
 
 MUST WebFetch the index.md above first, then load required modules based on task type.
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Full loading process (PROJECT_RULES.md + WebFetch)
 - Precedence rules
@@ -194,7 +194,7 @@ See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-
 
 ### ⛔ HARD GATE: all Standards Are MANDATORY (NO EXCEPTIONS)
 
-MUST: Be bound to all sections in [standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md).
+MUST: Be bound to all sections in [standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md).
 
 | Rule                                | Enforcement                                                                     |
 | ----------------------------------- | ------------------------------------------------------------------------------- |
@@ -342,7 +342,7 @@ I have loaded golang.md standards via WebFetch.
 
 **If this acknowledgment is missing → Implementation is INVALID.**
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for complete loading process.
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for complete loading process.
 
 ## MANDATORY Instrumentation (NON-NEGOTIABLE)
 
@@ -475,7 +475,7 @@ I have loaded golang.md standards via WebFetch.
 
 **⛔ If this acknowledgment is missing for new projects → Implementation is INVALID and REJECTED.**
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for complete loading process.
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for complete loading process.
 
 ## Application Type Detection (MANDATORY)
 
@@ -636,7 +636,7 @@ ok      myapp/auth    0.015s
 
 ## Handling Ambiguous Requirements
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Missing PROJECT_RULES.md handling (HARD BLOCK)
 - Non-compliant existing code handling
@@ -816,9 +816,9 @@ The Standards Compliance section exists to:
 
 ### Sections to Check (MANDATORY)
 
-**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:backend-engineer-golang → golang.md".
+**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:backend-engineer-golang → golang.md".
 
-**→ See [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:backend-engineer-golang → golang.md" for:**
+**→ See [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:backend-engineer-golang → golang.md" for:**
 
 - Complete list of sections to check (47 sections)
 - Section names (MUST use EXACT names from table)
@@ -828,7 +828,7 @@ The Standards Compliance section exists to:
 - Anti-rationalization rules
 - Completeness verification checklist
 
-**FOUR-FILE UPDATE RULE (for maintainers):** When a new section is added to golang standards, all four must be updated in the same commit: (1) the standards file, (2) its Table of Contents, (3) [standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) for this agent, (4) this agent doc if section count or references change.
+**FOUR-FILE UPDATE RULE (for maintainers):** When a new section is added to golang standards, all four must be updated in the same commit: (1) the standards file, (2) its Table of Contents, (3) [standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) for this agent, (4) this agent doc if section count or references change.
 
 **⛔ SECTION NAMES ARE not NEGOTIABLE:**
 
@@ -839,7 +839,7 @@ The Standards Compliance section exists to:
 
 ### ⛔ Standards Boundary Enforcement (CRITICAL)
 
-**See [shared-patterns/standards-boundary-enforcement.md](../skills/shared-patterns/standards-boundary-enforcement.md) for complete boundaries.**
+**See [shared-patterns/standards-boundary-enforcement.md](../skill/shared-patterns/standards-boundary-enforcement.md) for complete boundaries.**
 
 **⛔ HARD GATE:** Check only items listed in `golang.md → Frameworks & Libraries` table.
 
@@ -880,7 +880,7 @@ The Standards Compliance section exists to:
 
 ### Pre-Submission Self-Check ⭐ MANDATORY
 
-**Reference:** See [ai-slop-detection.md](../../default/skills/shared-patterns/ai-slop-detection.md) for complete detection patterns.
+**Reference:** See [ai-slop-detection.md](../skill/shared-patterns/ai-slop-detection.md) for complete detection patterns.
 
 **⛔ HARD GATE:** Before marking implementation complete, you MUST verify all of the following. This check is NON-NEGOTIABLE.
 

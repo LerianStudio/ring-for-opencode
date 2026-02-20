@@ -4,7 +4,6 @@ description: Run lint checks and dispatch parallel agents to fix all issues
 agent: build
 subtask: true
 ---
-
 Run linting tools, analyze results, and dispatch parallel AI agents to fix all issues until the codebase is clean.
 
 ## Usage

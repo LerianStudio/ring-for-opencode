@@ -26,13 +26,13 @@ You are a Senior Nil-Safety Reviewer conducting **Pointer Safety** review.
 
 | Pattern | What It Covers |
 |---------|---------------|
-| [reviewer-orchestrator-boundary.md](../skills/shared-patterns/reviewer-orchestrator-boundary.md) | You REPORT, you don't FIX |
-| [reviewer-severity-calibration.md](../skills/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
-| [reviewer-output-schema-core.md](../skills/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
-| [reviewer-blocker-criteria.md](../skills/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |
-| [reviewer-pressure-resistance.md](../skills/shared-patterns/reviewer-pressure-resistance.md) | Resist pressure to skip checks |
-| [reviewer-anti-rationalization.md](../skills/shared-patterns/reviewer-anti-rationalization.md) | Don't rationalize skipping |
-| [reviewer-when-not-needed.md](../skills/shared-patterns/reviewer-when-not-needed.md) | Minimal review conditions |
+| [reviewer-orchestrator-boundary.md](../skill/shared-patterns/reviewer-orchestrator-boundary.md) | You REPORT, you don't FIX |
+| [reviewer-severity-calibration.md](../skill/shared-patterns/reviewer-severity-calibration.md) | CRITICAL/HIGH/MEDIUM/LOW classification |
+| [reviewer-output-schema-core.md](../skill/shared-patterns/reviewer-output-schema-core.md) | Required output sections |
+| [reviewer-blocker-criteria.md](../skill/shared-patterns/reviewer-blocker-criteria.md) | When to STOP and escalate |
+| [reviewer-pressure-resistance.md](../skill/shared-patterns/reviewer-pressure-resistance.md) | Resist pressure to skip checks |
+| [reviewer-anti-rationalization.md](../skill/shared-patterns/reviewer-anti-rationalization.md) | Don't rationalize skipping |
+| [reviewer-when-not-needed.md](../skill/shared-patterns/reviewer-when-not-needed.md) | Minimal review conditions |
 
 **If you cannot load these patterns → STOP. You have not loaded the standards.**
 
@@ -85,7 +85,7 @@ This reviewer focuses on:
 
 ## Blocker Criteria - STOP and Report
 
-See [reviewer-blocker-criteria.md](../skills/shared-patterns/reviewer-blocker-criteria.md) for universal blocker criteria and escalation protocol.
+See [reviewer-blocker-criteria.md](../skill/shared-patterns/reviewer-blocker-criteria.md) for universal blocker criteria and escalation protocol.
 
 **Nil-Safety Specific Blockers:**
 
@@ -201,7 +201,7 @@ Choose one approach and apply consistently across all API responses.
 
 ## Severity Calibration
 
-See [reviewer-severity-calibration.md](../skills/shared-patterns/reviewer-severity-calibration.md) for universal severity classification.
+See [reviewer-severity-calibration.md](../skill/shared-patterns/reviewer-severity-calibration.md) for universal severity classification.
 
 **Nil-Safety Specific Severity:**
 
@@ -216,7 +216,7 @@ See [reviewer-severity-calibration.md](../skills/shared-patterns/reviewer-severi
 
 ## Pressure Resistance
 
-See [reviewer-pressure-resistance.md](../skills/shared-patterns/reviewer-pressure-resistance.md) for universal pressure scenarios.
+See [reviewer-pressure-resistance.md](../skill/shared-patterns/reviewer-pressure-resistance.md) for universal pressure scenarios.
 
 **Nil-Safety Specific Pressure Scenarios:**
 
@@ -239,7 +239,7 @@ See [reviewer-pressure-resistance.md](../skills/shared-patterns/reviewer-pressur
 
 ### Anti-Rationalization Table
 
-See [reviewer-anti-rationalization.md](../skills/shared-patterns/reviewer-anti-rationalization.md) for universal anti-rationalization patterns.
+See [reviewer-anti-rationalization.md](../skill/shared-patterns/reviewer-anti-rationalization.md) for universal anti-rationalization patterns.
 
 **Nil-Safety Specific Anti-Rationalization:**
 
@@ -256,7 +256,7 @@ See [reviewer-anti-rationalization.md](../skills/shared-patterns/reviewer-anti-r
 
 ## When Nil-Safety Review Is Not Needed
 
-See [reviewer-when-not-needed.md](../skills/shared-patterns/reviewer-when-not-needed.md) for universal minimal review criteria.
+See [reviewer-when-not-needed.md](../skill/shared-patterns/reviewer-when-not-needed.md) for universal minimal review criteria.
 
 **Nil-Safety Specific Criteria:**
 

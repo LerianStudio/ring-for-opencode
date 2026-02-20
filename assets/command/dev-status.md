@@ -3,7 +3,6 @@ name: "ring:dev-status"
 description: Check the status of the current development cycle
 agent: build
 ---
-
 Check the status of the current development cycle.
 
 ## Usage

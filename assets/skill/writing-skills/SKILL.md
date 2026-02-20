@@ -16,7 +16,7 @@ metadata:
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-**Personal skills live in agent-specific directories (e.g., `~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex, or custom agent directories)**
+**Personal skills live in agent-specific directories (e.g., `~/.claude/skills` for Claude Code, `~/.codex/skills` for Codex, or custom agent directories)** 
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
@@ -97,6 +97,7 @@ API docs, syntax guides, tool documentation (office docs)
 name: ring:Skill-Name-With-Hyphens
 description: Use when [triggers/symptoms] - [what it does, third person]
 ---
+
 # Skill Name
 ## Overview (1-2 sentences), ## When to Use (symptoms, NOT to use)
 ## Core Pattern (before/after code), ## Quick Reference (table for scanning)
@@ -137,8 +138,8 @@ Use words agents would search for:
 ### 3. Descriptive Naming
 
 **Use active voice, verb-first:**
-- `creating-skills` not `skill-creation`
-- `testing-skills-with-subagents` not `subagent-skill-testing`
+- ✅ `creating-skills` not `skill-creation`
+- ✅ `testing-skills-with-subagents` not `subagent-skill-testing`
 
 ### 4. Token Efficiency (Critical)
 
@@ -157,10 +158,10 @@ Use words agents would search for:
 **Verify:** `wc -w skills/path/SKILL.md` (check against word counts above)
 
 **Name by what you DO or core insight:**
-- `ring:condition-based-waiting` > `async-test-helpers`
-- `using-skills` not `skill-usage`
-- `flatten-with-flags` > `data-structure-refactoring`
-- `ring:root-cause-tracing` > `debugging-techniques`
+- ✅ `ring:condition-based-waiting` > `async-test-helpers`
+- ✅ `using-skills` not `skill-usage`
+- ✅ `flatten-with-flags` > `data-structure-refactoring`
+- ✅ `ring:root-cause-tracing` > `debugging-techniques`
 
 **Gerunds (-ing) work well for processes:**
 - `creating-skills`, `testing-skills`, `debugging-with-logs`
@@ -171,10 +172,10 @@ Use words agents would search for:
 **When writing documentation that references other skills:**
 
 Use skill name only, with explicit requirement markers:
-- Good: `**REQUIRED SUB-SKILL:** Use ring:test-driven-development`
-- Good: `**REQUIRED BACKGROUND:** You MUST understand systematic-debugging`
-- Bad: `See skills/testing/test-driven-development` (unclear if required)
-- Bad: `@skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
+- ✅ Good: `**REQUIRED SUB-SKILL:** Use ring:test-driven-development`
+- ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand systematic-debugging`
+- ❌ Bad: `See skills/testing/test-driven-development` (unclear if required)
+- ❌ Bad: `@skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
 
 **Why no @ links:** `@` syntax force-loads files immediately, consuming 200k+ context before you need them.
 

@@ -4,7 +4,6 @@ description: Organize and create atomic git commits with intelligent change grou
 agent: build
 subtask: false
 ---
-
 Analyze changes, group them into coherent atomic commits, and create signed commits following repository conventions. This command transforms a messy working directory into a clean, logical commit history.
 
 ## Smart Commit Organization

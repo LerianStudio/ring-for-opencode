@@ -4,7 +4,6 @@ description: Autonomous two-phase codebase exploration with adaptive agents
 agent: build
 subtask: true
 ---
-
 Autonomously discover codebase structure, then explore deeply with adaptive agents. The system first learns the architecture, then dispatches targeted explorers based on what it found.
 
 ## Usage

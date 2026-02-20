@@ -86,7 +86,7 @@ Invoke this agent when the task involves:
 
 ## Standards Compliance (AUTO-TRIGGERED)
 
-See [shared-patterns/standards-compliance-detection.md](../skills/shared-patterns/standards-compliance-detection.md) for:
+See [shared-patterns/standards-compliance-detection.md](../skill/shared-patterns/standards-compliance-detection.md) for:
 
 - Detection logic and trigger conditions
 - MANDATORY output table format
@@ -123,7 +123,7 @@ https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards
 
 MUST WebFetch the URL above before any implementation work.
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Full loading process (PROJECT_RULES.md + WebFetch)
 - Precedence rules
@@ -168,32 +168,36 @@ When `api-design.md` exists:
 
 ```bash
 # Check package.json for sindarian-ui
-grep -q "@anthropic/sindarian-ui" package.json && echo "sindarian-ui" || echo "vanilla"
+grep -q "@lerianstudio/sindarian-ui" package.json && echo "sindarian-ui" || echo "fallback-only"
 ```
+
+### UI Library Strategy
+
+**`@lerianstudio/sindarian-ui@1.0.0-beta.34`** is the PRIMARY UI library. For components not available in sindarian-ui, use shadcn/ui + Radix as FALLBACK (placed in project `components/ui/`). Both coexist.
 
 ### Mode Indicators
 
-| Mode             | Detection Pattern                                     | Implementation Approach                              |
-| ---------------- | ----------------------------------------------------- | ---------------------------------------------------- |
-| **sindarian-ui** | `@anthropic/sindarian-ui` in dependencies             | Use sindarian-ui FormField, Input, Select components |
-| **Vanilla**      | No sindarian packages, has `shadcn/ui` or `@radix-ui` | Use shadcn/ui Form or custom Radix wrappers          |
+| Mode             | Detection Pattern                                      | Implementation Approach                              |
+| ---------------- | ------------------------------------------------------ | ---------------------------------------------------- |
+| **sindarian-ui** (primary) | `@lerianstudio/sindarian-ui` in dependencies  | Use sindarian-ui FormField, Input, Select components |
+| **shadcn/radix** (fallback) | Components not available in sindarian-ui      | Place in project `components/ui/` using shadcn/ui + Radix primitives |
 
 ### Mode-Specific Requirements
 
-| Aspect      | sindarian-ui Mode                     | Vanilla Mode                          |
-| ----------- | ------------------------------------- | ------------------------------------- |
-| Form Fields | Import from `@anthropic/sindarian-ui` | Import from `@/components/ui/form`    |
-| Tooltips    | Use `FormTooltip` component           | Use Radix Tooltip with custom wrapper |
-| Page Layout | Use `PageRoot`, `PageView`            | Use custom layout components          |
-| Toast       | Use sindarian toast                   | Use sonner or shadcn toast            |
+| Aspect      | sindarian-ui (primary)                    | shadcn/radix (fallback)               |
+| ----------- | ----------------------------------------- | ------------------------------------- |
+| Form Fields | Import from `@lerianstudio/sindarian-ui`  | Import from `@/components/ui/form`    |
+| Tooltips    | Use `FormTooltip` component               | Use Radix Tooltip with custom wrapper |
+| Page Layout | Use `PageRoot`, `PageView`                | Use custom layout components          |
+| Toast       | Use sindarian toast                       | Use sonner or shadcn toast            |
 
 ### Anti-Rationalization
 
-| Rationalization                      | Why It's WRONG                    | Required Action                  |
-| ------------------------------------ | --------------------------------- | -------------------------------- |
-| "I'll use sindarian-ui, it's better" | Project may not have it installed | **Detect mode first**            |
-| "Both modes are similar enough"      | Import paths and APIs differ      | **Follow detected mode exactly** |
-| "I'll mix components from both"      | Inconsistent UX and bundle bloat  | **Use one mode only**            |
+| Rationalization                                 | Why It's WRONG                                          | Required Action                            |
+| ----------------------------------------------- | ------------------------------------------------------- | ------------------------------------------ |
+| "I'll use sindarian-ui, it's better"            | Project may not have it installed                        | **Detect mode first**                      |
+| "Both modes are similar enough"                 | Import paths and APIs differ                             | **Follow detected mode exactly**           |
+| "I'll recreate a sindarian-ui component in shadcn" | Duplicating available components causes drift and bloat | **Check sindarian-ui first, fallback only if missing** |
 
 ---
 
@@ -201,7 +205,7 @@ grep -q "@anthropic/sindarian-ui" package.json && echo "sindarian-ui" || echo "v
 
 ### ⛔ HARD GATE: All Standards Are MANDATORY (NO EXCEPTIONS)
 
-**You are bound to all sections in [standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md).**
+**You are bound to all sections in [standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md).**
 
 All sections are mandatory—see standards-coverage-table.md for the authoritative list.
 
@@ -317,7 +321,7 @@ I have loaded frontend.md standards via WebFetch.
 
 **If this acknowledgment is missing → Implementation is INVALID.**
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for complete loading process.
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for complete loading process.
 
 ## Project Standards Integration
 
@@ -778,7 +782,7 @@ You have deep expertise in accessibility. Apply WCAG 2.1 AA standards.
 
 ## Handling Ambiguous Requirements
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Missing PROJECT_RULES.md handling (HARD BLOCK)
 - Non-compliant existing code handling
@@ -883,7 +887,7 @@ When reporting issues in existing code:
 
 **If you catch yourself thinking any of these, STOP:**
 
-See [shared-patterns/shared-anti-rationalization.md](../skills/shared-patterns/shared-anti-rationalization.md) for universal agent anti-rationalizations.
+See [shared-patterns/shared-anti-rationalization.md](../skill/shared-patterns/shared-anti-rationalization.md) for universal agent anti-rationalizations.
 
 | Rationalization                                 | Why It's WRONG                                                               | Required Action                           |
 | ----------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------- |
@@ -920,7 +924,7 @@ See [shared-patterns/shared-anti-rationalization.md](../skills/shared-patterns/s
 | "Just use `<Input />` directly, no need for wrappers" | "Cannot proceed. Field abstraction layer is MANDATORY. I'll use InputField wrapper with proper label, error, and accessibility."   |
 | "Skip the ErrorBoundary, the app won't crash"         | "Cannot proceed. ErrorBoundary is MANDATORY for production apps. I'll implement proper error handling with recovery."              |
 | "We don't need pagination hooks, just use state"      | "Cannot proceed. Pagination hooks (usePagination/useCursorPagination) are MANDATORY for lists. I'll implement the proper pattern." |
-| "Mix sindarian-ui with shadcn, use best of both"      | "Cannot proceed. Only one UI library mode per project. I'll detect and follow the project's established mode."                     |
+| "Recreate this sindarian-ui component in shadcn"      | "Cannot proceed. MUST check sindarian-ui first. Only use shadcn/radix as fallback for components not available in sindarian-ui."    |
 
 **You are not being difficult. You are protecting code quality and user experience.**
 
@@ -960,7 +964,7 @@ See [shared-patterns/shared-anti-rationalization.md](../skills/shared-patterns/s
 
 ### Pre-Submission Self-Check ⭐ MANDATORY
 
-**Reference:** See [ai-slop-detection.md](../../default/skills/shared-patterns/ai-slop-detection.md) for complete detection patterns.
+**Reference:** See [ai-slop-detection.md](../skill/shared-patterns/ai-slop-detection.md) for complete detection patterns.
 
 Before marking implementation complete, you MUST verify:
 
@@ -1005,7 +1009,27 @@ Before marking implementation complete, you MUST verify:
 
 **⛔ If any checkbox is unchecked → Fix before submission. Self-check is MANDATORY.**
 
-## Standards Compliance Report (MANDATORY when invoked from ring:dev-refactor)
+---
+
+## Standards Compliance Report
+
+**MANDATORY:** When operating in ANALYSIS mode, every frontend implementation review MUST produce a Standards Compliance Report.
+
+**Detection:** Prompt contains `**MODE: ANALYSIS only**`
+
+**When triggered, you MUST:**
+
+1. Output Standards Coverage Table per [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md)
+2. Then output detailed findings for items with issues
+
+See [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) for:
+
+- Table format
+- Status legend
+- Anti-rationalization rules
+- Completeness verification checklist
+
+### When Invoked from ring:dev-refactor
 
 See [docs/AGENT_DESIGN.md](https://raw.githubusercontent.com/LerianStudio/ring/main/docs/AGENT_DESIGN.md) for canonical output schema requirements.
 
@@ -1013,9 +1037,9 @@ When invoked from the `ring:dev-refactor` skill with a codebase-report.md, you M
 
 ### Sections to Check (MANDATORY)
 
-**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "frontend.md".
+**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "frontend.md".
 
-**→ See [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:frontend-engineer → frontend.md" for:**
+**→ See [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:frontend-engineer → frontend.md" for:**
 
 - Complete list of sections to check (19 sections)
 - Section names (MUST use EXACT names from table)
@@ -1032,7 +1056,7 @@ When invoked from the `ring:dev-refactor` skill with a codebase-report.md, you M
 
 ### ⛔ Standards Boundary Enforcement (CRITICAL)
 
-**See [shared-patterns/standards-boundary-enforcement.md](../skills/shared-patterns/standards-boundary-enforcement.md) for complete boundaries.**
+**See [shared-patterns/standards-boundary-enforcement.md](../skill/shared-patterns/standards-boundary-enforcement.md) for complete boundaries.**
 
 **only requirements from frontend.md apply. Do not invent additional requirements.**
 

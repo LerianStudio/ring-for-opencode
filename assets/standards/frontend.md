@@ -21,17 +21,18 @@ This file defines the specific standards for frontend development.
 | 6 | [Typography Standards](#typography-standards) | Font selection and pairing |
 | 7 | [Animation Standards](#animation-standards) | CSS transitions, Framer Motion |
 | 8 | [Component Patterns](#component-patterns) | Compound components, error boundaries |
-| 9 | [Accessibility](#accessibility) | WCAG 2.1 AA compliance |
-| 10 | [Performance](#performance) | Code splitting, image optimization |
-| 11 | [Directory Structure](#directory-structure) | Next.js App Router layout |
-| 12 | [Forbidden Patterns](#forbidden-patterns) | Anti-patterns to avoid |
-| 13 | [Standards Compliance Categories](#standards-compliance-categories) | Categories for ring:dev-refactor |
-| 14 | [Form Field Abstraction Layer](#form-field-abstraction-layer) | **HARD GATE:** Field wrappers, dual-mode (sindarian-ui vs vanilla) |
-| 15 | [Provider Composition Pattern](#provider-composition-pattern) | Nested providers order, feature providers |
-| 16 | [Custom Hooks Patterns](#custom-hooks-patterns) | **HARD GATE:** usePagination, useCursorPagination, useCreateUpdateSheet, useStepper, useDebounce |
-| 17 | [Fetcher Utilities Pattern](#fetcher-utilities-pattern) | getFetcher, postFetcher, patchFetcher, deleteFetcher |
-| 18 | [Client-Side Error Handling](#client-side-error-handling) | **HARD GATE:** ErrorBoundary, API error helpers, toast integration |
-| 19 | [Data Table Pattern](#data-table-pattern) | TanStack Table, server-side pagination, column definitions |
+| 9 | [File Organization](#file-organization-mandatory) | File-level single responsibility |
+| 10 | [Accessibility](#accessibility) | WCAG 2.1 AA compliance |
+| 11 | [Performance](#performance) | Code splitting, image optimization |
+| 12 | [Directory Structure](#directory-structure) | Next.js App Router layout |
+| 13 | [Forbidden Patterns](#forbidden-patterns) | Anti-patterns to avoid |
+| 14 | [Standards Compliance Categories](#standards-compliance-categories) | Categories for ring:dev-refactor |
+| 15 | [Form Field Abstraction Layer](#form-field-abstraction-layer) | **HARD GATE:** Field wrappers, dual-mode (sindarian-ui vs vanilla) |
+| 16 | [Provider Composition Pattern](#provider-composition-pattern) | Nested providers order, feature providers |
+| 17 | [Custom Hooks Patterns](#custom-hooks-patterns) | **HARD GATE:** usePagination, useCursorPagination, useCreateUpdateSheet, useStepper, useDebounce |
+| 18 | [Fetcher Utilities Pattern](#fetcher-utilities-pattern) | getFetcher, postFetcher, patchFetcher, deleteFetcher |
+| 19 | [Client-Side Error Handling](#client-side-error-handling) | **HARD GATE:** ErrorBoundary, API error helpers, toast integration |
+| 20 | [Data Table Pattern](#data-table-pattern) | TanStack Table, server-side pagination, column definitions |
 
 **Meta-sections (not checked by agents):**
 - [Checklist](#checklist) - Self-verification before submitting code
@@ -527,6 +528,137 @@ class ErrorBoundary extends Component<Props, State> {
 
 ---
 
+## File Organization (MANDATORY)
+
+**Single Responsibility per File:** Each component file MUST represent ONE UI concern.
+
+### Rules
+
+| Rule | Description |
+|------|-------------|
+| **One component per file** | A file exports ONE primary component |
+| **Max 200 lines per component file** | If longer, extract sub-components or hooks |
+| **Co-locate related files** | Component, hook, types, test in same feature folder |
+| **Hooks in separate files** | Custom hooks that exceed 20 lines get their own file |
+| **Separate data from presentation** | Container (data-fetching) and presentational components split |
+
+### Examples
+
+```tsx
+// ❌ BAD - UserDashboard.tsx (400 lines, mixed concerns)
+export function UserDashboard() {
+    // 30 lines of state management
+    const [users, setUsers] = useState<User[]>([]);
+    const [filters, setFilters] = useState<UserFilters>({});
+    const [sortConfig, setSortConfig] = useState<SortConfig>({});
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+    // 40 lines of data fetching
+    useEffect(() => {
+        fetchUsers(filters).then(setUsers);
+    }, [filters]);
+
+    // 50 lines of event handlers
+    const handleSort = (column: string) => { ... };
+    const handleFilter = (key: string, value: unknown) => { ... };
+    const handleExport = (format: string) => { ... };
+    const handleBulkAction = (action: string, ids: string[]) => { ... };
+
+    // 280 lines of mixed JSX (filters + table + pagination + modal)
+    return (
+        <div>
+            {/* 80 lines of filter panel */}
+            {/* 100 lines of data table */}
+            {/* 50 lines of pagination */}
+            {/* 50 lines of export modal */}
+        </div>
+    );
+}
+```
+
+```tsx
+// ✅ GOOD - Split by concern
+
+// UserDashboard.tsx (~50 lines) - Composition root
+export function UserDashboard() {
+    const { users, pagination, isLoading } = useUsers();
+    const { filters, updateFilter, resetFilters } = useUserFilters();
+
+    return (
+        <div>
+            <UserFilters filters={filters} onChange={updateFilter} onReset={resetFilters} />
+            <UserTable users={users} isLoading={isLoading} />
+            <Pagination {...pagination} />
+        </div>
+    );
+}
+
+// useUsers.ts (~60 lines) - Data fetching hook
+export function useUsers(filters?: UserFilters) {
+    return useQuery({
+        queryKey: ['users', filters],
+        queryFn: () => fetchUsers(filters),
+    });
+}
+
+// useUserFilters.ts (~40 lines) - Filter state hook
+export function useUserFilters() {
+    const [filters, setFilters] = useState<UserFilters>({});
+
+    const updateFilter = useCallback((key: string, value: unknown) => {
+        setFilters((prev) => ({ ...prev, [key]: value }));
+    }, []);
+
+    const resetFilters = useCallback(() => setFilters({}), []);
+
+    return { filters, updateFilter, resetFilters };
+}
+
+// UserFilters.tsx (~70 lines) - Filter panel component
+interface UserFiltersProps {
+    filters: UserFilters;
+    onChange: (key: string, value: unknown) => void;
+    onReset: () => void;
+}
+
+export function UserFilters({ filters, onChange, onReset }: UserFiltersProps) {
+    return (
+        <div className="flex gap-4">
+            <InputField value={filters.name} onChange={(v) => onChange('name', v)} />
+            <SelectField value={filters.role} onChange={(v) => onChange('role', v)} options={roleOptions} />
+            <Button variant="ghost" onClick={onReset}>Reset</Button>
+        </div>
+    );
+}
+
+// UserTable.tsx (~80 lines) - Table component
+interface UserTableProps {
+    users: User[];
+    isLoading: boolean;
+}
+
+export function UserTable({ users, isLoading }: UserTableProps) {
+    if (isLoading) return <TableSkeleton />;
+
+    return (
+        <DataTable columns={userColumns} data={users} />
+    );
+}
+```
+
+### Signs a File Needs Splitting
+
+| Sign | Action |
+|------|--------|
+| Component file exceeds 200 lines | Extract sub-components or hooks |
+| More than 3 `useState`/`useEffect` in one file | Extract to custom hook |
+| JSX return exceeds 100 lines | Extract child components |
+| File mixes data fetching and presentation | Split container and presentational components |
+| Multiple `useQuery`/`useMutation` in one file | Extract to dedicated hook files |
+| Component accepts more than 5 props | Consider composition or compound component pattern |
+
+---
+
 ## Accessibility
 
 ### Required Practices
@@ -757,8 +889,8 @@ const handleClick = useCallback((id: string) => {
 
 | Mode | Detection | Components |
 |------|-----------|------------|
-| **sindarian-ui** | `@anthropic/sindarian-ui` in package.json | FormField, FormItem, FormLabel, FormControl, FormMessage, FormTooltip |
-| **Vanilla** | No sindarian packages | shadcn/ui Form or custom wrappers over Radix primitives |
+| **sindarian-ui** (primary) | `@lerianstudio/sindarian-ui` in package.json | FormField, FormItem, FormLabel, FormControl, FormMessage, FormTooltip |
+| **shadcn/radix** (fallback) | Components not available in sindarian-ui | Place in project `components/ui/` using shadcn/ui + Radix primitives |
 
 ### Field Wrapper Components (MANDATORY)
 
@@ -785,7 +917,7 @@ import {
     FormMessage,
     FormTooltip,
     Input,
-} from '@anthropic/sindarian-ui';
+} from '@lerianstudio/sindarian-ui';
 import { useFormContext } from 'react-hook-form';
 
 interface InputFieldProps {

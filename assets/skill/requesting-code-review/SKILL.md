@@ -342,17 +342,17 @@ Task:
   description: "Code review for [unit_id]"
   prompt: |
     ## Code Review Request
-
+    
     **Unit ID:** [unit_id]
     **Base SHA:** [base_sha]
     **Head SHA:** [head_sha]
-
+    
     ## What Was Implemented
     [implementation_summary]
-
+    
     ## Requirements
     [requirements]
-
+    
     ## Files Changed
     [implementation_files or "Use git diff"]
 
@@ -395,14 +395,14 @@ Task:
   description: "Business logic review for [unit_id]"
   prompt: |
     ## Business Logic Review Request
-
+    
     **Unit ID:** [unit_id]
     **Base SHA:** [base_sha]
     **Head SHA:** [head_sha]
-
+    
     ## What Was Implemented
     [implementation_summary]
-
+    
     ## Requirements
     [requirements]
 
@@ -648,7 +648,7 @@ IF blocking_count > 0:
 
 ### Orchestrator Boundaries (HARD GATE)
 
-**See [dev-team/skills/shared-patterns/standards-boundary-enforcement.md](../../dev-team/skills/shared-patterns/standards-boundary-enforcement.md) for core enforcement rules.**
+**See [dev-team/skills/shared-patterns/standards-boundary-enforcement.md](../shared-patterns/standards-boundary-enforcement.md) for core enforcement rules.**
 
 **Key prohibition:** Edit/Write/Create on source files is FORBIDDEN. Always dispatch agent.
 
@@ -1081,7 +1081,7 @@ IF gate0_handoff.subtasks exists AND gate0_handoff.subtasks.length > 0:
           base_sha: [sha before subtask],
           head_sha: [sha after subtask]
         }
-
+  
   Display:
   ┌─────────────────────────────────────────────────────────────────┐
   │ 📋 CODERABBIT VALIDATION MODE: SUBTASK-LEVEL                    │
@@ -1108,7 +1108,7 @@ ELSE:
       base_sha: base_sha,
       head_sha: head_sha
     }
-
+  
   Display:
   ┌─────────────────────────────────────────────────────────────────┐
   │ 📋 CODERABBIT VALIDATION MODE: TASK-LEVEL                       │
@@ -1165,37 +1165,37 @@ coderabbit --prompt-only --type uncommitted --base-commit [unit.base_sha]
       low: [list]
     }
   }
-
+  
   coderabbit_results.units.push(unit_result)
-
+  
   IF unit_result.issues.critical.length > 0 OR unit_result.issues.high.length > 0:
     → coderabbit_results.overall_status = "ISSUES_FOUND"
-
+  
   ─────────────────────────────────────────────────────────────────
   ⛔ MANDATORY: APPEND FINDINGS TO .coderabbit-findings.md
   ─────────────────────────────────────────────────────────────────
-
+  
   After EACH unit validation, append results to findings file:
-
+  
   IF .coderabbit-findings.md does NOT exist:
     → Create file with header (see "Findings File Format" below)
-
+  
   APPEND to .coderabbit-findings.md:
   ```
   ## Unit: [unit.id] - [unit.name]
   **Validated:** [timestamp]
   **Status:** [PASS | ISSUES_FOUND]
   **Files:** [unit.files.join(", ")]
-
+  
   ### Issues Found
   | # | Severity | Description | File:Line | Recommendation |
   |---|----------|-------------|-----------|----------------|
   | 1 | [severity] | [description] | [file:line] | [recommendation] |
   | ... | ... | ... | ... | ... |
-
+  
   ---
   ```
-
+  
   This ensures ALL findings are accumulated for review before commit.
 
 AFTER ALL UNITS VALIDATED:
@@ -1291,7 +1291,7 @@ _No issues found._
 
 ```text
 IF coderabbit_results.overall_status == "ISSUES_FOUND":
-
+  
   → FIRST: Display EACH issue in detail (REQUIRED before any action):
   ┌─────────────────────────────────────────────────────────────────┐
   │ ⚠️  CODERABBIT ISSUES FOUND - DETAILED DESCRIPTION               │
@@ -1332,7 +1332,7 @@ IF coderabbit_results.overall_status == "ISSUES_FOUND":
   │   Recommendation: Use parameterized queries                    │
   │                                                                 │
   └─────────────────────────────────────────────────────────────────┘
-
+  
   → THEN: Ask user for action:
   "CodeRabbit found [N] issues in [M] units. What would you like to do?"
     (a) Fix all issues - dispatch implementation agent per unit
@@ -1342,7 +1342,7 @@ IF coderabbit_results.overall_status == "ISSUES_FOUND":
   IF user selects (a) Fix issues:
     → ⛔ DO NOT edit files directly
     → FOR EACH unit WITH issues (validation_scope.units where status == "ISSUES_FOUND"):
-
+    
         Display:
         ┌─────────────────────────────────────────────────────────────────┐
         │ 🔧 DISPATCHING FIX: [unit.id] ([current]/[total with issues])   │
@@ -1351,39 +1351,39 @@ IF coderabbit_results.overall_status == "ISSUES_FOUND":
         │ Critical Issues: [N]                                           │
         │ High Issues: [N]                                               │
         └─────────────────────────────────────────────────────────────────┘
-
+        
         → DISPATCH implementation agent with unit-specific findings:
-
+        
         Task:
           subagent_type: "[same agent used in Gate 0]"
           description: "Fix CodeRabbit issues for [unit.id]"
           prompt: |
             ## CodeRabbit Issues to Fix - [unit.id]
-
+            
             **Scope:** This fix is for [subtask/task]: [unit.name]
             **Files in Scope:** [unit.files.join(", ")]
-
+            
             The following issues were found by CodeRabbit CLI external review
             for THIS SPECIFIC [subtask/task].
-
+            
             ⚠️ IMPORTANT: Only fix issues in files belonging to this unit:
             [unit.files list]
-
+            
             ### Critical Issues
             [list from unit.issues.critical]
-
-            ### High Issues
+            
+            ### High Issues  
             [list from unit.issues.high]
-
+            
             ## Requirements
             1. Fix each issue following Ring Standards
             2. Only modify files in scope: [unit.files]
             3. Run tests to verify fixes don't break functionality
             4. Commit fixes with message referencing unit: "fix([unit.id]): [description]"
-
+        
         → Wait for agent to complete
         → Record fix result for this unit
-
+        
         → VALIDATE EACH ISSUE INDIVIDUALLY:
         ┌─────────────────────────────────────────────────────────────────┐
         │ 🔍 VALIDATING FIXES FOR: [unit.id]                              │
@@ -1408,7 +1408,7 @@ IF coderabbit_results.overall_status == "ISSUES_FOUND":
         │ ... (repeat for ALL issues)                                    │
         │                                                                 │
         └─────────────────────────────────────────────────────────────────┘
-
+        
         → IF any issue NOT RESOLVED:
             → Identify the correct agent for re-dispatch:
               - Check gate0_handoff.implementation_agent (if available)
@@ -1417,36 +1417,36 @@ IF coderabbit_results.overall_status == "ISSUES_FOUND":
                 - *.ts files (backend) → ring:backend-engineer-typescript
                 - *.ts/*.tsx files (frontend) → ring:frontend-engineer
                 - *.yaml/*.yml (infra) → ring:devops-engineer
-
+            
             → Re-dispatch ONLY unresolved issues to the correct agent:
-
+            
             Task:
               subagent_type: "[correct agent based on file type or gate0_handoff]"
               model: "opus"
               description: "Retry fix for unresolved issues in [unit.id]"
               prompt: |
                 ## RETRY: Unresolved CodeRabbit Issues - [unit.id]
-
+                
                 Previous fix attempt did NOT resolve these issues.
                 This is attempt [N] of 2 maximum.
-
+                
                 ### Unresolved Issues (MUST FIX)
                 | # | Severity | Description | File:Line | Previous Attempt | Why It Failed |
                 |---|----------|-------------|-----------|------------------|---------------|
                 | [issue.id] | [severity] | [description] | [file:line] | [what was tried] | [why not resolved] |
-
+                
                 ### Requirements
                 1. Review the previous fix attempt and understand why it failed
                 2. Apply a different/better solution
                 3. Verify the fix resolves the issue
                 4. Run relevant tests
                 5. Commit with message: "fix([unit.id]): retry [issue description]"
-
+            
             → Max 2 fix attempts per issue
             → IF issue still NOT RESOLVED after 2 attempts:
                 → Mark as UNRESOLVED_ESCALATE
                 → Add to escalation report for manual review
-
+        
         → Record per-issue validation results:
         unit_validation = {
           id: unit.id,
@@ -1465,7 +1465,7 @@ IF coderabbit_results.overall_status == "ISSUES_FOUND":
           ],
           all_resolved: true | false
         }
-
+    
     → AFTER ALL UNITS FIXED:
         Display:
         ┌─────────────────────────────────────────────────────────────────┐
@@ -1513,33 +1513,33 @@ LEGACY FLOW (when validation_scope.mode == "task"):
     IF user selects (a) Fix issues:
       → ⛔ DO NOT edit files directly
       → DISPATCH implementation agent with CodeRabbit findings:
-
+      
       Task:
         subagent_type: "[same agent used in Gate 0]"
         model: "opus"
         description: "Fix CodeRabbit issues for [unit_id]"
         prompt: |
           ## CodeRabbit Issues to Fix
-
+          
           The following issues were found by CodeRabbit CLI external review.
           Fix ALL Critical and High severity issues.
-
+          
           ### Critical Issues
           [list from CodeRabbit output]
-
+          
           ### High Issues
           [list from CodeRabbit output]
-
+          
           ## Requirements
           1. Fix each issue following Ring Standards
           2. Run tests to verify fixes don't break functionality
           3. Commit fixes with descriptive message
-
+    
     → After agent completes, re-run CodeRabbit: `coderabbit --prompt-only`
     → If CodeRabbit issues remain, repeat fix cycle (max 2 iterations for CodeRabbit)
-
+    
     → ⛔ AFTER CodeRabbit passes, MUST re-run Ring reviewers:
-
+    
     ┌─────────────────────────────────────────────────────────────────┐
     │ 🔄 RE-RUNNING RING REVIEWERS AFTER CODERABBIT FIXES             │
     ├─────────────────────────────────────────────────────────────────┤
@@ -1548,7 +1548,7 @@ LEGACY FLOW (when validation_scope.mode == "task"):
     │ Ring reviewers. Re-validation is MANDATORY before Gate 5.       │
     │                                                                 │
     └─────────────────────────────────────────────────────────────────┘
-
+    
     Step 7.5.3a: Re-Run All 5 Ring Reviewers
     ─────────────────────────────────────────
     1. Get new HEAD_SHA after CodeRabbit fixes
@@ -1559,12 +1559,12 @@ LEGACY FLOW (when validation_scope.mode == "task"):
        - ring:test-reviewer
        - ring:nil-safety-reviewer
     3. Wait for all 5 to complete
-
+    
     Step 7.5.3b: Handle Ring Reviewer Results
     ─────────────────────────────────────────
     IF all 5 Ring reviewers PASS:
       → Proceed to Step 8 (Success Output)
-
+    
     IF any Ring reviewer finds CRITICAL/HIGH/MEDIUM issues:
       → Increment ring_revalidation_iterations counter
       → IF ring_revalidation_iterations >= 2:
@@ -1577,7 +1577,7 @@ LEGACY FLOW (when validation_scope.mode == "task"):
               → Re-run all 5 Ring reviewers (loop back to Step 7.5.3a)
           → IF CodeRabbit finds issues:
               → Fix CodeRabbit issues first, then re-run Ring reviewers
-
+    
     State tracking for CodeRabbit fix cycle:
     ```
     coderabbit_fix_state = {
@@ -1591,16 +1591,16 @@ IF CodeRabbit found only MEDIUM/LOW issues:
   → Display summary
   → ⛔ DO NOT edit files directly to add TODOs
   → DISPATCH implementation agent to add TODO comments:
-
+  
   Task:
     subagent_type: "[same agent used in Gate 0]"
     description: "Add TODO comments for CodeRabbit findings"
     prompt: |
       Add TODO comments for these CodeRabbit findings:
       [list MEDIUM/LOW issues with file:line]
-
+      
       Format: // TODO(coderabbit): [issue description]
-
+  
   → After TODO comments added (code changed):
       → Re-run all 5 Ring reviewers (per Step 7.5.3a above)
       → IF Ring reviewers PASS: Proceed to Step 8
@@ -1699,7 +1699,7 @@ IF CodeRabbit found no issues:
 
 ```text
 IF .coderabbit-findings.md exists:
-
+  
   ┌─────────────────────────────────────────────────────────────────┐
   │ 📋 CODERABBIT FINDINGS - ACCUMULATED DURING REVIEW              │
   ├─────────────────────────────────────────────────────────────────┤
@@ -1708,10 +1708,10 @@ IF .coderabbit-findings.md exists:
   │ review process. Review before proceeding to commit.            │
   │                                                                 │
   └─────────────────────────────────────────────────────────────────┘
-
+  
   → Display contents of .coderabbit-findings.md
   → Show summary table:
-
+  
   ┌─────────────────────────────────────────────────────────────────┐
   │ 📊 CODERABBIT FINDINGS SUMMARY                                  │
   ├─────────────────────────────────────────────────────────────────┤
@@ -1726,7 +1726,7 @@ IF .coderabbit-findings.md exists:
   │ Total Issues: [N] | Fixed: [N] | Pending: [N]                  │
   │                                                                 │
   └─────────────────────────────────────────────────────────────────┘
-
+  
   → Ask user:
   ┌─────────────────────────────────────────────────────────────────┐
   │ ❓ ACTION REQUIRED                                              │
@@ -1742,16 +1742,16 @@ IF .coderabbit-findings.md exists:
   │       tracking. Issues remain documented for future fixing.    │
   │                                                                 │
   └─────────────────────────────────────────────────────────────────┘
-
+  
   IF user selects (a) Fix all issues:
     → Dispatch implementation agent with ALL pending issues from findings file
     → After fixes, update .coderabbit-findings.md (mark issues as FIXED)
     → Re-run CodeRabbit validation for affected files
     → Loop back to Step 8.1 to display updated findings
-
+  
   IF user selects (b) Interactive mode (one-by-one):
     → Go to Step 8.1.1 (Interactive Issue Review)
-
+  
   IF user selects (c) Acknowledge and proceed:
     → Record: "CodeRabbit issues acknowledged by user"
     → Include .coderabbit-findings.md in commit (for audit trail)
@@ -1765,7 +1765,7 @@ issues_to_fix = []
 issues_to_skip = []
 
 FOR EACH issue IN pending_issues (ordered by severity: CRITICAL → HIGH → MEDIUM → LOW):
-
+  
   Display:
   ┌─────────────────────────────────────────────────────────────────┐
   │ 🔍 ISSUE [current]/[total] - [SEVERITY]                         │
@@ -1795,19 +1795,19 @@ FOR EACH issue IN pending_issues (ordered by severity: CRITICAL → HIGH → MED
   │   (k) Skip ALL remaining issues                                │
   │                                                                 │
   └─────────────────────────────────────────────────────────────────┘
-
+  
   IF user selects (f) Fix:
     → Add to issues_to_fix list
     → Continue to next issue
-
+  
   IF user selects (s) Skip:
     → Add to issues_to_skip list
     → Continue to next issue
-
+  
   IF user selects (a) Fix ALL remaining:
     → Add current + all remaining to issues_to_fix list
     → Break loop
-
+  
   IF user selects (k) Skip ALL remaining:
     → Add current + all remaining to issues_to_skip list
     → Break loop
@@ -1827,7 +1827,7 @@ AFTER loop completes:
   │ Proceed with this selection? (y/n)                             │
   │                                                                 │
   └─────────────────────────────────────────────────────────────────┘
-
+  
   IF user confirms (y):
     IF issues_to_fix.length > 0:
       → Dispatch implementation agent with ONLY issues_to_fix
@@ -1839,7 +1839,7 @@ AFTER loop completes:
     ELSE:
       → All issues skipped/acknowledged
       → Proceed to Step 8.2 (Success Output)
-
+  
   IF user cancels (n):
     → Return to Step 8.1 main prompt
 
@@ -1934,7 +1934,7 @@ Generate skill output:
 
 ## Pressure Resistance
 
-See [dev-team/skills/shared-patterns/shared-pressure-resistance.md](../../dev-team/skills/shared-patterns/shared-pressure-resistance.md) for universal pressure scenarios.
+See [dev-team/skills/shared-patterns/shared-pressure-resistance.md](../shared-patterns/shared-pressure-resistance.md) for universal pressure scenarios.
 
 | User Says | Your Response |
 |-----------|---------------|
@@ -1944,7 +1944,7 @@ See [dev-team/skills/shared-patterns/shared-pressure-resistance.md](../../dev-te
 
 ## Anti-Rationalization Table
 
-See [dev-team/skills/shared-patterns/shared-anti-rationalization.md](../../dev-team/skills/shared-patterns/shared-anti-rationalization.md) for universal anti-rationalizations.
+See [dev-team/skills/shared-patterns/shared-anti-rationalization.md](../shared-patterns/shared-anti-rationalization.md) for universal anti-rationalizations.
 
 ### Gate 4-Specific Anti-Rationalizations
 

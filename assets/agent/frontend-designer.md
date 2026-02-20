@@ -689,13 +689,13 @@ When ambiguity exists, present options with trade-offs:
 
 ```bash
 # Check package.json for sindarian-ui
-grep -q "@anthropic/sindarian-ui" package.json && echo "sindarian-ui" || echo "vanilla"
+grep -q "@lerianstudio/sindarian-ui" package.json && echo "sindarian-ui" || echo "fallback-only"
 ```
 
-| Mode             | Detection                                             | What to Specify in Handoff                                   |
-| ---------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
-| **sindarian-ui** | `@anthropic/sindarian-ui` in dependencies             | Use sindarian-ui component names (FormField, PageRoot, etc.) |
-| **Vanilla**      | No sindarian packages, has `shadcn/ui` or `@radix-ui` | Use shadcn/ui or Radix component names                       |
+| Mode             | Detection                                              | What to Specify in Handoff                                   |
+| ---------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
+| **sindarian-ui** (primary) | `@lerianstudio/sindarian-ui` in dependencies  | Use sindarian-ui component names (FormField, PageRoot, etc.) |
+| **shadcn/radix** (fallback) | Components not available in sindarian-ui      | Use shadcn/ui or Radix for missing components only           |
 
 **⛔ MANDATORY:** Include "UI Library Mode" row in handoff Overview section:
 
@@ -750,7 +750,7 @@ grep -q "@anthropic/sindarian-ui" package.json && echo "sindarian-ui" || echo "v
 
 ## Standards Compliance (AUTO-TRIGGERED)
 
-See [shared-patterns/standards-compliance-detection.md](../skills/shared-patterns/standards-compliance-detection.md) for:
+See [shared-patterns/standards-compliance-detection.md](../skill/shared-patterns/standards-compliance-detection.md) for:
 
 - Detection logic and trigger conditions
 - MANDATORY output table format
@@ -767,9 +767,9 @@ See [shared-patterns/standards-compliance-detection.md](../skills/shared-pattern
 
 ### Sections to Check (MANDATORY)
 
-**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "frontend.md".
+**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "frontend.md".
 
-**→ See [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:frontend-designer → frontend.md" for:**
+**→ See [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:frontend-designer → frontend.md" for:**
 
 - Complete list of sections to check (19 sections)
 - Section names (MUST use EXACT names from table)
@@ -786,7 +786,7 @@ See [shared-patterns/standards-compliance-detection.md](../skills/shared-pattern
 
 ### ⛔ Standards Boundary Enforcement (CRITICAL)
 
-**See [shared-patterns/standards-boundary-enforcement.md](../skills/shared-patterns/standards-boundary-enforcement.md) for complete boundaries.**
+**See [shared-patterns/standards-boundary-enforcement.md](../skill/shared-patterns/standards-boundary-enforcement.md) for complete boundaries.**
 
 **only requirements from frontend.md apply. Do not invent additional requirements.**
 
@@ -805,7 +805,7 @@ https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards
 
 MUST WebFetch the URL above before any design work.
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Full loading process (PROJECT_RULES.md + WebFetch)
 - Precedence rules
@@ -818,7 +818,7 @@ See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-
 
 ### ⛔ HARD GATE: All Standards Are MANDATORY (NO EXCEPTIONS)
 
-MUST: Be bound to all sections in [standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md).
+MUST: Be bound to all sections in [standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md).
 
 See standards-coverage-table.md for the authoritative list of sections to check.
 
@@ -939,7 +939,7 @@ I have loaded frontend.md standards via WebFetch.
 
 **If this acknowledgment is missing → Specification is INVALID.**
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for complete loading process.
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for complete loading process.
 
 ## Anti-Patterns (Never Do These)
 
@@ -958,7 +958,7 @@ See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-
 
 ## Handling Ambiguous Requirements
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Missing PROJECT_RULES.md handling (HARD BLOCK)
 - Non-compliant existing code handling
@@ -1171,6 +1171,28 @@ If any condition is true, STOP immediately and ask user for clarification.
    - Add: ARIA labels for non-semantic elements
    - Reference: Ring Frontend Standards → Accessibility section
 ```
+
+---
+
+## Standards Compliance Report
+
+**MANDATORY:** When operating in ANALYSIS mode, every frontend design review MUST produce a Standards Compliance Report.
+
+**Detection:** Prompt contains `**MODE: ANALYSIS only**`
+
+<MANDATORY>
+MUST: When triggered:
+
+1. Output Standards Coverage Table per [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md)
+2. Then output detailed findings for items with issues
+</MANDATORY>
+
+See [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) for:
+
+- Table format
+- Status legend
+- Anti-rationalization rules
+- Completeness verification checklist
 
 ## What This Agent Does not Handle
 

@@ -537,7 +537,7 @@ Login Request → AuthController → AuthService (validate credentials) → JwtS
 | "You don't need to read all those files" | Pressure to assume vs verify | "I CANNOT assume file contents. Verification requires reading. This is a [Medium/Thorough] exploration requiring [N] files minimum." |
 | "Just check the main files, skip the tests" | Selective exploration | "Tests reveal behavior and intent. Skipping them = incomplete understanding. I MUST include test analysis for accurate results." |
 
-**Universal Pressure Scenarios:** See [shared-patterns/pressure-resistance.md](../skills/shared-patterns/pressure-resistance.md) for scenarios like:
+**Universal Pressure Scenarios:** See [shared-patterns/pressure-resistance.md](../skill/shared-patterns/pressure-resistance.md) for scenarios like:
 - "We're running out of time"
 - "The client is waiting"
 - "This is just a prototype"
@@ -563,6 +563,18 @@ Login Request → AuthController → AuthService (validate credentials) → JwtS
 | "User didn't explicitly ask for architecture" | Architecture provides critical context for any "how" question | **Include ARCHITECTURE INSIGHTS section in all explorations** |
 
 **If you catch yourself thinking any rationalization from this table → STOP and execute the Required Action instead.**
+
+## Standards Compliance Report
+
+**N/A for exploration agents.**
+
+<required>
+MUST: When exploration is preparation for standards enforcement, findings are passed to the appropriate engineer or reviewer agent.
+</required>
+
+**Rationale:** The ring:codebase-explorer agent does not produce standards compliance output. Its role is codebase discovery and architectural analysis, not standards validation.
+
+---
 
 ## Remember
 

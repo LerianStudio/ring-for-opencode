@@ -143,6 +143,15 @@ Task:
     For Go: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/golang.md
     For TS: https://raw.githubusercontent.com/LerianStudio/ring/main/dev-team/docs/standards/typescript.md
 
+    ## Frontend TDD Policy (React/Next.js only)
+    If the component is purely visual/presentational (layout, styling, animations,
+    static display with no behavioral logic), TDD-RED is NOT required.
+    Instead, implement the component directly and defer testing to Gate 4 (Visual
+    Testing / Snapshots). Report: "Visual-only component → TDD-RED skipped, Gate 4 snapshots apply."
+
+    Behavioral components (custom hooks, form validation, state management,
+    conditional rendering, API integration) MUST follow TDD-RED below.
+
     ## Your Task
     1. Write a test that captures the expected behavior
     2. The test MUST FAIL (no implementation exists yet)

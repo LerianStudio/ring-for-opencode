@@ -18,17 +18,17 @@ This skill runs lint checks on the codebase, analyzes the results to identify in
 
 **Core principle:** Group lint issues by file/component, dispatch one agent per independent stream, iterate until clean.
 
-## CRITICAL CONSTRAINTS
+## ⛔ CRITICAL CONSTRAINTS
 
 These constraints are NON-NEGOTIABLE and must be communicated to ALL dispatched agents:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  DO NOT CREATE AUTOMATED SCRIPTS TO FIX LINT ISSUES             │
-│  DO NOT CREATE DOCUMENTATION OR README FILES                    │
-│  DO NOT ADD COMMENTS EXPLAINING THE FIXES                       │
-│  FIX EACH ISSUE DIRECTLY BY EDITING THE SOURCE CODE             │
-│  MAKE MINIMAL CHANGES - ONLY WHAT'S NEEDED FOR LINT             │
+│  🚫 DO NOT CREATE AUTOMATED SCRIPTS TO FIX LINT ISSUES         │
+│  🚫 DO NOT CREATE DOCUMENTATION OR README FILES                 │
+│  🚫 DO NOT ADD COMMENTS EXPLAINING THE FIXES                   │
+│  ✅ FIX EACH ISSUE DIRECTLY BY EDITING THE SOURCE CODE         │
+│  ✅ MAKE MINIMAL CHANGES - ONLY WHAT'S NEEDED FOR LINT         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -93,10 +93,10 @@ After all agents complete, run `<lint_command> 2>&1`.
 
 | Result | Action |
 |--------|--------|
-| **Lint passes** | Done |
-| **Same issues remain** | Investigate why fixes failed |
-| **New issues appeared** | Analyze + dispatch new agents |
-| **Fewer issues remain** | Create new streams, repeat |
+| **Lint passes** | ✅ Done |
+| **Same issues remain** | ⚠️ Investigate why fixes failed |
+| **New issues appeared** | 🔄 Analyze + dispatch new agents |
+| **Fewer issues remain** | 🔄 Create new streams, repeat |
 
 ### Step 4.3: Iterate If Needed
 
@@ -147,4 +147,4 @@ After all agents complete, run `<lint_command> 2>&1`.
 
 ## Example Session
 
-`/ring:lint` → Run lint → 16 issues in 3 areas → Analyze streams (API: 5, Services: 8, Utils: 3) → Dispatch 3 parallel agents → All complete → Re-run lint → All pass.
+`/ring:lint` → Run lint → 16 issues in 3 areas → Analyze streams (API: 5, Services: 8, Utils: 3) → Dispatch 3 parallel agents → All complete → Re-run lint → ✅ All pass.

@@ -117,7 +117,7 @@ I will search for all patterns above using Grep tool.
 **Result:** ❌ FAIL - N FORBIDDEN patterns found
 ```
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for complete loading process.
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for complete loading process.
 
 **OUT OF SCOPE - Do not validate:**
 
@@ -251,7 +251,7 @@ When validation fails, report issues to developers:
 
 ## Standards Compliance (AUTO-TRIGGERED)
 
-See [shared-patterns/standards-compliance-detection.md](../skills/shared-patterns/standards-compliance-detection.md) for:
+See [shared-patterns/standards-compliance-detection.md](../skill/shared-patterns/standards-compliance-detection.md) for:
 
 - Detection logic and trigger conditions
 - MANDATORY output table format
@@ -279,7 +279,7 @@ See [shared-patterns/standards-compliance-detection.md](../skills/shared-pattern
 
 **⛔ CRITICAL: You CANNOT proceed without successfully loading standards via WebFetch.**
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Full loading process (PROJECT_RULES.md + WebFetch)
 - **If WebFetch fails → STOP IMMEDIATELY** (see workflow for error format)
@@ -292,7 +292,7 @@ See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-
 
 ### ⛔ HARD GATE: all Standards Are MANDATORY (NO EXCEPTIONS)
 
-MUST: Be bound to all sections in [standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md).
+MUST: Be bound to all sections in [standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md).
 
 See standards-coverage-table.md for sections to check (see coverage table for applicability - some sections apply conditionally for Go/TS).
 
@@ -357,7 +357,7 @@ _After rendering: if no row has Decision = "PROJECT_RULES (override)", append "N
 ```
 
 <gate>
-**Precedence Rules:** See [standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for Ring vs PROJECT_RULES precedence semantics.
+**Precedence Rules:** See [standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for Ring vs PROJECT_RULES precedence semantics.
 
 STOP and ask user when neither Ring nor PROJECT_RULES covers the topic.
 </gate>
@@ -366,7 +366,7 @@ STOP and ask user when neither Ring nor PROJECT_RULES covers the topic.
 
 ## Handling Ambiguous Requirements
 
-See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-workflow.md) for:
+See [shared-patterns/standards-workflow.md](../skill/shared-patterns/standards-workflow.md) for:
 
 - Missing PROJECT_RULES.md handling (HARD BLOCK)
 - Non-compliant existing code handling
@@ -379,7 +379,7 @@ See [shared-patterns/standards-workflow.md](../skills/shared-patterns/standards-
 
 ### Anti-Hallucination: Command Output Requirement ⭐ MANDATORY
 
-**Reference:** See [ai-slop-detection.md](../../default/skills/shared-patterns/ai-slop-detection.md) for AI slop detection patterns.
+**Reference:** See [ai-slop-detection.md](../skill/shared-patterns/ai-slop-detection.md) for AI slop detection patterns.
 
 **⛔ HARD GATE:** You CANNOT claim any finding without ACTUAL command output.
 
@@ -427,9 +427,9 @@ When invoked from the `ring:dev-refactor` skill with a codebase-report.md, you M
 
 ### Sections to Check (MANDATORY)
 
-**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:sre → sre.md".
+**⛔ HARD GATE:** You MUST check all sections defined in [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:sre → sre.md".
 
-**→ See [shared-patterns/standards-coverage-table.md](../skills/shared-patterns/standards-coverage-table.md) → "ring:sre → sre.md" for:**
+**→ See [shared-patterns/standards-coverage-table.md](../skill/shared-patterns/standards-coverage-table.md) → "ring:sre → sre.md" for:**
 
 - Complete list of sections to check (6 sections)
 - Section names (MUST use EXACT names from table)
@@ -446,7 +446,7 @@ When invoked from the `ring:dev-refactor` skill with a codebase-report.md, you M
 
 ### ⛔ Standards Boundary Enforcement (CRITICAL)
 
-**See [shared-patterns/standards-boundary-enforcement.md](../skills/shared-patterns/standards-boundary-enforcement.md) for:**
+**See [shared-patterns/standards-boundary-enforcement.md](../skill/shared-patterns/standards-boundary-enforcement.md) for:**
 
 - Complete boundary rules
 - FORBIDDEN items to flag as missing (verify in sre.md first)

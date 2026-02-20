@@ -4,7 +4,6 @@ description: Execute plan in batches with review checkpoints
 agent: build
 subtask: false
 ---
-
 Execute an existing implementation plan with controlled checkpoints and code review between batches. Supports autonomous one-go execution or batch mode with human review at each checkpoint.
 
 ## Usage

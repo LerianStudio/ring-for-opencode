@@ -49,7 +49,7 @@ Use this skill when:
 | 41 | **Data Encryption at Rest** | Field-level encryption, key management, password hashing, encrypted backups |
 | 43 | **Rate Limiting** | Three-tier strategy (Global/Export/Dispatch), Redis-backed storage, key generation, production safety |
 | 44 | **CORS Configuration** | Origin validation, middleware ordering, production wildcard prohibition, Helmet integration |
-| 33 | **Multi-Tenant Patterns** *(CONDITIONAL)* | Pool Manager, JWT tenantId, context injection |
+| 33 | **Multi-Tenant Patterns** *(CONDITIONAL)* | Tenant Manager, DualPoolMiddleware, JWT tenantId, module-specific connections |
 
 ### Category C: Operational Readiness (7 dimensions)
 
@@ -3422,76 +3422,52 @@ If multi-tenant IS detected, audit multi-tenant architecture patterns for produc
 
 **Search Patterns:**
 - Files: `**/tenant*.go`, `**/pool*.go`, `**/middleware*.go`, `**/context*.go`
-- Keywords: `tenantID`, `PoolManager`, `TenantContext`, `schema`, `search_path`
+- Keywords: `tenantID`, `TenantManager`, `TenantContext`, `schema`, `search_path`
 - Also search: `**/jwt*.go`, `**/auth*.go` for tenant extraction
 
 **Reference Implementation (GOOD):**
 ```go
-// Pool Manager for tenant connection management
-type PoolManager struct {
-    mu       sync.RWMutex
-    pools    map[string]*sql.DB
-    config   *PoolConfig
-    maxPools int
+// DualPoolMiddleware routes to correct tenant connection pool per module
+type DualPoolMiddleware struct {
+    onboardingPool       *tenantmanager.TenantConnectionManager
+    transactionPool      *tenantmanager.TenantConnectionManager
+    onboardingMongoPool  *tenantmanager.MongoManager
+    transactionMongoPool *tenantmanager.MongoManager
 }
 
-func (pm *PoolManager) GetConnection(tenantID string) (*sql.DB, error) {
-    pm.mu.RLock()
-    if pool, ok := pm.pools[tenantID]; ok {
-        pm.mu.RUnlock()
-        return pool, nil
+// Path-based pool selection
+func (m *DualPoolMiddleware) selectPool(path string) *tenantmanager.TenantConnectionManager {
+    if m.isTransactionPath(path) {
+        return m.transactionPool
     }
-    pm.mu.RUnlock()
+    return m.onboardingPool
+}
 
-    // Create new pool for tenant
-    pm.mu.Lock()
-    defer pm.mu.Unlock()
+// Module-specific connection from context
+db, err := tenantmanager.GetModulePostgresForTenant(ctx, constant.ModuleOnboarding)
 
-    // Double-check after acquiring write lock
-    if pool, ok := pm.pools[tenantID]; ok {
-        return pool, nil
-    }
-
-    pool, err := pm.createPool(tenantID)
+// Entity-scoped query — ALWAYS filter by organization_id + ledger_id
+func (r *Repo) Find(ctx context.Context, orgID, ledgerID, id uuid.UUID) (*Entity, error) {
+    db, err := tenantmanager.GetModulePostgresForTenant(ctx, constant.ModuleTransaction)
     if err != nil {
-        return nil, fmt.Errorf("create pool for tenant %s: %w", tenantID, err)
+        return nil, err
     }
-    pm.pools[tenantID] = pool
-    return pool, nil
-}
-
-// Tenant context injection middleware
-func TenantMiddleware(next fiber.Handler) fiber.Handler {
-    return func(c *fiber.Ctx) error {
-        claims := auth.GetClaims(c)
-        tenantID := claims["tenant_id"].(string)
-        if tenantID == "" {
-            return fiber.NewError(401, "missing tenant context")
-        }
-        ctx := context.WithValue(c.UserContext(), TenantKey, tenantID)
-        c.SetUserContext(ctx)
-        return next(c)
-    }
-}
-
-// Tenant-scoped query — ALWAYS filter by tenant
-func (r *Repo) FindByID(ctx context.Context, id uuid.UUID) (*Entity, error) {
-    tenantID := GetTenantID(ctx)  // From context, never from request
-    var entity Entity
-    err := r.db.WithContext(ctx).
-        Where("id = ? AND tenant_id = ?", id, tenantID).
-        First(&entity).Error
-    return &entity, err
+    find := squirrel.Select(columnList...).
+        From(r.tableName).
+        Where(squirrel.Expr("organization_id = ?", orgID)).
+        Where(squirrel.Expr("ledger_id = ?", ledgerID)).
+        Where(squirrel.Expr("id = ?", id)).
+        PlaceholderFormat(squirrel.Dollar)
+    // ...
 }
 ```
 
 **Reference Implementation (BAD):**
 ```go
-// BAD: Query without tenant filter — data leakage!
+// BAD: Query without entity scoping — intra-tenant IDOR!
 func (r *Repo) FindByID(ctx context.Context, id uuid.UUID) (*Entity, error) {
-    var entity Entity
-    err := r.db.WithContext(ctx).Where("id = ?", id).First(&entity).Error
-    return &entity, err
+    db, _ := tenantmanager.GetModulePostgresForTenant(ctx, constant.ModuleTransaction)
+    return db.QueryRowContext(ctx, "SELECT * FROM entities WHERE id = $1", id)
 }
 
 // BAD: Tenant ID from request header (can be spoofed)
@@ -3499,28 +3475,30 @@ func GetTenantID(c *fiber.Ctx) string {
     return c.Get("X-Tenant-ID")  // User-controlled!
 }
 
-// BAD: No schema isolation — shared tables
-func (r *Repo) Save(ctx context.Context, entity *Entity) error {
-    return r.db.Create(entity).Error  // Which tenant's data?
-}
+// BAD: Non-module-specific connection getter
+db, err := tenantmanager.GetPostgresForTenant(ctx)  // WRONG: missing module parameter
 ```
 
 **Check Against Ring Standards For:**
 1. (HARD GATE) Tenant ID extracted from JWT claims (not user-controlled headers/params) per multi-tenant.md
-2. (HARD GATE) All database queries include tenant filter — no query without tenant scope
-3. (HARD GATE) Tenant context middleware injects tenant into request context
-4. Pool Manager implementation for connection management
-5. Database schema isolation (schema-per-tenant or row-level filtering)
-6. Tenant-scoped cache keys (Redis keys include tenant prefix)
+2. (HARD GATE) All database queries include entity scoping (organization_id + ledger_id)
+3. (HARD GATE) DualPoolMiddleware injects tenant into request context with module-specific connections
+4. TenantConnectionManager with dual-pool (onboarding + transaction) architecture
+5. Database-per-tenant isolation (separate databases per tenant via TenantConnectionManager)
+6. Tenant-scoped cache keys (Redis keys include tenant prefix via GetKeyFromContext)
 7. No cross-tenant data leakage in list/search operations
+8. Cross-module connection injection (both modules in context)
+9. ErrManagerClosed handling (503 SERVICE_UNAVAILABLE)
 
 **Severity Ratings:**
-- CRITICAL: Queries without tenant filter — data leakage (HARD GATE violation per Ring standards)
+- CRITICAL: Queries without entity scoping — intra-tenant IDOR (HARD GATE violation per Ring standards)
 - CRITICAL: Tenant ID from user-controlled input (HARD GATE violation)
-- CRITICAL: Missing tenant context middleware (HARD GATE violation)
-- HIGH: No Pool Manager for connection management
+- CRITICAL: Missing DualPoolMiddleware (HARD GATE violation)
+- HIGH: No TenantConnectionManager for connection management
 - HIGH: Cache keys not tenant-scoped
+- HIGH: Missing cross-module connection injection
 - MEDIUM: Inconsistent tenant extraction across modules
+- MEDIUM: Missing ErrManagerClosed handling
 - LOW: Missing tenant validation in non-critical paths
 
 **Output Format:**
@@ -3530,9 +3508,11 @@ func (r *Repo) Save(ctx context.Context, entity *Entity) error {
 ### Summary
 - Multi-tenant detection: Yes/No/N/A
 - Tenant extraction: JWT / Header / Missing
-- Tenant middleware: Yes/No
-- Pool Manager: Yes/No
-- Queries with tenant filter: X/Y
+- DualPoolMiddleware: Yes/No
+- Tenant Manager: Yes/No
+- Dual-pool architecture: Yes/No
+- Module-specific connections: Yes/No
+- Queries with entity scoping: X/Y
 
 ### Critical Issues
 [file:line] - Description

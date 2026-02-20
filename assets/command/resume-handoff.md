@@ -98,7 +98,7 @@ Should I proceed with this, or would you like to adjust the approach?
 ### Basic Resume
 ```
 User: /ring:resume-handoff docs/handoffs/auth-refactor/2025-12-27_15-45-00_session.md
-Assistant:
+Assistant: 
 
 ## Resuming: auth-refactor
 
@@ -107,7 +107,7 @@ Assistant:
 
 ### Context Restored
 
-Working on OAuth provider integration for the authentication system.
+Working on OAuth provider integration for the authentication system. 
 Google OAuth was completed, currently implementing GitHub OAuth.
 
 ### Key Decisions (Already Made)

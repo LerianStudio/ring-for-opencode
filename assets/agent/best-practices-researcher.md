@@ -223,6 +223,16 @@ Queries to try:
 - "[feature type] pitfalls to avoid"
 ```
 
+---
+
+## Standards Compliance Report
+
+**N/A for research agents.**
+
+**Rationale:** The ring:best-practices-researcher agent produces research findings, not implementation output. Standards compliance verification is performed by engineer agents that consume research output.
+
+---
+
 ## Output Format
 
 Your response MUST include these sections:

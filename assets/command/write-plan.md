@@ -4,7 +4,6 @@ description: Create detailed implementation plan with bite-sized tasks
 agent: build
 subtask: false
 ---
-
 Create a comprehensive implementation plan for a feature, with exact file paths, complete code examples, and verification steps. Plans are designed to be executable by engineers with zero codebase context.
 
 ## Usage

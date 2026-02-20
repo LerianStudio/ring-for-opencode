@@ -35,7 +35,7 @@ Load plan, review critically, choose execution mode, execute tasks with code rev
 
 ### Step 2: Choose Execution Mode (MANDATORY)
 
-**THIS STEP IS NON-NEGOTIABLE. You MUST use `AskUserQuestion` before executing ANY tasks.**
+**⚠️ THIS STEP IS NON-NEGOTIABLE. You MUST use `AskUserQuestion` before executing ANY tasks.**
 
 Ask: "How would you like to execute this plan?" Options: (1) **One-go (autonomous)** - all batches with code review, no human review until completion (2) **Batch (with review)** - pause for human review after each batch
 
